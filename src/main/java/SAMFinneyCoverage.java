@@ -22,7 +22,7 @@ public class SAMFinneyCoverage {
     private File bam_file = null;
 
     public void set_output(String outfile) {
-        this.outfile = outfile + ".wig.gz";
+        this.outfile = outfile + ".wig";
     }
 
     public void set_base_quality(int quality) {
@@ -58,15 +58,16 @@ public class SAMFinneyCoverage {
     public void find_coverage() throws IOException {
         SAMFileReader sfr = new SAMFileReader(bam_file);
 
-        if (outfile == null) outfile = bam_file.getName() + ".wig.gz";
+        if (outfile == null) outfile = bam_file.getName() + ".wig";
         WorkingFile wf = new WorkingFile(outfile);
 
         OutputStream os = new BufferedOutputStream(new FileOutputStream(wf));
 
-        if (outfile.indexOf(".gz") == outfile.length() - 3) {
+        /*if (outfile.indexOf(".gz") == outfile.length() - 3) {
             System.err.println("Generating GZ wig file: " + outfile);
             os = new GZIPOutputStream(os);
-        }
+        }*/
+
         PrintStream ps = new PrintStream(os);
 
         List<String> chr_labels = new ArrayList<String>();
@@ -99,8 +100,6 @@ public class SAMFinneyCoverage {
 
         for (int chr_i = CHR_I_START; chr_i <= CHR_I_END; chr_i++) {
             int coverage_len = chr_sizes.get(chr_i);
-            Map<String, List<String>> readIds = new HashMap<String, List<String>>();
-
             int[] coverage = new int[coverage_len];
 
             //
@@ -142,10 +141,6 @@ public class SAMFinneyCoverage {
                     read = sr.getReadBases();
                     baseQuals = sr.getBaseQualities();
 
-                    /*if (sr.getReadNegativeStrandFlag()) {
-                        ArrayUtils.reverse(quals);
-                    }*/
-
                     if (baseQuals.length == 0) {
                         if (null_qual++ == 0)
                             System.err.println("ERROR: 0-length qual array for " + sr.getReadName() + " (only warning, counts at end of run)");  // debug
@@ -158,12 +153,9 @@ public class SAMFinneyCoverage {
                         continue;
                     }
 
-                    // List<CigarElement> cigarElements = sr.getCigar().getCigarElements();
                     for (AlignmentBlock ab : sr.getAlignmentBlocks()) {
                         read_i = ab.getReadStart() - 1;
                         ref_i = ab.getReferenceStart() - 1;
-
-                        //	    System.err.println("ref_i="+ref_i + " cov_len=" + coverage.length + " readlen=" + read.length + " qlen=" + quals.length + " read_i=" + read_i + " blen=" + ab.getLength() + " read=" + sr.getReadName() + " alignStart=" + sr.getAlignmentStart() + " cigar=" + sr.getCigar());  // debug
 
                         for (i = read_i, end = read_i + ab.getLength(); i < end; i++, ref_i++) {
                             if (i >= baseQuals.length) {
@@ -181,15 +173,6 @@ public class SAMFinneyCoverage {
                             } else {
                                 if (baseQuals[i] >= BASE_MIN_QUALITY && ref_i >= 0 && ref_i < coverage_len) {
                                     coverage[ref_i]++;
-                                    if (!readIds.containsKey(Integer.toString(ref_i))) {
-                                        readIds.put(Integer.toString(ref_i), new ArrayList<String>());
-                                    }
-                                    readIds.get(Integer.toString(ref_i)).add(sr.getReadName());
-
-                                    /*if (sr.getReadName().equals("C61Y9ANXX:5:1204:1574729:0") && sr.getCigarString().equals("7S118M")) {
-                                        System.out.println(ref_i + " - Quality: " + baseQuals[i]);
-                                    }
-*/
                                 }
                             }
                         }
@@ -202,20 +185,11 @@ public class SAMFinneyCoverage {
             //
             //  write results:
             //
-
-
             // .wig format
             if (has_coverage) {
                 ps.println("fixedStep chrom=" + chroms.get(chr_i).toString() + " start=1 step=1");
-                //for (i = 0; i < coverage_len; i++) {
-                String reads;
-                for (i = 89709647; i < 89729000; i++) {
-                    if (readIds.containsKey(Integer.toString(i))) {
-                        reads = readIds.get(Integer.toString(i)).toString();
-                    } else {
-                        reads = "";
-                    }
-                    ps.println(i + "\t" + Integer.toString(coverage[i]) + "\t" + reads);
+                for (i = 0; i < coverage_len; i++) {
+                    ps.println(Integer.toString(coverage[i]));
                 }
             }
         }
