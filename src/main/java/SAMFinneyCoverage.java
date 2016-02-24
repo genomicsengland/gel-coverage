@@ -13,6 +13,7 @@ public class SAMFinneyCoverage {
     private int MAPPING_MIN_QUALITY = 10;
     private static boolean VERBOSE_MODE = false;
     private static boolean SKIP_DUPLICATE_READS = true;
+    private static boolean STDOUT = false;
     public static int CHR_I_START = 0;
     public static int CHR_I_END = 24;
 
@@ -45,13 +46,17 @@ public class SAMFinneyCoverage {
         SKIP_DUPLICATE_READS = v;
     }
 
+    public void set_stdout(boolean v) {
+        this.STDOUT = v;
+    }
+
     public void print_thresholds() {
-        System.out.println("Minimum base quality: " + BASE_MIN_QUALITY);
-        System.out.println("Minimum mapping quality: " + MAPPING_MIN_QUALITY);
+        System.err.println("Minimum base quality: " + BASE_MIN_QUALITY);
+        System.err.println("Minimum mapping quality: " + MAPPING_MIN_QUALITY);
         if (SKIP_DUPLICATE_READS) {
-            System.out.println("Skipping duplicated reads.\n");
+            System.err.println("Skipping duplicated reads.\n");
         } else {
-            System.out.println("Considering duplicated reads.\n");
+            System.err.println("Considering duplicated reads.\n");
         }
     }
 
@@ -59,9 +64,18 @@ public class SAMFinneyCoverage {
         SAMFileReader sfr = new SAMFileReader(bam_file);
 
         if (outfile == null) outfile = bam_file.getName() + ".wig";
-        WorkingFile wf = new WorkingFile(outfile);
+        WorkingFile wf = null;
+        FileOutputStream fos;
 
-        OutputStream os = new BufferedOutputStream(new FileOutputStream(wf));
+        if (STDOUT) {
+            fos = new FileOutputStream(FileDescriptor.out);
+        } else {
+            wf = new WorkingFile(outfile);
+            fos = new FileOutputStream(wf);
+        }
+
+        OutputStream os = new BufferedOutputStream(fos);
+
 
         /*if (outfile.indexOf(".gz") == outfile.length() - 3) {
             System.err.println("Generating GZ wig file: " + outfile);
@@ -99,6 +113,8 @@ public class SAMFinneyCoverage {
         int qual_bounds_problem = 0;
 
         for (int chr_i = CHR_I_START; chr_i <= CHR_I_END; chr_i++) {
+            long startTime = System.currentTimeMillis();
+
             int coverage_len = chr_sizes.get(chr_i);
             int[] coverage = new int[coverage_len];
 
@@ -111,7 +127,6 @@ public class SAMFinneyCoverage {
             if (ref_name == null) {
                 System.err.println("WTF: no .bam mappings vs. chr index " + chr_i);  // debug
             } else {
-                System.err.println("CHR " + ref_name);  // debug
                 if (VERBOSE_MODE) System.err.println("query=" + ref_name + " size=" + coverage_len);
                 CloseableIterator<SAMRecord> iterator = sfr.queryOverlapping(ref_name, 1, coverage_len);
                 SAMRecord sr;
@@ -192,6 +207,10 @@ public class SAMFinneyCoverage {
                     ps.println(Integer.toString(coverage[i]));
                 }
             }
+
+            // Run some code;
+            long stopTime = System.currentTimeMillis();
+            System.err.println("CHR " + ref_name + " in " + (stopTime - startTime)/1000 + " seconds.");
         }
 
         if (null_qual > 0) {
@@ -207,13 +226,14 @@ public class SAMFinneyCoverage {
         }
 
         ps.close();
-        wf.finish();
+        if (wf != null) {
+            wf.finish();
+        }
 
     }
 
     public static void main(String[] argv) {
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.getDefaultValidationStringency().SILENT);
-        // STFU
 
         File bam_file = null;
         SAMFinneyCoverage sc = new SAMFinneyCoverage();
@@ -231,6 +251,8 @@ public class SAMFinneyCoverage {
                 sc.set_mapping_quality(Integer.parseInt(argv[++i]));
             } else if (argv[i].equals("-output")) {
                 sc.set_output(argv[++i]);
+            } else if (argv[i].equals("-stdout")) {
+                sc.set_stdout(true);
             } else if (argv[i].equals("-chr-i-start")) {
                 SAMFinneyCoverage.CHR_I_START = Integer.parseInt(argv[++i]);
             } else if (argv[i].equals("-chr-i-end")) {
