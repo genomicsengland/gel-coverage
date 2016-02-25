@@ -1,5 +1,6 @@
-# Gel Coverage Pipeline
+## Gel Coverage Pipeline
 
+### .wig File Generation
 
 On Skyscape:
 
