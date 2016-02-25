@@ -92,6 +92,10 @@ public class SAMFinneyCoverage {
         //
         SAMFileHeader h = sfr.getFileHeader();
         SAMSequenceDictionary dict = h.getSequenceDictionary();
+
+        WorkingFile chr_wf = new WorkingFile(outfile.replace(".wig", ".chr"));
+        PrintStream chr_os = new PrintStream(new BufferedOutputStream(new FileOutputStream(chr_wf)));
+
         for (SAMSequenceRecord ssr : dict.getSequences()) {
             String ref_name = ssr.getSequenceName();
             Chromosome c = Chromosome.valueOfString(ref_name);
@@ -100,8 +104,11 @@ public class SAMFinneyCoverage {
                 chr_labels.add(ref_name);
                 chroms.add(c);
                 chr_sizes.add(ref_len);
+                chr_os.println(c.toString() + "\t" + ref_len);
             }
         }
+        chr_os.close();
+        chr_wf.finish();
 
         //
         //  generate coverage
