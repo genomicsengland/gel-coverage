@@ -24,3 +24,7 @@ You can also write to stdout for piping purposes.
 ```bash
 java -jar /genomes/software/apps/gel-coverage/gel-coverage-jar-with-dependencies.jar -bam <BAM_FILE> -stdout
 ```
+
+### Run Time
+
+It will take roughly 1hr for a 30x rare disease/cancer germline bam, for a 75x cancer bam it'll be about 2hrs.
