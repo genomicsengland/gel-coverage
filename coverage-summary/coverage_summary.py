@@ -4,9 +4,11 @@ import subprocess
 import argparse
 from collections import defaultdict
 import tqdm
+import numpy as np
 import pyBigWig
 import pandas
 import json
+import re
 import urllib2
 
 
@@ -64,7 +66,7 @@ def other_chrs(bw):
         elif i == 24:
             chromosome = "chrY"
         length=int(bw.chroms(chromosome))
-        chromosomes.append((chromosome,1,100))
+        chromosomes.append((chromosome,1,length))
 
     return chromosomes
 
@@ -76,20 +78,43 @@ def coverage_counts_wg(n_file,bw):
     return generic_coverage(bw,ns)
 
 
-def coverage_counts_exon(bw):
+def coverage_counts_exon(bw,bed):
     bw = pyBigWig.open( bw )
-    exons=make_exons_bed()
+    exons=flatten_bed(bed)
     return generic_coverage(bw,exons)
 
-def generic_coverage(bw,bed):
-    result = defaultdict()
 
+def exon_gc_coverage(bw,bed):
+    bw = pyBigWig.open( bw )
+    result = list()
     for interval in bed:
-        print interval
         chrom = interval.chrom
         start = interval.start
         end = interval.end
+        #print "chr"+str(chrom)+ ":"+ str(start) +"-"+ str(end)
+        if start == end:
+            end+=1
+        cov = bw.values("chr"+str(chrom), start, end)
+        cov_mean = np.mean(cov)
+        id = interval.name
+        gene,txid,exon_raw = id.split("|")
 
+        exon = exon_raw.replace("exon","")
+        result.append(str(chrom)+"\t"+str(start)+"\t"+str(end)+"\t"+interval.name+"\t"+exon+"\t"+str(interval.score)+"\t"+interval.strand+"\t"+str(cov_mean))
+    return result
+
+def generic_coverage(bw,bed):
+
+    result = defaultdict()
+
+    for interval in bed:
+        #print interval
+        chrom = interval.chrom
+        start = interval.start
+        end = interval.end
+        #print "chr"+str(chrom)+ ":"+ str(start) +"-"+ str(end)
+        if start == end:
+            end+=1
         cov = bw.values("chr"+str(chrom), start, end)
         result[chrom]=defaultdict(lambda: 0)
         for coverage in cov:
@@ -104,15 +129,44 @@ def generic_coverage(bw,bed):
     return sorted_data
 
 
+
+def gc_content(sequence):
+    gcCount = 0
+    totalBaseCount = 0
+    gcCount += len(re.findall("[GC]", sequence))
+    totalBaseCount += len(re.findall("[GCTA]", sequence))
+    gcFraction = float(gcCount) / totalBaseCount
+    return ( gcFraction )
+
 def make_exons_bed():
-    url="http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/latest/hsapiens/feature/gene/all?include=chromosome,transcripts.exons.start,transcripts.exons.end"
-    exons=json.load(urllib2.urlopen(url))["response"][0]["result"]
+
+    url="http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/latest/hsapiens/feature/gene/all?limit=1"
+    numTotalResults=json.load(urllib2.urlopen(url))["response"][0]["numTotalResults"]
     all_exons=list()
-    for result in exons:
-        for transcript in result["transcripts"]:
-            for exons in transcript["exons"]:
-                all_exons.append((result["chromosome"],exons["start"],exons["end"]))
+    #getting exons from cellbase
+    all_exons=list()
+    #YOU DONT GET ALL THE RESULTS - BECAUSE OF THE STEP
+    print "making exon bed file... <1min"
+    for i in tqdm.tqdm(xrange(1,numTotalResults,5000)):
+        url="http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/latest/hsapiens/feature/gene/all?include=name,chromosome,transcripts.exons.start,transcripts.exons.exonNumber,transcripts.id,transcripts.strand,transcripts.exons.end,transcripts.exons.sequence,exonNumber&skip="+str(i)
+        exons=json.load(urllib2.urlopen(url))["response"][0]["result"]
+        for result in exons:
+            gene = result["name"]
+            for transcript in result["transcripts"]:
+                txid = transcript["id"]
+                strand = transcript["strand"]
+                for exons in transcript["exons"]:
+                    if "sequence" in exons:
+                        gc = gc_content(exons["sequence"])
+                        exonNumber = exons["exonNumber"]
+                        row_id = gene +"|"+ txid + "|exon" + str(exonNumber)
+                        all_exons.append((result["chromosome"],exons["start"],exons["end"],row_id,str(gc),strand))
+    #make two bed files - one collapsed
     bed = pybedtools.BedTool(all_exons)
+    #faltten merges all exons so we can get a coverage summary, but, non flattened is used in GC coverage calculations
+    return bed
+
+def flatten_bed(bed):
     bed = bed.sort()
     bed = bed.merge()
     return bed
@@ -145,12 +199,33 @@ def main():
 
 
     logging.basicConfig(level=level, format='%(asctime)s %(levelname)s %(name)s %(message)s')
-    output = open(args.output, 'w')
+
+
+    bed = make_exons_bed()
+
+    print "making exon cov means with gc..."
+
+    output = open(args.output+".exon.coverage.means.with.GC.txt","w")
+    result = exon_gc_coverage(args.bw,bed)
+    #1	29321	29370	WASH7P|ENST00000438504|exon1	0.78	-	54.9795918367
+    output.write("#chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
+    output.write("\n".join(result))
+    output.close()
+
+    print "making exon cov summary..."
+
+    output = open(args.output+".exon.coverage.counts.txt", 'w')
+    result = coverage_counts_exon(args.bw,bed)
+    result.to_csv(output, sep='\t')
+    output.close()
+
+    print "making whole genome cov summary..."
+
+    output = open(args.output+".wg.coverage.counts.txt", 'w')
     result = coverage_counts_wg(args.genome_n,args.bw)
     result.to_csv(output, sep='\t')
     output.close()
 
-    print coverage_counts_exon(args.bw)
 
     command = "Rscript"
     args = [args.output]

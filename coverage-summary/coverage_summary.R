@@ -6,6 +6,10 @@ option_list = list(
   make_option(c("-f", "--files"), type="character", default=NULL, 
               help="files to process", metavar="character"),
   make_option(c("-l", "--labels"), type="character", default=NULL, 
+              help="labels for plotting", metavar="labels"),
+  make_option(c("-c", "--coverage"), type="character", default=NULL, 
+              help="labels for plotting", metavar="labels"),
+  make_option(c("-s", "--scope"), type="character", default=NULL, 
               help="labels for plotting", metavar="labels")
 ); 
 
@@ -19,6 +23,8 @@ if (is.null(opt$files)){
 
 files=opt$files
 labels=opt$labels
+covs=opt$coverage
+scope=opt$scope
 print(labels)
 print(files)
 #files="/Volumes/SCRATCH/temp/countstest.wg.coverage.counts.txt,/Volumes/SCRATCH/temp/countstest2.wg.coverage.counts.txt"
@@ -26,7 +32,7 @@ print(files)
 ##++++++++++ define functions ++++++++++++++++++++++
 myprod<-function(x){as.numeric(x[1])*as.numeric(x[2])}
 mysq<-function(x){((as.numeric(x[1])-as.numeric(x[3]))^2)*as.numeric(x[2])}
-mymsn <- function(x,p) {  
+mymsn <- function(x,p,name) {  
   cof<-qnorm(1-p/2)
   subtotal <- apply(x,1,myprod)
   total <- sum(subtotal) #sum(k(i))
@@ -34,7 +40,8 @@ mymsn <- function(x,p) {
   x$m<-total/n
   m<-x$m[1]
   this.sq<-sqrt(sum(apply(x,1,mysq))/n)
-  out<-data.frame(n=round(n,digits=0),
+  out<-data.frame(sample=name,
+                  n=round(n,digits=0),
                   mean=round(m,digits=1),                  
                   sd=round(this.sq,digits=1),
                   lower=round(m-cof*this.sq,digits=1),
@@ -98,7 +105,7 @@ theme_gel_proper <- function(base_size = 12, base_family="Calibri") {
   )
 }
 
-gel_colours=c("#44546b","#0ead84","#addce9","#27b7cc","#90c684","#d3922d")
+gel_colours=c("#0ead84","#44546b","#addce9","#27b7cc","#90c684","#d3922d")
 
 files=strsplit(files,",")[[1]]
 print(files)
@@ -111,6 +118,12 @@ for(i in 1:length(files)) {
   #print(file)
   wg<-read.table(as.character(file),header=T,sep="\t",check.names = FALSE)
   
+  #write out coverage summary
+  summary=mymsn(wg[2:covs,c("Coverage","Total")],0.05,labels[i])
+  filename=paste(file,scope,"coverage.summary.table","txt",sep=".")
+  filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
+  write.table(summary,filename,quote=F,row.names=F,col.names=T,sep="\t")
+  
   prop=as.data.frame(prop.table(as.matrix(wg), 2) )
   prop$Coverage=as.numeric(row.names(prop))-1
   m.wg = melt(prop,id=c("Coverage","Total"))
@@ -122,11 +135,14 @@ for(i in 1:length(files)) {
     facet_wrap(~variable,scales="free")+
     scale_fill_manual("Sample",values=gel_colours)+
     scale_y_continuous("Percent Total")+
-    scale_x_continuous("Percent Total")+
+    scale_x_continuous("Coverage")+
     theme_gel_proper()+
     coord_cartesian(xlim = c(0,101), ylim = c(0,5))
-  filename=paste(file,"coverage.distribution.chr-by-chr.png",sep=".")
+  filename=paste(file,scope,"coverage.distribution.chr-by-chr.png",sep=".")
   print(filename)
+
+  filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
+  
   ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
   if (i > 1){
     final= rbind(old,m.wg)
@@ -135,14 +151,16 @@ for(i in 1:length(files)) {
     old=m.wg
   }
 }
-print(head(final))
-ggplot(final,aes(Coverage,as.numeric(value)*100,fill=sample))+
-  geom_bar(stat="identity",position="dodge")+
-  facet_wrap(~variable,scales="free")+
-  scale_y_continuous("Percent Total")+
-  scale_fill_manual("Sample",values=gel_colours)+
-  scale_x_continuous("Percent Total")+
-  theme_gel_proper()+
-  coord_cartesian(xlim = c(0,101), ylim = c(0,5))
-filename=paste("all","coverage.distribution.chr-by-chr.png",sep=".")
-ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
+if (length(files) > 1){
+  ggplot(final,aes(Coverage,as.numeric(value)*100,fill=sample))+
+    geom_bar(stat="identity",position="dodge")+
+    facet_wrap(~variable,scales="free")+
+    scale_y_continuous("Percent Total")+
+    scale_fill_manual("Sample",values=gel_colours)+
+    scale_x_continuous("Coverage")+
+    theme_gel_proper()+
+    coord_cartesian(xlim = c(0,101), ylim = c(0,5))
+  filename=paste("all",scope,".coverage.distribution.chr-by-chr.png",sep=".")
+  filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
+  ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
+}
