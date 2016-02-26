@@ -1,4 +1,12 @@
 #parse the arguments
+require(reshape)
+require(ggplot2)
+require(grid)
+require(plyr)
+library(RColorBrewer)
+require(extrafont)
+
+###############get options##################
 
 library("optparse")
 
@@ -27,8 +35,7 @@ covs=opt$coverage
 scope=opt$scope
 print(labels)
 print(files)
-#files="/Volumes/SCRATCH/temp/countstest.wg.coverage.counts.txt,/Volumes/SCRATCH/temp/countstest2.wg.coverage.counts.txt"
-#labels="LP20001-DNA_A01,LP20001-DNA_A02"
+
 ##++++++++++ define functions ++++++++++++++++++++++
 myprod<-function(x){as.numeric(x[1])*as.numeric(x[2])}
 mysq<-function(x){((as.numeric(x[1])-as.numeric(x[3]))^2)*as.numeric(x[2])}
@@ -58,15 +65,6 @@ my.rcumsum <- function(x){
 }
 chrs<-c(1:22,"X","Y")
 
-
-#################my new code
-require(reshape)
-require(ggplot2)
-require(grid)
-require(plyr)
-library(RColorBrewer)
-require(extrafont)
-
 theme_gel_proper <- function(base_size = 12, base_family="Calibri") {
   theme(
     text = element_text(size=base_size,family=base_family),
@@ -78,32 +76,34 @@ theme_gel_proper <- function(base_size = 12, base_family="Calibri") {
     axis.title.y =      element_text(size = base_size, angle = 90, vjust = 0.5),
     axis.ticks.length = unit(0.3, "lines"),
     axis.ticks.margin = unit(0.5, "lines"),
-    
-    legend.background = element_rect(colour=NA), 
+
+    legend.background = element_rect(colour=NA),
     legend.key =        element_blank(),
     legend.key.size =   unit(1.2, "lines"),
     legend.title =      element_text(size = base_size,face = "bold", hjust = 0),
     legend.position =   "right",
-    
-    panel.background =  element_rect(fill = "white", colour = NA), 
+
+    panel.background =  element_rect(fill = "white", colour = NA),
     panel.border = element_rect(color="black",size=0.5,fill="NA"),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     panel.margin =      unit(0.5, "lines"),
-    
+
     strip.text.x =      element_text(),
     strip.text.y =      element_text(angle = -90),
     strip.background = element_rect(colour="black",size=0.6, fill="#FFFFFF"),
-    
+
     plot.background =   element_rect(colour = NA),
     plot.title =        element_text(size = base_size * 1.2),
     plot.margin =       unit(c(1, 1, 0.5, 0.5), "lines")
-    
-    
-    
-    
+
+
+
+
   )
 }
+
+#################make plots for all files###########################
 
 gel_colours=c("#0ead84","#44546b","#addce9","#27b7cc","#90c684","#d3922d")
 
@@ -151,6 +151,10 @@ for(i in 1:length(files)) {
     old=m.wg
   }
 }
+
+
+##################more than one sample? then make a combined plot########################
+
 if (length(files) > 1){
   ggplot(final,aes(Coverage,as.numeric(value)*100,fill=sample))+
     geom_bar(stat="identity",position="dodge")+

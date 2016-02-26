@@ -11,9 +11,17 @@ import json
 import re
 import urllib2
 
-
+__author__ = 'mparker'
 
 def intervals(n_file,other_chr):
+    """
+    this is a method to make up for the lack of non-autosomal chromosomes in the nonN's bed file, fill in chrX
+    and chrY in the bed file for calculating wg coverage
+
+    :param n_file: nonN regions of the genome
+    :param other_chr: all chromosome in bw file
+    :return: bed file with all regions
+    """
     ns = pybedtools.BedTool(n_file)
     ns_chrs=list()
     for feature in ns:
@@ -32,6 +40,12 @@ def intervals(n_file,other_chr):
     return all
 
 def lt_helper(a):
+    """
+    helper to sort chromosmes properly
+
+    :param a: sort object
+    :return:
+    """
     try:
         return int(a)
     except ValueError:
@@ -46,18 +60,30 @@ def lt_helper(a):
 
 
 def __lt__(a, b):
+    """
+    run the chromosome sort helper
+
+    :param a:
+    :param b:
+    :return: proper sorted chromosomes
+    """
     return cmp(lt_helper(a), lt_helper(b))
 
-def chromosome_sizes(chr_sizes):
-    chomosomes = dict()
-    with open(chr_sizes) as fp:
-        for line in fp:
-            chrom,length=line.split("\t")
-            chomosomes[str(chrom.replace("chr",""))] = int(length)
-    return chomosomes
+# def chromosome_sizes(chr_sizes):
+#     chomosomes = dict()
+#     with open(chr_sizes) as fp:
+#         for line in fp:
+#             chrom,length=line.split("\t")
+#             chomosomes[str(chrom.replace("chr",""))] = int(length)
+#     return chomosomes
 
+def get_chr_lengths(bw):
+    """
+    get chromosome lengths from header of bigWig file
 
-def other_chrs(bw):
+    :param bw: pyBigWig file object
+    :return: list of chromosomes and length in a bed recognisable format
+    """
     chromosomes=list()
     for i in range(1,24):
         chromosome = "chr"+str(i)
@@ -71,20 +97,40 @@ def other_chrs(bw):
     return chromosomes
 
 def coverage_counts_wg(n_file,bw):
-    bw = pyBigWig.open( bw )
+    """
+    get coverage summary counts in non-N regions of the genome
 
-    other = other_chrs(bw)
+    :param n_file: non-N regions of the genome bed file
+    :param bw: path to bigWig file
+    :return: dataframe of exon coverage summary
+    """
+    bw = pyBigWig.open( bw )
+    other = get_chr_lengths(bw)
     ns = intervals(n_file,other)
     return generic_coverage(bw,ns)
 
 
 def coverage_counts_exon(bw,bed):
+    """
+    get coverage summary counts in exonic regions
+
+    :param bw: path to a bigWig file
+    :param bed: bed file object of regions
+    :return: dataframe of exon coverage summary
+    """
     bw = pyBigWig.open( bw )
     exons=flatten_bed(bed)
     return generic_coverage(bw,exons)
 
 
 def exon_gc_coverage(bw,bed):
+    """
+    this is a specific method to calculate coverage in all exonic regions with gc content
+
+    :param bw: path to bigWig file
+    :param bed: bed file object of regions
+    :return: list of results (NOT a bed file compatible object)
+    """
     bw = pyBigWig.open( bw )
     result = list()
     for interval in bed:
@@ -104,7 +150,13 @@ def exon_gc_coverage(bw,bed):
     return result
 
 def generic_coverage(bw,bed):
+    """
+    using pyBigWig calculates number of bases at each coverage level in regions of a bed file
 
+    :param bw: pyBigWig bw file object
+    :param bed: bed file of regions to calculate the summary over
+    :return: sorted_data: pandas dataframe of coverage summary - rows coverage, columns chromosomes
+    """
     result = defaultdict()
 
     for interval in bed:
@@ -131,6 +183,12 @@ def generic_coverage(bw,bed):
 
 
 def gc_content(sequence):
+    """
+    Calculates gc content of a DNA sequence
+
+    :param sequence: a string of ATGC's
+    :return: the gc fraction of the region
+    """
     gcCount = 0
     totalBaseCount = 0
     gcCount += len(re.findall("[GC]", sequence))
@@ -139,13 +197,20 @@ def gc_content(sequence):
     return ( gcFraction )
 
 def make_exons_bed():
+    """
+    Gets all exons from cellbase and makes a bed - also calculates gc content, returns a valid bed with gc in the
+    score column
 
+    :return: pybedtools object
+    """
     url="http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/latest/hsapiens/feature/gene/all?limit=1"
     numTotalResults=json.load(urllib2.urlopen(url))["response"][0]["numTotalResults"]
-    all_exons=list()
     #getting exons from cellbase
     all_exons=list()
-    #YOU DONT GET ALL THE RESULTS - BECAUSE OF THE STEP
+    # TODO YOU DONT GET ALL THE RESULTS - BECAUSE OF THE STEP
+
+    # TODO while doing this calculate coding exons too
+
     print "making exon bed file... <1min"
     for i in tqdm.tqdm(xrange(1,numTotalResults,5000)):
         url="http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/latest/hsapiens/feature/gene/all?include=name,chromosome,transcripts.exons.start,transcripts.exons.exonNumber,transcripts.id,transcripts.strand,transcripts.exons.end,transcripts.exons.sequence,exonNumber&skip="+str(i)
@@ -161,12 +226,16 @@ def make_exons_bed():
                         exonNumber = exons["exonNumber"]
                         row_id = gene +"|"+ txid + "|exon" + str(exonNumber)
                         all_exons.append((result["chromosome"],exons["start"],exons["end"],row_id,str(gc),strand))
-    #make two bed files - one collapsed
     bed = pybedtools.BedTool(all_exons)
-    #faltten merges all exons so we can get a coverage summary, but, non flattened is used in GC coverage calculations
     return bed
 
 def flatten_bed(bed):
+    """
+    flatten a bed file, i.e. collapse overlapping regions
+
+    :param bed: bed file object
+    :return: bed: sorted bed
+    """
     bed = bed.sort()
     bed = bed.merge()
     return bed
@@ -176,8 +245,6 @@ def main():
     parser = argparse.ArgumentParser(description='Sam/Bam file filter')
     parser.add_argument('--genome_n', metavar='Ns_in_genome', type=str, default="/accelrys/apps/gel/genomeref/data/human/human_g1k_v37_NonN_Regions.CHR.bed",
                         help='a bed file of the non-N regions in genome')
-    # parser.add_argument('--chr_sizes', metavar='chr_sizes', default=False,
-    #                     help='chromosome size file')
     parser.add_argument('--bw', metavar='bw', default=False,
                         help='bw file')
     parser.add_argument('--output', metavar='output', default=False,
@@ -195,9 +262,6 @@ def main():
         level = logging.DEBUG
 
 
-   # coverage_counts_exon(exons,args.bw)
-
-
     logging.basicConfig(level=level, format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 
@@ -207,7 +271,6 @@ def main():
 
     output = open(args.output+".exon.coverage.means.with.GC.txt","w")
     result = exon_gc_coverage(args.bw,bed)
-    #1	29321	29370	WASH7P|ENST00000438504|exon1	0.78	-	54.9795918367
     output.write("#chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
     output.write("\n".join(result))
     output.close()
@@ -226,6 +289,7 @@ def main():
     result.to_csv(output, sep='\t')
     output.close()
 
+    print "making plots whole genome..."
 
     command = "Rscript"
     args = [args.output]
@@ -233,7 +297,9 @@ def main():
     print Rcommand
     x = subprocess.check_output(Rcommand, universal_newlines=True)
 
+    print "making plots exons..."
 
+    # TODO cumulative coverage plots
 
 if __name__ == '__main__':
     main()
