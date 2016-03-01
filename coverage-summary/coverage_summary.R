@@ -1,3 +1,4 @@
+#!/usr/local/bin/Rscript
 #parse the arguments
 require(reshape)
 require(ggplot2)
@@ -47,7 +48,7 @@ mymsn <- function(x,p,name) {
   x$m<-total/n
   m<-x$m[1]
   this.sq<-sqrt(sum(apply(x,1,mysq))/n)
-  out<-data.frame(sample=name,
+  out<-data.frame(wellId=name,
                   n=round(n,digits=0),
                   mean=round(m,digits=1),                  
                   sd=round(this.sq,digits=1),
@@ -108,9 +109,7 @@ theme_gel_proper <- function(base_size = 12, base_family="Calibri") {
 gel_colours=c("#0ead84","#44546b","#addce9","#27b7cc","#90c684","#d3922d")
 
 files=strsplit(files,",")[[1]]
-print(files)
 labels=strsplit(labels,",")[[1]]
-print(files)
 
 for(i in 1:length(files)) {
 

@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/local/bin/Rscript
 require(gridExtra)
 require(reshape)
 require(ggplot2)
@@ -13,7 +13,7 @@ library("optparse")
 
 option_list = list(
   make_option(c("-f", "--file"), type="character", default=NULL,
-              help="file to process", metavar="character"),
+              help="file to process", metavar="character")
 );
 
 opt_parser = OptionParser(option_list=option_list);
@@ -70,9 +70,8 @@ theme_gel_proper <- function(base_size = 10, base_family="Calibri") {
 
 ####################do stuff##############################
 
-
-file="/Volumes/SCRATCH/temp/countstest.wg.coverage.counts.txt.exon.coverage.means.with.GC.txt"
 dat<-read.table(file,header=T,sep="\t")
+print(head(dat))
 dat$V5=dat$cov/median(dat$cov)
 gc25<-quantile(dat[,6],0.25)
 gc75<-quantile(dat[,6],0.75)
@@ -82,7 +81,7 @@ y.cov=4*median(dat$cov,na.rm=T)
 m25<-dat[dat$gc<=gc25 & dat$exon<=30,]
 m75<-dat[dat$gc>=gc75 & dat$exon<=30,]
 m50<-dat[dat$gc>gc25 & dat$gc<gc75  & dat$exon<=30,]
-png(paste(id,seg,"coverage.boxplots.png",sep="."),height=250,width=1000,type="cairo")
+png(paste(file,"coverage.boxplots.png",sep="."),height=250,width=1000,type="cairo")
 par(mfrow=c(1,3))
 
 ############do average coverage plots#################

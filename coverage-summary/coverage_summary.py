@@ -1,6 +1,7 @@
 import pybedtools
 import logging
 import subprocess
+import os
 import argparse
 from collections import defaultdict
 import tqdm
@@ -265,37 +266,54 @@ def main():
     logging.basicConfig(level=level, format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 
+    well_id = os.path.basename(args.output)
+
     bed = make_exons_bed()
 
     print "making exon cov means with gc..."
 
-    output = open(args.output+".exon.coverage.means.with.GC.txt","w")
+    output_file = args.output+".exon.coverage.means.with.GC.txt"
+    output = open(output_file,"w")
     result = exon_gc_coverage(args.bw,bed)
-    output.write("#chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
+    output.write("chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
     output.write("\n".join(result))
     output.close()
 
+    print "making plots exome gc..."
+
+    Rcommand = "gc_exon_boxplots.R -f " + output_file
+    print Rcommand
+    temp = subprocess.Popen(Rcommand,shell = True)
+
+
     print "making exon cov summary..."
 
-    output = open(args.output+".exon.coverage.counts.txt", 'w')
+    output_file = args.output+".exon.coverage.counts.txt"
+    output = open(output_file, 'w')
     result = coverage_counts_exon(args.bw,bed)
     result.to_csv(output, sep='\t')
     output.close()
 
+    print "making plots exome..."
+
+    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage 101 --scope exome"
+    print Rcommand
+    temp = subprocess.Popen(Rcommand,shell = True)
+
     print "making whole genome cov summary..."
 
-    output = open(args.output+".wg.coverage.counts.txt", 'w')
+    output_file = args.output+".wg.coverage.counts.txt"
+    output = open(output_file, 'w')
     result = coverage_counts_wg(args.genome_n,args.bw)
     result.to_csv(output, sep='\t')
     output.close()
 
     print "making plots whole genome..."
 
-    command = "Rscript"
-    args = [args.output]
-    Rcommand = [command, "coverage_summary.R"] + args
+    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage 101 --scope wg"
     print Rcommand
-    x = subprocess.check_output(Rcommand, universal_newlines=True)
+    temp = subprocess.Popen(Rcommand,shell = True)
+
 
     print "making plots exons..."
 
