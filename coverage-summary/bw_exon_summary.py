@@ -62,7 +62,7 @@ parser = argparse.ArgumentParser(description='Coverage summary for exons')
 parser.add_argument('--bw', metavar='bw', help='This is the bw file')
 parser.add_argument('--chr2gene', metavar='chr2gene', help='This is the chr2gene file')
 parser.add_argument('--genes', metavar='genes', help='This is a list of genes or you can have a list of transcripts')
-parser.add_argument('--transcripts', metavar='transcripts',]
+parser.add_argument('--transcripts', metavar='transcripts',
                     help='This is a list of transcripts or you can have a list of genes')
 parser.add_argument('--genes2tx', metavar='genes2tx', help='This is a file listing genes to transcripts')
 parser.add_argument('--collapse', metavar='flatten',
