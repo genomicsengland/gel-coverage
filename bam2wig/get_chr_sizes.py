@@ -1,8 +1,36 @@
 import pysam
 from collections import defaultdict
 import argparse
-from coverage_summary import __lt__
 
+def lt_helper(a):
+    """
+    helper to sort chromosmes properly
+
+    :param a: sort object
+    :return:
+    """
+    try:
+        return int(a)
+    except ValueError:
+        if a == "X":
+            return 24
+        elif a == "Y":
+            return 25
+        elif a == "MT" or a == "M":
+            return 26
+        else:
+            return 27
+
+
+def __lt__(a, b):
+    """
+    run the chromosome sort helper
+
+    :param a:
+    :param b:
+    :return: proper sorted chromosomes
+    """
+    return cmp(lt_helper(a), lt_helper(b))
 
 
 def get_chr_sizes(path_to_bam):
