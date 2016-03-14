@@ -272,7 +272,7 @@ def main():
 
     print "making plots exome gc..."
 
-    Rcommand = "gc_exon_boxplots.R -f " + output_file
+    Rcommand = "Rscript gc_exon_boxplots.R -f " + output_file
     print Rcommand
     temp = subprocess.Popen(Rcommand,shell = True)
 
@@ -287,7 +287,7 @@ def main():
 
     print "making plots exome..."
 
-    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage 101 --scope exome"
+    Rcommand = "Rscript coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage 101 --scope exome"
     print Rcommand
     temp = subprocess.Popen(Rcommand,shell = True)
 
@@ -301,7 +301,7 @@ def main():
 
     print "making plots whole genome..."
 
-    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage 101 --scope wg"
+    Rcommand = "Rscript coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage 101 --scope wg"
     print Rcommand
     temp = subprocess.Popen(Rcommand,shell = True)
 
