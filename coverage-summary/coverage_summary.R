@@ -17,7 +17,7 @@ option_list = list(
   make_option(c("-l", "--labels"), type="character", default=NULL, 
               help="labels for plotting", metavar="labels"),
   make_option(c("-c", "--coverage"), type="character", default=NULL, 
-              help="labels for plotting", metavar="labels"),
+              help="xlim coverage", metavar="labels"),
   make_option(c("-s", "--scope"), type="character", default=NULL, 
               help="labels for plotting", metavar="labels")
 ); 
@@ -136,7 +136,7 @@ for(i in 1:length(files)) {
     scale_y_continuous("Percent Total")+
     scale_x_continuous("Coverage")+
     theme_gel_proper()+
-    coord_cartesian(xlim = c(0,101), ylim = c(0,5))
+    coord_cartesian(xlim = c(0,covs), ylim = c(0,5))
   filename=paste(file,scope,"coverage.distribution.chr-by-chr.png",sep=".")
   print(filename)
 
@@ -162,7 +162,7 @@ if (length(files) > 1){
     scale_fill_manual("Sample",values=gel_colours)+
     scale_x_continuous("Coverage")+
     theme_gel_proper()+
-    coord_cartesian(xlim = c(0,101), ylim = c(0,5))
+    coord_cartesian(xlim = c(0,covs), ylim = c(0,5))
   filename=paste("all",scope,".coverage.distribution.chr-by-chr.png",sep=".")
   filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
   ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
