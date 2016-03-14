@@ -29,6 +29,15 @@ java -jar /genomes/software/apps/gel-coverage/gel-coverage-jar-with-dependencies
 
 It will take roughly 1hr for a 30x rare disease/cancer germline bam, for a 75x cancer bam it'll be about 2hrs.
 
+#### Piping to generate bigWig
+
+You can pipe the wig to generate a bigWig without having to generate the wig 1st
+
+```bash
+module load java/jdk1.8.0_45
+java -jar /genomes/software/apps/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam /genomes/by_date/2014-11-17/RAREP00885/LP2000275-DNA_D09/Assembly/LP2000275-DNA_D09.bam -stdout | /accelrys/apps/gel/toolkit/bin/linux64/ucsc/wigToBigWig stdin /genomes/analysis/rare_disease/coverage/LP2000275-DNA_D09.chr /genomes/analysis/rare_disease/coverage/LP2000275-DNA_D09.bw
+```
+
 ### Coverage Summaries
 
 coverage_summary.py prepares two coverage summary files (histograms), one for the whole genome and one for all exons.
@@ -48,3 +57,4 @@ coverage_summary.R
 ```bash
 gc_exon_boxplots.R
 ```
+

@@ -1,4 +1,3 @@
-#!/usr/bin/Rscript
 require(gridExtra)
 require(reshape)
 require(ggplot2)
@@ -95,7 +94,13 @@ colnames(we.gd.prop)<-c("wg.g","ex.g")
 we.gd.prop$wgg.cum<-my.rcumsum(we.gd.prop$wg.g)
 we.gd.prop$exg.cum<-my.rcumsum(we.gd.prop$ex.g)
 we.gd.prop$cov<- seq(0,(covs-1),1)
-
+png(paste(wgfile,"cumulative_plot","png",sep="."),width=400,height=400,type="cairo")
+plot(wgg.cum ~ cov,data=we.gd.prop, xlab="Coverage",ylab="Percent of Bases (%)",
+     main=paste(wgfile," cumulative coverage",sep=""),col="green",pch=22)
+points(cum ~ cov,data=we.gd.prop,col="green",pch=19)
+legend("topright",c("Genomic Normal","Genomic Disease","Exonic Normal","Exonic Disease"),
+       pch=c(22,22,19,19),col=c("green","red"),bty="n",cex=0.9)
+dev.off()
 
 names(we.gd.prop)=c("Whole Genome","Exome","Whole Genome Cum.","Exon Cum.","cov")
 m.we.gd.prop = melt(we.gd.prop[,c(3,4,5)],id="cov")

@@ -70,14 +70,6 @@ def __lt__(a, b):
     """
     return cmp(lt_helper(a), lt_helper(b))
 
-# def chromosome_sizes(chr_sizes):
-#     chomosomes = dict()
-#     with open(chr_sizes) as fp:
-#         for line in fp:
-#             chrom,length=line.split("\t")
-#             chomosomes[str(chrom.replace("chr",""))] = int(length)
-#     return chomosomes
-
 def get_chr_lengths(bw):
     """
     get chromosome lengths from header of bigWig file
@@ -180,7 +172,6 @@ def generic_coverage(bw,bed):
     sorted_data["Total"] = sorted_data.sum(axis=1)
     sorted_data.index.name = 'Coverage'
     return sorted_data
-
 
 
 def gc_content(sequence):
