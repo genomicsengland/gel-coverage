@@ -289,7 +289,7 @@ def main():
 
     print "making plots exome..."
 
-    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage " + str(args.xlim) + " --scope exome"
+    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " -c " + str(args.xlim) + " --scope exome"
     print Rcommand
     temp = subprocess.Popen(Rcommand,shell = True)
 
@@ -303,7 +303,7 @@ def main():
 
     print "making plots whole genome..."
 
-    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage " + str(args.xlim) + " --scope wg"
+    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " -c " + str(args.xlim) + " --scope wg"
     print Rcommand
     temp = subprocess.Popen(Rcommand,shell = True)
 
