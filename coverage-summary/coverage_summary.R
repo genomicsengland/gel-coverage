@@ -1,4 +1,4 @@
-#!/usr/bin/R
+#!/usr/bin/env Rscript
 #parse the arguments
 require(reshape)
 require(ggplot2)

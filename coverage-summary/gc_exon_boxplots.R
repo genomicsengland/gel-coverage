@@ -1,4 +1,4 @@
-#!/usr/bin/R
+#!/usr/bin/env Rscript
 require(gridExtra)
 require(reshape)
 require(ggplot2)
