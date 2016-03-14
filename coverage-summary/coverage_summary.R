@@ -1,3 +1,4 @@
+#!/usr/bin/R
 #parse the arguments
 require(reshape)
 require(ggplot2)
