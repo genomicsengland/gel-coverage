@@ -15,7 +15,9 @@ option_list = list(
   make_option(c("-w", "--wgenome"), type="character", default=NULL,
               help="whole genome coverage summary file", metavar="character"),
   make_option(c("-e", "--exon"), type="character", default=NULL,
-              help="exon coverage summary file", metavar="character")
+              help="exon coverage summary file", metavar="character"),
+  make_option(c("-c", "--coverage"), type="character", default=NULL,
+              help="xlim for histograms", metavar="character")
 );
 
 opt_parser = OptionParser(option_list=option_list);
@@ -29,9 +31,14 @@ if (is.null(opt$exon)){
   print_help(opt_parser)
   stop("At least one argument must be supplied (input file).n", call.=FALSE)
 }
+if (is.null(opt$coverage)){
+  print_help(opt_parser)
+  stop("At least one argument must be supplied (input file).n", call.=FALSE)
+}
 
 wgfile = opt$wgenome
 exonfile = opt$exon
+covs = opt$coverage
 
 ##############set theme############################
           
@@ -78,7 +85,7 @@ gel_colours=c("#0ead84","#44546b","#addce9","#27b7cc","#90c684","#d3922d")
 
 wgfile="/Volumes/SCRATCH/temp/LP2000278-DNA_B02.wg.coverage.counts.txt"
 exonfile="/Volumes/SCRATCH/temp/LP2000278-DNA_B02.exon.coverage.counts.txt"
-covs=101
+
 wg.g<-read.table(wgfile,header=T,sep="\t",check.names = FALSE)
 exon.g<-read.table(exonfile,header=T,sep="\t")
 xmin<-min(dim(exon.g)[[1]])
