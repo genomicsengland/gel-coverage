@@ -241,6 +241,8 @@ def main():
                         help='bw file')
     parser.add_argument('--output', metavar='output', default=False,
                         help='output file')
+    parser.add_argument('--xlim', metavar='xlim', default=False,
+                        help='xlimit for plotting, GL is better at 101, Tumor at 201')
     parser.add_argument('--debug', action='store_true', default=False,
                         help='If it is present then debugging is turned on')
 
@@ -287,7 +289,7 @@ def main():
 
     print "making plots exome..."
 
-    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage 101 --scope exome"
+    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage " + str(args.xlim) + " --scope exome"
     print Rcommand
     temp = subprocess.Popen(Rcommand,shell = True)
 
@@ -301,7 +303,7 @@ def main():
 
     print "making plots whole genome..."
 
-    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage 101 --scope wg"
+    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " --coverage " + str(args.xlim) + " --scope wg"
     print Rcommand
     temp = subprocess.Popen(Rcommand,shell = True)
 
