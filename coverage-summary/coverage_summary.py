@@ -157,13 +157,15 @@ def generic_coverage(bw,bed):
         chrom = interval.chrom
         start = interval.start
         end = interval.end
-        #print "chr"+str(chrom)+ ":"+ str(start) +"-"+ str(end)
-        if start == end:
-            end+=1
-        cov = bw.values("chr"+str(chrom), start, end)
-        result[chrom]=defaultdict(lambda: 0)
-        for coverage in cov:
-            result[chrom][int(coverage)]+=1
+        if chrom == "2":
+            print "chr"+str(chrom)+ ":"+ str(start) +"-"+ str(end)
+            if start == end:
+                end+=1
+            cov = bw.values("chr"+str(chrom), start, end)
+            print (bw.stats("chr"+str(chrom), start, end, type="mean"))
+            result[chrom]=defaultdict(lambda: 0)
+            for coverage in cov:
+                result[chrom][int(coverage)]+=1
 
     order = sorted(result,cmp=__lt__)
     data = pandas.DataFrame.from_dict(result,orient="columns").fillna(0)
@@ -261,38 +263,38 @@ def main():
 
     well_id = os.path.basename(args.output)
 
-    bed = make_exons_bed()
+    # bed = make_exons_bed()
 
-    print "making exon cov means with gc..."
-
-    output_file = args.output+".exon.coverage.means.with.GC.txt"
-    output = open(output_file,"w")
-    result = exon_gc_coverage(args.bw,bed)
-    output.write("chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
-    output.write("\n".join(result))
-    output.close()
-
-    print "making plots exome gc..."
-
-    Rcommand = "gc_exon_boxplots.R -f " + output_file
-    print Rcommand
-    temp = subprocess.Popen(Rcommand,shell = True)
-
-
-    print "making exon cov summary..."
-
-    output_file = args.output+".exon.coverage.counts.txt"
-    output = open(output_file, 'w')
-    result = coverage_counts_exon(args.bw,bed)
-    result.to_csv(output, sep='\t')
-    output.close()
-
-    print "making plots exome..."
-
-    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " -c " + str(args.xlim) + " --scope exome"
-    print Rcommand
-    temp = subprocess.Popen(Rcommand,shell = True)
-
+    # print "making exon cov means with gc..."
+    #
+    # output_file = args.output+".exon.coverage.means.with.GC.txt"
+    # output = open(output_file,"w")
+    # result = exon_gc_coverage(args.bw,bed)
+    # output.write("chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
+    # output.write("\n".join(result))
+    # output.close()
+    #
+    # print "making plots exome gc..."
+    #
+    # Rcommand = "gc_exon_boxplots.R -f " + output_file
+    # print Rcommand
+    # temp = subprocess.Popen(Rcommand,shell = True)
+    #
+    #
+    # print "making exon cov summary..."
+    #
+    # output_file = args.output+".exon.coverage.counts.txt"
+    # output = open(output_file, 'w')
+    # result = coverage_counts_exon(args.bw,bed)
+    # result.to_csv(output, sep='\t')
+    # output.close()
+    #
+    # print "making plots exome..."
+    #
+    # Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " -c " + str(args.xlim) + " --scope exome"
+    # print Rcommand
+    # temp = subprocess.Popen(Rcommand,shell = True)
+    #
     print "making whole genome cov summary..."
 
     output_file = args.output+".wg.coverage.counts.txt"
