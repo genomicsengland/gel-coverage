@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Maven: gov.nih.nlm.ncbi:ngs-java:1.2.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/gov/nih/nlm/ncbi/ngs-java/1.2.2/ngs-java-1.2.2.jar!/" />
+    </CLASSES>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/gov/nih/nlm/ncbi/ngs-java/1.2.2/ngs-java-1.2.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

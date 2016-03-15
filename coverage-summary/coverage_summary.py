@@ -70,15 +70,17 @@ def __lt__(a, b):
     """
     return cmp(lt_helper(a), lt_helper(b))
 
-def get_chr_lengths(bw):
+def get_chr_lengths(bw,format):
     """
     get chromosome lengths from header of bigWig file
 
     :param bw: pyBigWig file object
+    :param format: specify "dict" to return a dict instead of a bed recognisable format
     :return: list of chromosomes and length in a bed recognisable format
     """
     chromosomes=list()
-    for i in range(1,24):
+    chromosomes_dict=defaultdict()
+    for i in range(1,25):
         chromosome = "chr"+str(i)
         if i == 23:
             chromosome = "chrX"
@@ -86,8 +88,11 @@ def get_chr_lengths(bw):
             chromosome = "chrY"
         length=int(bw.chroms(chromosome))
         chromosomes.append((chromosome,1,length))
-
-    return chromosomes
+        chromosomes_dict[chromosome]=length
+    if format == "dict":
+        return chromosomes_dict
+    else:
+        return chromosomes
 
 def coverage_counts_wg(n_file,bw):
     """
@@ -98,7 +103,7 @@ def coverage_counts_wg(n_file,bw):
     :return: dataframe of exon coverage summary
     """
     bw = pyBigWig.open( bw )
-    other = get_chr_lengths(bw)
+    other = get_chr_lengths(bw,"bed")
     ns = intervals(n_file,other)
     return generic_coverage(bw,ns)
 
@@ -126,20 +131,26 @@ def exon_gc_coverage(bw,bed):
     """
     bw = pyBigWig.open( bw )
     result = list()
+
+    total_exons = bed.count()
+    exon_count=0
     for interval in bed:
         chrom = interval.chrom
         start = interval.start
         end = interval.end
-        #print "chr"+str(chrom)+ ":"+ str(start) +"-"+ str(end)
         if start == end:
             end+=1
-        cov = bw.values("chr"+str(chrom), start, end)
-        cov_mean = np.mean(cov)
-        id = interval.name
-        gene,txid,exon_raw = id.split("|")
-
-        exon = exon_raw.replace("exon","")
-        result.append(str(chrom)+"\t"+str(start)+"\t"+str(end)+"\t"+interval.name+"\t"+exon+"\t"+str(interval.score)+"\t"+interval.strand+"\t"+str(cov_mean))
+        #print "chr"+str(chrom)+ ":"+ str(start) +"-"+ str(end)
+        if "chr"+str(chrom) in get_chr_lengths(bw,"dict"):
+            cov = bw.values("chr"+str(chrom), start, end)
+            cov_mean = np.mean(cov)
+            id = interval.name
+            gene,txid,exon_raw = id.split("|")
+            exon = exon_raw.replace("exon","")
+            result.append(str(chrom)+"\t"+str(start)+"\t"+str(end)+"\t"+interval.name+"\t"+exon+"\t"+str(interval.score)+"\t"+interval.strand+"\t"+str(cov_mean))
+        exon_count+=1
+        if exon_count % 100000 == 0:
+            print "Done " + str(exon_count) + " exons out of " + str(total_exons)
     return result
 
 def generic_coverage(bw,bed):
@@ -152,18 +163,18 @@ def generic_coverage(bw,bed):
     """
     result = defaultdict()
 
+    for i in get_chr_lengths(bw,"dict"):
+        result[i.replace("chr","")]=defaultdict(lambda: 0)
+
     for interval in bed:
-        #print interval
         chrom = interval.chrom
         start = interval.start
         end = interval.end
-        if chrom == "2":
-            print "chr"+str(chrom)+ ":"+ str(start) +"-"+ str(end)
-            if start == end:
-                end+=1
+        if start == end:
+            end+=1
+        #print str(chrom)+":"+str(start)+"-"+str(end)
+        if "chr"+str(chrom) in get_chr_lengths(bw,"dict"):
             cov = bw.values("chr"+str(chrom), start, end)
-            print (bw.stats("chr"+str(chrom), start, end, type="mean"))
-            result[chrom]=defaultdict(lambda: 0)
             for coverage in cov:
                 result[chrom][int(coverage)]+=1
 
@@ -199,15 +210,14 @@ def make_exons_bed():
     """
     url="http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/latest/hsapiens/feature/gene/all?limit=1"
     numTotalResults=json.load(urllib2.urlopen(url))["response"][0]["numTotalResults"]
-    #getting exons from cellbase
+
     all_exons=list()
-    # TODO YOU DONT GET ALL THE RESULTS - BECAUSE OF THE STEP
 
     # TODO while doing this calculate coding exons too
 
-    print "making exon bed file... <1min"
-    for i in tqdm.tqdm(xrange(1,numTotalResults,5000)):
-        url="http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/latest/hsapiens/feature/gene/all?include=name,chromosome,transcripts.exons.start,transcripts.exons.exonNumber,transcripts.id,transcripts.strand,transcripts.exons.end,transcripts.exons.sequence,exonNumber&skip="+str(i)
+    print "making exon bed file... <3min"
+    for i in tqdm.tqdm(xrange(0,numTotalResults,5000)):
+        url="http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/latest/hsapiens/feature/gene/all?include=name,chromosome,transcripts.exons.start,transcripts.exons.exonNumber,transcripts.id,transcripts.strand,transcripts.exons.end,transcripts.exons.sequence,exonNumber&limit=5000&skip="+str(i)
         exons=json.load(urllib2.urlopen(url))["response"][0]["result"]
         for result in exons:
             gene = result["name"]
@@ -259,60 +269,45 @@ def main():
 
 
     logging.basicConfig(level=level, format='%(asctime)s %(levelname)s %(name)s %(message)s')
-
+    # print args.bw
+    # bw = pyBigWig.open( args.bw )
+    # print get_chr_lengths(bw,"dict")
 
     well_id = os.path.basename(args.output)
 
-    # bed = make_exons_bed()
+    bed = make_exons_bed()
 
-    # print "making exon cov means with gc..."
-    #
-    # output_file = args.output+".exon.coverage.means.with.GC.txt"
-    # output = open(output_file,"w")
-    # result = exon_gc_coverage(args.bw,bed)
-    # output.write("chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
-    # output.write("\n".join(result))
-    # output.close()
-    #
-    # print "making plots exome gc..."
-    #
-    # Rcommand = "gc_exon_boxplots.R -f " + output_file
-    # print Rcommand
-    # temp = subprocess.Popen(Rcommand,shell = True)
-    #
-    #
-    # print "making exon cov summary..."
-    #
-    # output_file = args.output+".exon.coverage.counts.txt"
-    # output = open(output_file, 'w')
-    # result = coverage_counts_exon(args.bw,bed)
-    # result.to_csv(output, sep='\t')
-    # output.close()
-    #
-    # print "making plots exome..."
-    #
-    # Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " -c " + str(args.xlim) + " --scope exome"
-    # print Rcommand
-    # temp = subprocess.Popen(Rcommand,shell = True)
-    #
-    print "making whole genome cov summary..."
+    print "making exon cov means with gc..."
 
-    output_file = args.output+".wg.coverage.counts.txt"
-    output = open(output_file, 'w')
+    gc_output_file = args.output+".exon.coverage.means.with.GC.txt"
+    output = open(gc_output_file,"w")
+    result = exon_gc_coverage(args.bw,bed)
+    output.write("chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
+    output.write("\n".join(result))
+    output.close()
+
+    print "making exon cov summary..."
+
+    exon_output_file = args.output+".exon.coverage.counts.txt"
+    output = open(exon_output_file, 'w')
+    result = coverage_counts_exon(args.bw,bed)
+    result.to_csv(output, sep='\t')
+    output.close()
+
+    print "making wgs cov summary..."
+
+    wg_output_file = args.output+".wg.coverage.counts.txt"
+    output = open(wg_output_file, 'w')
     result = coverage_counts_wg(args.genome_n,args.bw)
     result.to_csv(output, sep='\t')
     output.close()
 
-    print "making plots whole genome..."
+    print "all files made now plotting..."
 
-    Rcommand = "coverage_summary.R -l " + well_id + " -f " + output_file + " -c " + str(args.xlim) + " --scope wg"
+    Rcommand = "make_plots_summaries.R -w " +  wg_output_file + " -e " + exon_output_file + " -g " + gc_output_file + " -l " + args.output +" -c " + args.xlim
     print Rcommand
     temp = subprocess.Popen(Rcommand,shell = True)
 
-
-    print "making plots exons..."
-
-    # TODO cumulative coverage plots
 
 if __name__ == '__main__':
     main()
