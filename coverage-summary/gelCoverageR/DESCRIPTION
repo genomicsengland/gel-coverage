@@ -13,12 +13,9 @@ Imports:
     plyr,
     RColorBrewer,
     extrafont,
-    gelCoverageR,
     optparse,
-    Homo.sapiens,
     VariantAnnotation,
     GenomicRanges,
-    ggbio,
     rtracklayer
 License: What license is it under?
 LazyData: true
