@@ -136,6 +136,8 @@ coverage_summary <- function(files,labels,covs,scope){
 
     ##################more than one sample? then make a combined plot########################
 
+    outfile_prefix=str_replace(files, ",", "_")
+
     if (length(files) > 1){
         ggplot(final,aes(Coverage,as.numeric(value)*100,fill=sample))+
         geom_bar(stat="identity",position="dodge")+
@@ -145,7 +147,7 @@ coverage_summary <- function(files,labels,covs,scope){
         scale_x_continuous("Coverage")+
         theme_gel_proper()+
         coord_cartesian(xlim = c(0,101), ylim = c(0,5))
-        filename=paste("all",scope,".coverage.distribution.chr-by-chr.png",sep=".")
+        filename=paste(outfile_prefix,scope,".coverage.distribution.chr-by-chr.png",sep=".")
         filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
         ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
     }
