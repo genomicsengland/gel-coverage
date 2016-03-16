@@ -4,16 +4,16 @@
 \alias{coverage_summary}
 \title{A function to summarise coverage}
 \usage{
-coverage_summary(files, labels, covs, scope)
+coverage_summary(file, label, covs, scope)
 }
 \arguments{
-\item{files}{a single file or comma separated list of files}
-
-\item{labels}{a single label or comma separated list of labels (same order as files)}
-
 \item{covs}{ylim}
 
 \item{scope}{wg or exome}
+
+\item{files}{a single file}
+
+\item{labels}{a single label}
 }
 \description{
 A function to summarise coverage

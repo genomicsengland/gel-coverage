@@ -79,78 +79,98 @@ gel_colours=c("#0ead84","#44546b","#addce9","#27b7cc","#90c684","#d3922d")
 #' A function to summarise coverage
 #'
 #'
-#' @param files a single file or comma separated list of files
-#' @param labels a single label or comma separated list of labels (same order as files)
+#' @param files a single file
+#' @param labels a single label
 #' @param covs ylim
 #' @param scope wg or exome
 #' @keywords summary
 #' @export
 #' @examples
 #' coverage_summary()
-coverage_summary <- function(files,labels,covs,scope){
+coverage_summary <- function(file,label,covs,scope){
 
     #################make plots for all files###########################
 
-    files=strsplit(files,",")[[1]]
-    labels=strsplit(labels,",")[[1]]
+    wg<-read.table(as.character(file),header=T,sep="\t",check.names = FALSE)
 
-    for(i in 1:length(files)) {
+    #write out coverage summary
+    summary=mymsn(wg[2:covs,c("Coverage","Total")],0.05,label)
+    filename=paste(file,"coverage.summary.table","txt",sep=".")
+    filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
+    write.table(summary,filename,quote=F,row.names=F,col.names=T,sep="\t")
 
-        file=files[i]
-        wg<-read.table(as.character(file),header=T,sep="\t",check.names = FALSE)
-
-        #write out coverage summary
-        summary=mymsn(wg[2:covs,c("Coverage","Total")],0.05,labels[i])
-        filename=paste(file,"coverage.summary.table","txt",sep=".")
-        filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
-        write.table(summary,filename,quote=F,row.names=F,col.names=T,sep="\t")
-
-        prop=as.data.frame(prop.table(as.matrix(wg), 2) )
-        prop$Coverage=as.numeric(row.names(prop))-1
-        m.wg = melt(prop,id=c("Coverage","Total"))
-        m.wg$sample=labels[i]
-        ymax=max(subset(m.wg,Coverage!=0)$value*100)
-        print(head(m.wg))
-        print(covs)
-        print("plotting...")
-        ggplot(m.wg,aes(Coverage,as.numeric(value)*100))+
+    prop=as.data.frame(prop.table(as.matrix(wg), 2) )
+    prop$Coverage=as.numeric(row.names(prop))-1
+    m.wg = melt(prop,id=c("Coverage","Total"))
+    m.wg$sample=label
+    ymax=max(subset(m.wg,Coverage!=0)$value*100)
+    print(head(m.wg))
+    print(covs)
+    print("plotting...")
+    ggplot(m.wg,aes(Coverage,as.numeric(value)*100))+
         geom_bar(stat="identity",color=gel_colours[1])+
-        ggtitle(labels[i])+
+        ggtitle(label)+
         facet_wrap(~variable,scales="free")+
+        scale_y_continuous("Percent Total",limits=c(0,ymax))+
         scale_fill_manual("Sample",values=gel_colours)+
-        scale_y_continuous("Percent Total")+
-        scale_x_continuous("Coverage")+
-        theme_gel_proper()+
-        coord_cartesian(xlim = c(0, covs), ylim = c(0,ymax+0.5))
-        filename=paste(file,"coverage.distribution.chr-by-chr.png",sep=".")
-        filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
-        print(filename)
-        ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
-        if (i > 1){
-            final= rbind(old,m.wg)
-            old=final
-        }else{
-            old=m.wg
-        }
+        scale_x_continuous("Coverage",limits=c(0,covs))+
+        theme_gel_proper()
+    filename=paste(file,"coverage.distribution.chr-by-chr.png",sep=".")
+    filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
+    print(filename)
+    ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
+
+}
+
+
+#' Plots multiple samples on same graphs
+#'
+#'
+#' @param files a single files
+#' @param labels a single label
+#' @param covs ylim
+#' @param scope wg or exome
+#' @keywords summary
+#' @export
+#' @examples
+#' multiple_sample_plots()
+multiple_sample_plots <- function(files,labels,covs,scope){
+  outfile_prefix=str_replace(labels, ",", "_")
+  files=strsplit(files,",")[[1]]
+  labels=strsplit(labels,",")[[1]]
+
+  for(i in 1:length(files)) {
+
+    file=files[i]
+    wg<-read.table(as.character(file),header=T,sep="\t",check.names = FALSE)
+    prop=as.data.frame(prop.table(as.matrix(wg), 2) )
+    prop$Coverage=as.numeric(row.names(prop))-1
+    m.wg = melt(prop,id=c("Coverage","Total"))
+    m.wg$sample=labels[i]
+    ymax=max(subset(m.wg,Coverage!=0)$value*100)
+
+    if (i > 1){
+      final= rbind(old,m.wg)
+      old=final
+    }else{
+      old=m.wg
     }
 
-    ##################more than one sample? then make a combined plot########################
+  }
 
-    outfile_prefix=str_replace(files, ",", "_")
 
-    if (length(files) > 1){
-        ggplot(final,aes(Coverage,as.numeric(value)*100,fill=sample))+
-        geom_bar(stat="identity",position="dodge")+
-        facet_wrap(~variable,scales="free")+
-        scale_y_continuous("Percent Total")+
-        scale_fill_manual("Sample",values=gel_colours)+
-        scale_x_continuous("Coverage")+
-        theme_gel_proper()+
-        coord_cartesian(xlim = c(0,101), ylim = c(0,5))
-        filename=paste(outfile_prefix,scope,".coverage.distribution.chr-by-chr.png",sep=".")
-        filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
-        ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
-    }
+  ymax=max(subset(m.wg,Coverage!=0)$value*100)
+  ggplot(final,aes(Coverage,as.numeric(value)*100,fill=sample))+
+    geom_bar(stat="identity",position="dodge")+
+    facet_wrap(~variable,scales="free")+
+    scale_y_continuous("Percent Total",limits=c(0,ymax))+
+    scale_fill_manual("Sample",values=gel_colours)+
+    scale_x_continuous("Coverage",limits=c(0,covs))+
+    theme_gel_proper()
+  filename=paste(outfile_prefix,scope,"coverage.distribution.chr-by-chr.png",sep=".")
+  filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
+  print(filename)
+  ggsave(filename, width = 30, height = 20, units = "cm",dpi=600)
 
 }
 
