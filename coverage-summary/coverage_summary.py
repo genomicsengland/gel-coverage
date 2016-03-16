@@ -270,7 +270,7 @@ def main():
 
     logging.basicConfig(level=level, format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
-    # bed = make_exons_bed()
+    bed = make_exons_bed()
 
     print "making exon cov means with gc..."
 
