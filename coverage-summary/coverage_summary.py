@@ -270,38 +270,38 @@ def main():
 
     logging.basicConfig(level=level, format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
-    bed = make_exons_bed()
+    # bed = make_exons_bed()
 
     print "making exon cov means with gc..."
 
     gc_output_file = args.output+".exon.coverage.means.with.GC.txt"
-    output = open(gc_output_file,"w")
-    result = exon_gc_coverage(args.bw,bed)
-    output.write("chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
-    output.write("\n".join(result))
-    output.close()
+    # output = open(gc_output_file,"w")
+    # result = exon_gc_coverage(args.bw,bed)
+    # output.write("chrm\tstart\tend\tid\texon\tgc\tstrand\tcov\n")
+    # output.write("\n".join(result))
+    # output.close()
 
     print "making exon cov summary..."
 
     exon_output_file = args.output+".exon.coverage.counts.txt"
-    output = open(exon_output_file, 'w')
-    result = coverage_counts_exon(args.bw,bed)
-    result.to_csv(output, sep='\t')
-    output.close()
+    # output = open(exon_output_file, 'w')
+    # result = coverage_counts_exon(args.bw,bed)
+    # result.to_csv(output, sep='\t')
+    # output.close()
 
     print "making wgs cov summary..."
 
     wg_output_file = args.output+".wg.coverage.counts.txt"
-    output = open(wg_output_file, 'w')
-    result = coverage_counts_wg(args.genome_n,args.bw)
-    result.to_csv(output, sep='\t')
-    output.close()
+    # output = open(wg_output_file, 'w')
+    # result = coverage_counts_wg(args.genome_n,args.bw)
+    # result.to_csv(output, sep='\t')
+    # output.close()
 
     print "all files made now plotting..."
 
     Rcommand = "make_plots_summaries.R -w " +  wg_output_file + " -e " + exon_output_file + " -g " + gc_output_file + " -l " + args.output +" -c " + args.xlim
     print Rcommand
-    temp = subprocess.Popen(Rcommand,shell = True)
+    temp = os.system(Rcommand)
 
 
 if __name__ == '__main__':
