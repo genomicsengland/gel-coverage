@@ -269,11 +269,6 @@ def main():
 
 
     logging.basicConfig(level=level, format='%(asctime)s %(levelname)s %(name)s %(message)s')
-    # print args.bw
-    # bw = pyBigWig.open( args.bw )
-    # print get_chr_lengths(bw,"dict")
-
-    well_id = os.path.basename(args.output)
 
     bed = make_exons_bed()
 
