@@ -135,7 +135,8 @@ coverage_summary <- function(file,label,covs,scope){
 #' @examples
 #' multiple_sample_plots()
 multiple_sample_plots <- function(files,labels,covs,scope){
-  outfile_prefix=str_replace(labels, ",", "_")
+  outfile_prefix=gsub(",", "_",labels)
+  print(outfile_prefix)
   files=strsplit(files,",")[[1]]
   labels=strsplit(labels,",")[[1]]
 
