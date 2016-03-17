@@ -272,6 +272,8 @@ def main():
 
     bed = make_exons_bed()
 
+    well_id = os.path.basename(args.output)
+
     print "making exon cov means with gc..."
 
     gc_output_file = args.output+".exon.coverage.means.with.GC.txt"
@@ -299,7 +301,7 @@ def main():
 
     print "all files made now plotting..."
 
-    Rcommand = "make_plots_summaries.R -w " +  wg_output_file + " -e " + exon_output_file + " -g " + gc_output_file + " -l " + args.output +" -c " + args.xlim
+    Rcommand = "make_plots_summaries.R -w " +  wg_output_file + " -e " + exon_output_file + " -g " + gc_output_file + " -l " + well_id +" -c " + args.xlim
     print Rcommand
     temp = os.system(Rcommand)
 
