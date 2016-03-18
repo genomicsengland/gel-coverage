@@ -1,13 +1,12 @@
 from distutils.core import setup
 
 setup(
-    name='gel-coverage',
+    name='gelCoverage',
     version='',
-    packages=[''],
-    package_dir={'': 'coverage-summary'},
+    packages=['gelCoverage'],
     url='',
     license='',
     author='mparker',
     author_email='matthew.parker@genomicsengland.co.uk',
-    description=''
+    description='', requires=['pandas', 'pyBigWig', 'tqdm', 'pybedtools']
 )

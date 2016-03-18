@@ -1,33 +1,40 @@
-myprod<-function(x){
-    as.numeric(x[1])*as.numeric(x[2])
-}
-mysq<-function(x){
-    ((as.numeric(x[1])-as.numeric(x[3]))^2)*as.numeric(x[2])
-}
-mymsn <- function(x,p,name) {
-    cof<-qnorm(1-p/2)
-    subtotal <- apply(x,1,myprod)
-    total <- sum(subtotal) #sum(k(i))
-    n <- sum(as.numeric(x[,2]))
-    x$m<-total/n
-    m<-x$m[1]
-    this.sq<-sqrt(sum(apply(x,1,mysq))/n)
-    out<-data.frame(wellId=name,
-    n=round(n,digits=0),
-    mean=round(m,digits=1),
-    sd=round(this.sq,digits=1),
-    lower=round(m-cof*this.sq,digits=1),
-    upper=round(m+cof*this.sq,digits=1),
-    pct25=round(qnorm(0.25,mean=m,sd=this.sq),digits=1),
-    median=round(qnorm(0.5,mean=m,sd=this.sq),digits=1),
-    pct75=round(qnorm(0.75,mean=m,sd=this.sq),digits=1))
-    out
-}
 my.rcumsum <- function(x){
     y=100-cumsum(x)
     y1=c(100,y)
     y1[1:length(y1)-1]
 }
+
+#' A function to produce the summary table
+#'
+#'
+#' @param base_size base font size, default 12
+#' @param base_family base font family, default Calibri
+#' @keywords summary
+#' @export
+#' @examples
+#' summary_table()
+summary_table <- function(freq_table,well_id,column){
+
+    mean=wtd.mean(freq_table[,"Coverage"], freq_table[,column])
+    pct25=wtd.quantile(freq_table[,"Coverage"], freq_table[,column], probs = 0.25)
+    median=wtd.quantile(freq_table[,"Coverage"], freq_table[,column], probs = 0.5)
+    pct75=wtd.quantile(freq_table[,"Coverage"], freq_table[,column], probs = 0.75)
+    var=wtd.var(freq_table[,"Coverage"], freq_table[,column])
+    sd=sqrt(var)
+    n=sum(freq_table[,column])
+
+    out=data.frame(scope=column,
+                    wellId=well_id,
+                    n=round(n,digits=0),
+                    mean=round(mean,digits=1),
+                    sd=round(sd,digits=1),
+                    pct25=round(pct25,digits=1),
+                    median=round(median,digits=1),
+                    pct75=round(pct75,digits=1))
+    out
+
+}
+
 chrs<-c(1:22,"X","Y")
 
 #' A function to gel a plot
@@ -76,6 +83,7 @@ theme_gel_proper <- function(base_size = 12, base_family="Calibri") {
 
 gel_colours=c("#0ead84","#44546b","#addce9","#27b7cc","#90c684","#d3922d")
 
+
 #' A function to summarise coverage
 #'
 #'
@@ -93,15 +101,21 @@ coverage_summary <- function(file,label,covs,scope){
 
     wg<-read.table(as.character(file),header=T,sep="\t",check.names = FALSE)
 
-    #write out coverage summary
-    summary=mymsn(wg[2:covs,c("Coverage","Total")],0.05,label)
-    filename=paste(file,"coverage.summary.table","txt",sep=".")
-    filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
-    write.table(summary,filename,quote=F,row.names=F,col.names=T,sep="\t")
+    allchr=summary_table(wg,label,"allchrs")
+    autosomes=summary_table(wg,label,"autosomes")
+    x=summary_table(wg,label,"X")
+    y=summary_table(wg,label,"Y")
+
+    summary_new=rbind(allchr,autosomes,x,y)
+
+    filename_new=paste(file,"coverage.summary.table.txt",sep=".")
+    filename_new=sub(".coverage.counts.txt", "", filename_new, ignore.case =FALSE, fixed=FALSE)
+    write.table(summary_new,filename_new,quote=F,row.names=F,col.names=T,sep="\t")
 
     prop=as.data.frame(prop.table(as.matrix(wg), 2) )
     prop$Coverage=as.numeric(row.names(prop))-1
-    m.wg = melt(prop,id=c("Coverage","Total"))
+    print(head(prop))
+    m.wg = melt(prop,id=c("Coverage","allchrs","autosomes"))
     m.wg$sample=label
     ymax=max(subset(m.wg,Coverage!=0)$value*100)
     print(head(m.wg))
@@ -146,7 +160,7 @@ multiple_sample_plots <- function(files,labels,covs,scope){
     wg<-read.table(as.character(file),header=T,sep="\t",check.names = FALSE)
     prop=as.data.frame(prop.table(as.matrix(wg), 2) )
     prop$Coverage=as.numeric(row.names(prop))-1
-    m.wg = melt(prop,id=c("Coverage","Total"))
+    m.wg = melt(prop,id=c("Coverage","allchrs"))
     m.wg$sample=labels[i]
     ymax=max(subset(m.wg,Coverage!=0)$value*100)
 
@@ -255,34 +269,36 @@ gc_exon_boxplots <- function(file){
 #' cumulative_coverage()
 cumulative_coverage <- function(label,wgfile,exonfile,covs){
 
-    ####################do stuff##############################
+  ####################do stuff##############################
 
-    wg.g<-read.table(wgfile,header=T,sep="\t",check.names = FALSE)
-    exon.g<-read.table(exonfile,header=T,sep="\t")
-    xmin<-min(dim(exon.g)[[1]])
-    exon.g.total <- cbind(exon.g$Total[1:xmin])
-    exon.g.prop <- as.data.frame(prop.table(exon.g.total/100,2))
-    colnames(exon.g.prop)<-c("ex.g")
-    rownames(exon.g.prop)<-exon.g$Coverage[1:xmin]
-    exon.g.prop$germline<-cumsum(exon.g.prop[,1])
+  wg.g<-read.table(wgfile,header=T,sep="\t",check.names = FALSE)
+  exon.g<-read.table(exonfile,header=T,sep="\t",check.names = FALSE)
+  xmin<-min(dim(exon.g)[[1]])
+  exon.g.total <- cbind(exon.g$allchrs[1:xmin])
 
-    ### combine genomic and exonic coverage ####
-    wg=wg.g$Total[1:covs]
-    exon=exon.g$Total[1:covs]
-    exon[is.na(exon)] <- 0
-    wg[is.na(wg)] <- 0
-    we.gd.total<-cbind(wg,exon)
-    we.gd.prop<-as.data.frame(100*prop.table(we.gd.total/100,2))
-    colnames(we.gd.prop)<-c("wg.g","ex.g")
-    we.gd.prop$wgg.cum<-my.rcumsum(we.gd.prop$wg.g)
-    we.gd.prop$exg.cum<-my.rcumsum(we.gd.prop$ex.g)
-    we.gd.prop$cov<- seq(0,(covs-1),1)
+  exon.g.prop <- as.data.frame(prop.table(exon.g.total/100,2))
+  print("hello")
+  colnames(exon.g.prop)<-c("ex.g")
+  rownames(exon.g.prop)<-exon.g$Coverage[1:xmin]
+  exon.g.prop$germline<-cumsum(exon.g.prop[,1])
 
-    names(we.gd.prop)=c("Whole Genome","Exome","Whole Genome Cum.","Exon Cum.","cov")
-    m.we.gd.prop = melt(we.gd.prop[,c(3,4,5)],id="cov")
-    print(head(m.we.gd.prop))
+  ### combine genomic and exonic coverage ####
+  wg=wg.g$allchrs[1:covs]
+  exon=exon.g$allchrs[1:covs]
+  exon[is.na(exon)] <- 0
+  wg[is.na(wg)] <- 0
+  we.gd.total<-cbind(wg,exon)
+  we.gd.prop<-as.data.frame(100*prop.table(we.gd.total/100,2))
+  colnames(we.gd.prop)<-c("wg.g","ex.g")
+  we.gd.prop$wgg.cum<-my.rcumsum(we.gd.prop$wg.g)
+  we.gd.prop$exg.cum<-my.rcumsum(we.gd.prop$ex.g)
+  we.gd.prop$cov<- seq(0,(covs-1),1)
 
-    ggplot(m.we.gd.prop,aes(cov,value,color=variable))+
+  names(we.gd.prop)=c("Whole Genome","Exome","Whole Genome Cum.","Exon Cum.","cov")
+  m.we.gd.prop = melt(we.gd.prop[,c(3,4,5)],id="cov")
+  print(head(m.we.gd.prop))
+
+  ggplot(m.we.gd.prop,aes(cov,value,color=variable))+
     theme_gel_proper()+
     geom_point()+
     ggtitle("Cumulative Coverage")+
@@ -291,15 +307,15 @@ cumulative_coverage <- function(label,wgfile,exonfile,covs){
     scale_x_continuous("Coverage")+
     coord_cartesian(xlim = c(0,covs), ylim = c(0,100))
 
-    filename=paste(wgfile,"cumulative coverage.png",sep=".")
-    #filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
-    ggsave(filename, width = 20, height = 10, units = "cm",dpi=150)
+  filename=paste(wgfile,"cumulative coverage.png",sep=".")
+  #filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
+  ggsave(filename, width = 20, height = 10, units = "cm",dpi=150)
 
-    names(we.gd.prop)=c("Whole Genome","Exome","Whole Genome Cum.","Exon Cum.","cov")
-    m.we.gd.prop = melt(we.gd.prop[,c(1,2,5)],id="cov")
-    print(head(m.we.gd.prop))
-    ymax=max(subset(m.we.gd.prop,cov!=0)$value)
-    ggplot(m.we.gd.prop,aes(cov,value,fill=variable))+
+  names(we.gd.prop)=c("Whole Genome","Exome","Whole Genome Cum.","Exon Cum.","cov")
+  m.we.gd.prop = melt(we.gd.prop[,c(1,2,5)],id="cov")
+  print(head(m.we.gd.prop))
+  ymax=max(subset(m.we.gd.prop,cov!=0)$value)
+  ggplot(m.we.gd.prop,aes(cov,value,fill=variable))+
     geom_bar(stat="identity",position="dodge")+
     ggtitle("All Chromosomes Coverage Distribution")+
     scale_y_continuous("Percent Total")+
@@ -308,12 +324,13 @@ cumulative_coverage <- function(label,wgfile,exonfile,covs){
     theme_gel_proper()+
     coord_cartesian(xlim = c(0,covs), ylim = c(0,ymax))
 
-    filename=paste(wgfile,"all.coverage.distribution.all.chrs.png",sep=".")
-    #filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
-    ggsave(filename, width = 20, height = 10, units = "cm",dpi=150)
+  filename=paste(wgfile,"all.coverage.distribution.all.chrs.png",sep=".")
+  #filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
+  ggsave(filename, width = 20, height = 10, units = "cm",dpi=150)
 
 
 }
+
 
 #' A function to plot a gene with coverage and variants
 #'

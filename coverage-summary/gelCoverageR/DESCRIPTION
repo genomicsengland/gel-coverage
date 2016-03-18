@@ -13,6 +13,7 @@ Imports:
     plyr,
     RColorBrewer,
     extrafont,
+    Hmisc,
     optparse,
     stringr,
     VariantAnnotation,
