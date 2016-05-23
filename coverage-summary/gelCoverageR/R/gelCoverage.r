@@ -307,7 +307,7 @@ cumulative_coverage <- function(label,wgfile,exonfile,covs){
     scale_x_continuous("Coverage")+
     coord_cartesian(xlim = c(0,covs), ylim = c(0,100))
 
-  filename=paste(wgfile,"cumulative coverage.png",sep=".")
+  filename=paste(wgfile,"cumulative_coverage.png",sep=".")
   #filename=sub(".coverage.counts.txt", "", filename, ignore.case =FALSE, fixed=FALSE)
   ggsave(filename, width = 20, height = 10, units = "cm",dpi=150)
 
