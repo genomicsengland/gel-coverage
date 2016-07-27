@@ -21,16 +21,17 @@ module load java/jdk1.8.0_45
 # Check number of arguments
 if [[ $# -ne 1 ]]
   then
-  echo "Exactly one argument is required, the path e.g. 2015-12-16/0000234403/LP2000950-DNA_A10"
+  echo "Exactly one argument is required, the path e.g. /genomes/by_date/2015-12-16/0000234403/LP2000950-DNA_A10"
   exit 1
 fi
 
-id=$1
-# e.g. 2015-12-16/0000234403/LP2000950-DNA_A10
-lp=$(echo $id | awk -F"/" '{print $3}')
-bam=/genomes/by_date/${id}/Assembly/${lp}.bam
-direc=/genomes/analysis/by_date/${id}/coverage/
-bigwig=/genomes/analysis/by_date/${id}/coverage/${lp}.bw
+pth=$1
+lp=$(echo $pth | awk -F"/" '{print $6}')
+bam=${pth}/Assembly/${lp}.bam
+
+pth2=$(echo $pth | sed 's:/genomes/by_date/:/genomes/analysis/by_date/:')
+direc=${pth2}/coverage/
+bigwig=${direc}/${lp}.bw
 
 # Exit if the bigwig file already exists
 if [ -f "${bigwig}" ]
