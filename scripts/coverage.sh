@@ -18,12 +18,31 @@ export PATH=/genomes/software/apps/gel-coverage/scripts:${PATH}
 module load python-tiering/2.7.10
 module load java/jdk1.8.0_45
 
+# Check number of arguments
+if [[ $# -ne 1 ]]
+  then
+  echo "Exactly one argument is required, the path e.g. 2015-12-16/0000234403/LP2000950-DNA_A10"
+  exit 1
+fi
+
 id=$1
 # e.g. 2015-12-16/0000234403/LP2000950-DNA_A10
 lp=$(echo $id | awk -F"/" '{print $3}')
 bam=/genomes/by_date/${id}/Assembly/${lp}.bam
 direc=/genomes/analysis/by_date/${id}/coverage/
 bigwig=/genomes/analysis/by_date/${id}/coverage/${lp}.bw
+
+# Exit if the bigwig file already exists
+if [ -f "${bigwig}" ]
+then
+  exit 0
+fi
+
+# Create the directory structure if necessary
+if [ ! -d "${direc}" ]
+then
+  mkdir -p $direc
+fi
  
 java -jar /genomes/software/apps/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam ${bam} -stdout | /genomes/software/src/ucsc/wigToBigWig stdin ${direc}/${lp}.chr $bigwig 
 
