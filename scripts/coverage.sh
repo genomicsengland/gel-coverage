@@ -43,7 +43,14 @@ if [ ! -d "${direc}" ]
 then
   mkdir -p $direc
 fi
- 
+
+# 1. Make chromosome size file
+python /genomes/software/apps/gel-coverage/bam2wig/get_chr_sizes.py \
+  --bam $bam \
+  --output ${direc}/${lp}.chr
+
+# 2. Make bigwig file
 java -jar /genomes/software/apps/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam ${bam} -stdout | /genomes/software/src/ucsc/wigToBigWig stdin ${direc}/${lp}.chr $bigwig 
 
+# 3. Make coverage summary
 python /genomes/software/apps/gel-coverage/scripts/coverage_summary.py --bw $bigwig --xlim 101 --outdir $direc --outprefix $lp --genome_n /genomes/software/apps/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
