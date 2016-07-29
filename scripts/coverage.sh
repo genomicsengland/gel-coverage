@@ -21,11 +21,12 @@ module load java/jdk1.8.0_45
 # Check number of arguments
 if [[ $# -ne 1 ]]
   then
-  echo "Exactly one argument is required, the path e.g. /genomes/by_date/2015-12-16/0000234403/LP2000950-DNA_A10"
+  echo "Exactly one argument is required, the path to a text file where each line lists the path corresponding to an array job, e.g. one line might be /genomes/by_date/2015-12-16/0000234403/LP2000950-DNA_A10"
   exit 1
 fi
 
-pth=$1
+sge_array_file=$1
+pth=$(awk "NR==$SGE_TASK_ID" ${sge_array_file})
 lp=$(echo $pth | awk -F"/" '{print $6}')
 bam=${pth}/Assembly/${lp}.bam
 
