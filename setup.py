@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='gelCoverage',
-    version='',
+    version='1.0.0',
     packages=['gelCoverage'],
     scripts=['coverage_summary.py'],
     url='',
