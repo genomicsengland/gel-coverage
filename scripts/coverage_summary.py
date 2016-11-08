@@ -16,6 +16,8 @@ def main():
                         help='output file')
     parser.add_argument('--xlim', metavar='xlim', default=False,
                         help='xlimit for plotting, GL is better at 101, Tumor at 201')
+    parser.add_argument('--assembly', metavar='assembly', default='GRch37',
+                        help='GRch37 or GRch38')
     parser.add_argument('--debug', action='store_true', default=False,
                         help='If it is present then debugging is turned on')
 
@@ -32,7 +34,7 @@ def main():
     logging.basicConfig(level=level, format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
     c = Coverage()
-    bed = c.make_exons_bed()
+    bed = c.make_exons_bed(assembly=args.assembly)
 
     well_id = os.path.basename(args.output)
 
