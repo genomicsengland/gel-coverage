@@ -59,7 +59,7 @@ java \
     /genomes/software/src/ucsc/wigToBigWig stdin ${direc}/${lp}.chr $bigwig
 
 # 3. Make coverage summary
-python /genomes/software/apps/gel-coverage/scripts/coverage_summary.py \
+coverage_summary.py
   --bw $bigwig \
   --xlim 101 \
   --outdir $direc \
