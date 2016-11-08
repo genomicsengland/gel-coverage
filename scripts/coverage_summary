@@ -13,8 +13,10 @@ def main():
                         help='a bed file of the non-N regions in genome')
     parser.add_argument('--bw', metavar='bw', default=False,
                         help='bw file')
-    parser.add_argument('--output', metavar='output', default=False,
-                        help='output file')
+    parser.add_argument('--outdir', metavar='outdir', default=False,
+                        help='output directory')
+    parser.add_argument('--outprefix', metavar='outprefix', default=False,
+                        help='output files prefix (e.g. LPxxxxxx-DNA_A01)')
     parser.add_argument('--xlim', metavar='xlim', default=False,
                         help='xlimit for plotting, GL is better at 101, Tumor at 201')
     parser.add_argument('--assembly', metavar='assembly', default='GRch37',
@@ -37,11 +39,9 @@ def main():
     c = Coverage()
     bed = c.make_exons_bed(assembly=args.assembly)
 
-    well_id = os.path.basename(args.output)
-
     print "making exon cov means with gc..."
 
-    gc_output_file = args.output+".exon.coverage.means.with.GC.txt"
+    gc_output_file = args.outdir + "/" + args.outprefix + ".exon.coverage.means.with.GC.txt"
     output = open(gc_output_file,"w")
     result = c.exon_gc_coverage(args.bw,bed)
     result.to_csv(output, sep='\t',index=False)
@@ -49,7 +49,7 @@ def main():
 
     print "making exon cov summary..."
 
-    exon_output_file = args.output+".exon.coverage.counts.txt"
+    exon_output_file = args.outdir + "/" + args.outprefix + ".exon.coverage.counts.txt"
     output = open(exon_output_file, 'w')
     result = c.coverage_counts_exon(args.bw,bed)
     result.to_csv(output, sep='\t')
@@ -57,7 +57,7 @@ def main():
 
     print "making wgs cov summary..."
 
-    wg_output_file = args.output+".wg.coverage.counts.txt"
+    wg_output_file = args.outdir + "/" + args.outprefix + ".wg.coverage.counts.txt"
     output = open(wg_output_file, 'w')
     result = c.coverage_counts_wg(args.genome_n,args.bw)
     result.to_csv(output, sep='\t')
@@ -65,7 +65,7 @@ def main():
 
     print "all files made now plotting..."
 
-    Rcommand = "make_plots_summaries.R -w " +  wg_output_file + " -e " + exon_output_file + " -g " + gc_output_file + " -l " + well_id +" -c " + args.xlim
+    Rcommand = "make_plots_summaries.R -w " +  wg_output_file + " -e " + exon_output_file + " -g " + gc_output_file + " -l " + args.outprefix +" -c " + args.xlim
     print Rcommand
     temp = os.system(Rcommand)
 
