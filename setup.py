@@ -4,7 +4,7 @@ setup(
     name='gelCoverage',
     version='1.0.0',
     packages=['gelCoverage'],
-    scripts=['coverage_summary.py'],
+    scripts=['coverage_summary'],
     url='',
     license='',
     author='mparker',
