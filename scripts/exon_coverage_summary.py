@@ -22,11 +22,6 @@ def main():
     parser.add_argument('--panel-version', metavar = 'panel_version',
                         help='The panel version',
                         default = None)
-    # TODO: verify if wew want this parameter in the config file
-    parser.add_argument('--panel-gene-confidence-thr', metavar = 'gene_confidence_threshold',
-                        help = 'The minimum gene association confidence',
-                        choices = ["HighEvidence", "MediumEvidence", "LowEvidence"],
-                        default = "HighEvidence")
     parser.add_argument('--genes', metavar = 'genes',
                         default = None,
                         help = 'Comma separated list of genes (HGNC gene symbols) to analyse. Will be masked by a panel')
@@ -67,7 +62,8 @@ def main():
         # Initialize PanelApp helper
         panelapp_helper = PanelappHelper(host=config.get('panelapp', 'host'))
         # Get list of genes from PanelApp
-        gene_list = panelapp_helper.get_gene_list(args.panel, args.panel_version, args.gene_confidence_threshold)
+        gene_list = panelapp_helper.get_gene_list(args.panel, args.panel_version,
+                                                  config.get("panelapp", "gene_confidence"))
     elif args.genes is not None:
         gene_list = args.genes.split(",")
     #elif args.transcripts is not None:
