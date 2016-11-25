@@ -15,8 +15,8 @@
                     "description": "The input file used to calculate coverage statistics",
                     "type": "string"
                 },
-                "organism": {
-                    "description": "The organism (used for CellBase)",
+                "species": {
+                    "description": "The species (used for CellBase)",
                     "type": "string"
                 },
                 "assembly": {

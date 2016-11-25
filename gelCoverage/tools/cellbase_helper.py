@@ -48,31 +48,37 @@ class CellbaseHelper():
         gcFraction = float(gcCount) / totalBaseCount
         return (gcFraction)
 
-    def get_all_genes (self):
+    def get_all_genes (self, filter = True):
         """
         Gets all existing genes ENSEMBL ids
         :param assembly: the assembly
         :return: list of ENSEMBL identifiers
         """
-        # TODO: filter by biotype and basic flag
-        cellbase_result = self.cellbase_client.get("feature", "gene", "list", assembly = self.assembly)
+        # TODO: filter by basic flag
+        cellbase_result = self.cellbase_client.get("feature", "gene", "list",
+                                                   assembly = self.assembly,
+                                                   **{"transcripts.biotype" : ",".join(self.filter_biotypes) if filter else ""}
+                                                   #biotype = ",".join(self.filter_biotypes if filter else "")
+        )
         gene_list = [x["id"] for x in cellbase_result [0]["result"]]
+        # TODO: return a list of HGNC gene symbols instead of gene ids
+        # Listing does not support including other fields than name
+        #cellbase_result2 = self.cellbase_client.get_gene_client().search(
+        #    None,
+        #    id=",".join(gene_id_list),
+        #    assembly=self.assembly,
+        #    include=",".join(["name"]))
+        #gene_list = [x["name"] for x in cellbase_result2[0]["result"]]
         return gene_list
 
-    def get_gene_list_from_transcripts (self, transcripts_list):
-        # TODO:
-        #gene_list = []
-        #return gene_list
-        raise NotImplemented
-
-    def make_exons_bed(self, gene_list):
+    def make_exons_bed(self, gene_list, filter = True):
         """
         Gets all exons from cellbase and makes a bed - also calculates gc content, returns a valid bed with gc in the
         score column
         :param gene_list The list of genes to be analysed
         :return: pybedtools object
         """
-        # TODO: filter by biotype and basic flag
+        # TODO: filter by basic flag
         if gene_list is None or len(gene_list) == 0:
             raise SystemError("Input gene list is not correct")
         number_genes = len(gene_list)
@@ -88,14 +94,16 @@ class CellbaseHelper():
             current_list = gene_list[gene_count : limit]
             gene_count += limit
             # Query CellBase for a subset of genes
-            # TODO: filter by biotype and basic flag
+            # TODO: filter by basic flag
             cellbase_exons = self.cellbase_gene_client.search(
                 None,
                 name = ",".join(current_list),
                 assembly = self.assembly,
                 include = ",".join(["name","chromosome","transcripts.exons.start",
                                     "transcripts.exons.exonNumber", "transcripts.id,transcripts.strand",
-                                    "transcripts.exons.end", "transcripts.exons.sequence", "exonNumber"]))
+                                    "transcripts.exons.end", "transcripts.exons.sequence", "exonNumber"]),
+                **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
+            )
             # TODO: check for errors and empty results
             # Parse results into BED fields
             for gene in cellbase_exons[0]["result"]:
@@ -112,3 +120,9 @@ class CellbaseHelper():
         # Build BED file
         bed = pybedtools.BedTool(all_exons)
         return bed
+
+    def get_gene_list_from_transcripts (self, transcripts_list):
+        # TODO:
+        #gene_list = []
+        #return gene_list
+        raise NotImplemented

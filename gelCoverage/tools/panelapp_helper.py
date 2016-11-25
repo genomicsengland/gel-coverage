@@ -19,6 +19,7 @@ class PanelappHelper():
             else gene_confidence_threshold)
         url = urllib2.quote(url) + parameters # we don't want parameters quoted
         panel = json.load(urllib2.urlopen("https://" + url))
+        # TODO: refine error management
         if type(panel) != dict:
             raise SystemError("PanelApp returned an error for the query %s" % url)
         gene_list = [x["GeneSymbol"] for x in panel["result"]["Genes"]]
