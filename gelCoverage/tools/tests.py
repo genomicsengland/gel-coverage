@@ -10,7 +10,7 @@ class CellbaseHelperTests(unittest.TestCase):
         self.version = "latest"
         self.assembly = "GRCh37"
         self.host = "10.5.8.201:8080/cellbase-4.5.0-rc"
-        self.filter_basic_flag = 1
+        self.filter_basic_flag = ["basic"]
         self.filter_biotypes = ["IG_C_gene", "IG_D_gene", "IG_J_gene", "IG_V_gene", "IG_V_gene", "protein_coding",
                            "nonsense_mediated_decay", "non_stop_decay", "TR_C_gene",
                            "TR_D_gene", "TR_J_gene", "TR_V_gene"]
@@ -45,9 +45,12 @@ class CellbaseHelperTests(unittest.TestCase):
         Tests make_exons_bed() for a list of 3 genes
         :return:
         """
-        gene_list = ["CFTR", "BRCA1", "BRCA2"]
+        gene_list = ["CFTR", "BRCA1", "BRCA2",
+                     "IGHE" # gene with 3 transcripts flagged as basic and 1 not flagged as basic
+                     ]
         bed = self.cellbase_helper.make_exons_bed(gene_list)
         self.assertIsNotNone(bed)
+        ighe_transcripts = []
         for interval in bed:
             chr = interval.chrom
             self.assertEqual(type(chr), unicode)
@@ -88,17 +91,23 @@ class CellbaseHelperTests(unittest.TestCase):
                                    (txid, exon_idx, str(start), str(gene_start)))
                 self.assertLessEqual(end, gene_end, "Transcript %s exon %s out of bounds: %s > %s" %
                                  (txid, exon_idx, str(end), str(gene_end)))
+            elif gene == "IGHE":
+                ighe_transcripts.append(txid)
             else:
                 self.assertTrue(False, "Unexpected information in the BED file for gene %s" % gene)
+        self.assertEqual(len(set(ighe_transcripts)), 2) # checks that non basic flagged transcript has been filtered out
 
     def test2_1(self):
         """
         Tests make_exons_bed() for a list of 3 genes not filtering
         :return:
         """
-        gene_list = ["CFTR", "BRCA1", "BRCA2"]
+        gene_list = ["CFTR", "BRCA1", "BRCA2",
+                     "IGHE"  # gene with 3 transcripts flagged as basic and 1 not flagged as basic
+                     ]
         bed = self.cellbase_helper.make_exons_bed(gene_list, filter = False)
         self.assertIsNotNone(bed)
+        ighe_transcripts = []
         for interval in bed:
             chr = interval.chrom
             self.assertEqual(type(chr), unicode)
@@ -139,8 +148,11 @@ class CellbaseHelperTests(unittest.TestCase):
                                    (txid, exon_idx, str(start), str(gene_start)))
                 self.assertLessEqual(end, gene_end, "Transcript %s exon %s out of bounds: %s > %s" %
                                  (txid, exon_idx, str(end), str(gene_end)))
+            elif gene == "IGHE":
+                ighe_transcripts.append(txid)
             else:
                 self.assertTrue(False, "Unexpected information in the BED file for gene %s" % gene)
+        self.assertEqual(len(set(ighe_transcripts)), 3)  # checks that non basic flagged transcript has not been filtered out
 
     def test3(self):
         """
