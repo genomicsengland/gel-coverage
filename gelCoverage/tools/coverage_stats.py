@@ -52,10 +52,10 @@ def compute_exon_level_statistics(coverages, gc_content):
     stats["bases_gte_15x"] = np.sum(1 for x in coverages if x >= 15)
     stats["bases_gte_30x"] = np.sum(1 for x in coverages if x >= 30)
     stats["bases_gte_50x"] = np.sum(1 for x in coverages if x >= 50)
-    stats["percent_lt_15x"] = stats["bases_lt_15x"] / stats["total_bases"]
-    stats["percent_gte_15x"] = stats["bases_gte_15x"] / stats["total_bases"]
-    stats["percent_gte_30x"] = stats["bases_gte_30x"] / stats["total_bases"]
-    stats["percent_gte_50x"] = stats["bases_gte_50x"] / stats["total_bases"]
+    stats["percent_lt_15x"] = float(stats["bases_lt_15x"] / stats["total_bases"])
+    stats["percent_gte_15x"] = float(stats["bases_gte_15x"] / stats["total_bases"])
+    stats["percent_gte_30x"] = float(stats["bases_gte_30x"] / stats["total_bases"])
+    stats["percent_gte_50x"] = float(stats["bases_gte_50x"] / stats["total_bases"])
     stats["gc_content"] = gc_content
 
     return stats
@@ -82,10 +82,10 @@ def compute_transcript_level_statistics(exons):
     stats["bases_gte_15x"] = np.sum([x["bases_gte_15x"] for _,x in exons.iteritems()])
     stats["bases_gte_30x"] = np.sum([x["bases_gte_30x"] for _,x in exons.iteritems()])
     stats["bases_gte_50x"] = np.sum([x["bases_gte_50x"] for _,x in exons.iteritems()])
-    stats["percent_lt_15x"] = stats["bases_lt_15x"] / stats["total_bases"]
-    stats["percent_gte_15x"] = stats["bases_gte_15x"] / stats["total_bases"]
-    stats["percent_gte_30x"] = stats["bases_gte_30x"] / stats["total_bases"]
-    stats["percent_gte_50x"] = stats["bases_gte_50x"] / stats["total_bases"]
+    stats["percent_lt_15x"] = float(stats["bases_lt_15x"] / stats["total_bases"])
+    stats["percent_gte_15x"] = float(stats["bases_gte_15x"] / stats["total_bases"])
+    stats["percent_gte_30x"] = float(stats["bases_gte_30x"] / stats["total_bases"])
+    stats["percent_gte_50x"] = float(stats["bases_gte_50x"] / stats["total_bases"])
     stats["gc_content"] = np.sum(
         [x["gc_content"] * x["total_bases"] for _, x in exons.iteritems()]) / stats["total_bases"]
 
