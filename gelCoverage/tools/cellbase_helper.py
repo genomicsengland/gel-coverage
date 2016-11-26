@@ -1,9 +1,11 @@
 import pybedtools
-from pycellbase.cbconfig import *
-from pycellbase.cbclient import *
-import re
+from pycellbase.cbconfig import ConfigClient
+from pycellbase.cbclient import CellBaseClient
+import gelCoverage.tools.coverage_stats as coverage_stats
+import gelCoverage.tools.sequence_stats as sequence_stats
 
-class CellbaseHelper():
+
+class CellbaseHelper:
 
     def __init__(self, species, version, assembly, host, filter_flags, filter_biotypes):
         """
@@ -30,23 +32,9 @@ class CellbaseHelper():
             }
         }
         # Initializes the CellBase client
-        conf = ConfigClient("../../resources/cellbase_config.json")
-        self.cellbase_client = CellBaseClient(conf)
+        config = ConfigClient(json_config)
+        self.cellbase_client = CellBaseClient(config)
         self.cellbase_gene_client = self.cellbase_client.get_gene_client()
-
-    def gc_content(self, sequence):
-        """
-        Calculates gc content of a DNA sequence
-
-        :param sequence: a string of ATGC's
-        :return: the gc fraction of the region
-        """
-        gcCount = 0
-        totalBaseCount = 0
-        gcCount += len(re.findall("[GC]", sequence))
-        totalBaseCount += len(re.findall("[GCTA]", sequence))
-        gcFraction = float(gcCount) / totalBaseCount
-        return (gcFraction)
 
     def is_any_flag_included(self, flags):
         """
@@ -62,12 +50,12 @@ class CellbaseHelper():
         :param transcripts: the transcripts data structure
         :return: flattened list of transcripts
         """
-        return sum([y["annotationFlags"] if "annotationFlags" in y else [] for y in x], [])
+        return sum([y["annotationFlags"] if "annotationFlags" in y else [] for y in transcripts], [])
 
-    def get_all_genes (self, filter = True):
+    def get_all_genes(self, filter=True):
         """
         Gets all existing genes ENSEMBL ids
-        :param assembly: the assembly
+        :param filter: flag indicating if filtering should be applied
         :return: list of ENSEMBL identifiers
         """
         cellbase_result = self.cellbase_gene_client.search(
@@ -76,16 +64,17 @@ class CellbaseHelper():
             include=",".join(["name", "transcripts.annotationFlags"]),
             **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
         )
-        gene_list = [x["name"] for x in cellbase_result [0]["result"]
+        gene_list = [x["name"] for x in cellbase_result[0]["result"]
                      if self.is_any_flag_included(self.get_all_flags_for_gene(x["transcripts"]))]
 
         return gene_list
 
-    def make_exons_bed(self, gene_list, filter = True):
+    def make_exons_bed(self, gene_list, filter=True):
         """
         Gets all exons from cellbase and makes a bed - also calculates gc content, returns a valid bed with gc in the
         score column
         :param gene_list The list of genes to be analysed
+        :param filter: flag indicating if filtering should be applied
         :return: pybedtools object
         """
         if gene_list is None or len(gene_list) == 0:
@@ -95,22 +84,23 @@ class CellbaseHelper():
         # TODO: Verify that all genes in the list are present in the reference
 
         # Iterates through genes in 1000 genes batches
-        GENE_BATCH = 1000
+        gene_batch = 1000
         gene_count = 0
         all_exons = list()
         while gene_count < number_genes:
-            limit = min( len(gene_list) - gene_count, GENE_BATCH)
-            current_list = gene_list[gene_count : limit]
+            limit = min(len(gene_list) - gene_count, gene_batch)
+            current_list = gene_list[gene_count: limit]
             gene_count += limit
             # Query CellBase for a subset of genes
             cellbase_exons = self.cellbase_gene_client.search(
                 None,
-                name = ",".join(current_list),
-                assembly = self.assembly,
-                include = ",".join(["name","chromosome","transcripts.exons.start",
-                                    "transcripts.exons.exonNumber", "transcripts.id,transcripts.strand",
-                                    "transcripts.exons.end", "transcripts.exons.sequence", "exonNumber",
-                                    "transcripts.annotationFlags"]),
+                name=",".join(current_list),
+                assembly=self.assembly,
+                include=",".join(["name", "chromosome", "transcripts.exons.start",
+                                  "transcripts.exons.exonNumber",
+                                  "transcripts.id,transcripts.strand",
+                                  "transcripts.exons.end", "transcripts.exons.sequence",
+                                  "exonNumber", "transcripts.annotationFlags"]),
                 **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
             )
             # TODO: check for errors and empty results
@@ -118,15 +108,15 @@ class CellbaseHelper():
             for gene in cellbase_exons[0]["result"]:
                 gene_name = gene["name"]
                 for transcript in gene["transcripts"]:
-                    if filter and (
-                        "annotationFlags" not in transcript or
-                                not self.is_any_flag_included(transcript["annotationFlags"])):
+                    filtered_out = "annotationFlags" not in transcript or \
+                                   not self.is_any_flag_included(transcript["annotationFlags"])
+                    if filter and filtered_out:
                         # We ignore transcripts not flagged as any of a set of flags in the config file
                         continue
                     txid = transcript["id"]
                     strand = transcript["strand"]
                     for exon in transcript["exons"]:
-                        gc = self.gc_content(exon["sequence"]) if "sequence" in exon else None
+                        gc = sequence_stats.compute_gc_content(exon["sequence"]) if "sequence" in exon else None
                         exon_number = exon["exonNumber"]
                         row_id = gene_name + "|" + txid + "|exon" + str(exon_number)
                         all_exons.append(
@@ -137,6 +127,6 @@ class CellbaseHelper():
 
     def get_gene_list_from_transcripts (self, transcripts_list):
         # TODO:
-        #gene_list = []
-        #return gene_list
+        # gene_list = []
+        # return gene_list
         raise NotImplemented

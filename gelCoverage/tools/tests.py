@@ -1,7 +1,8 @@
 import unittest
-from cellbase_helper import CellbaseHelper
-from panelapp_helper import PanelappHelper
-from coverage_stats import *
+from gelCoverage.tools.cellbase_helper import CellbaseHelper
+from gelCoverage.tools.panelapp_helper import PanelappHelper
+import gelCoverage.tools.coverage_stats as coverage_stats
+import gelCoverage.tools.sequence_stats as sequence_stats
 import random
 import collections
 import numpy
@@ -298,7 +299,7 @@ class CoverageStatsTests(unittest.TestCase):
         Tests find_gaps(coverages, start_position, coverage_threshold)
         :return:
         """
-        gaps = find_gaps(self.coverages, self.start_position, self.coverage_threshold)
+        gaps = coverage_stats.find_gaps(self.coverages, self.start_position, self.coverage_threshold)
         self.assertEqual(type(gaps), list)
         self.assertEqual(len(gaps), 3)
         for gap in gaps:
@@ -314,7 +315,7 @@ class CoverageStatsTests(unittest.TestCase):
         compute_exon_level_statistics(coverages, gc_content)
         :return:
         """
-        stats = compute_exon_level_statistics(self.coverages, self.gc_content)
+        stats = coverage_stats.compute_exon_level_statistics(self.coverages, self.gc_content)
         self.assertEqual(type(stats), collections.defaultdict)
         self.assertTrue("total_bases" in stats)
         self.assertTrue("mean" in stats)
@@ -352,11 +353,11 @@ class CoverageStatsTests(unittest.TestCase):
         compute_transcript_level_statistics(exons)
         :return:
         """
-        exon1 = compute_exon_level_statistics(self.coverages, self.gc_content)
-        exon2 = compute_exon_level_statistics(self.coverages2, self.gc_content)
-        exon3 = compute_exon_level_statistics(self.coverages3, self.gc_content)
+        exon1 = coverage_stats.compute_exon_level_statistics(self.coverages, self.gc_content)
+        exon2 = coverage_stats.compute_exon_level_statistics(self.coverages2, self.gc_content)
+        exon3 = coverage_stats.compute_exon_level_statistics(self.coverages3, self.gc_content)
         exons = {1:exon1, 2:exon2, 3:exon3}
-        stats = compute_transcript_level_statistics(exons)
+        stats = coverage_stats.compute_transcript_level_statistics(exons)
         self.assertEqual(type(stats), collections.defaultdict)
         self.assertTrue("total_bases" in stats)
         self.assertTrue("mean" in stats)
@@ -389,6 +390,22 @@ class CoverageStatsTests(unittest.TestCase):
         self.assertEqual(type(stats["percent_gte_50x"]), float)
         self.assertEqual(type(stats["gc_content"]), numpy.float64)
 
+
+class SequenceStatsTests(unittest.TestCase):
+
+    def setUp(self):
+        # Creates random sequence with a GC content close 0.6
+        self.sequence = numpy.random.choice(["G", "C", "A", "T"], 10000, p=[0.3, 0.3, 0.2, 0.2])
+
+    def test1(self):
+        """
+        Tests find_gaps(coverages, start_position, coverage_threshold)
+        :return:
+        """
+        gc_content = sequence_stats.compute_gc_content(self.sequence)
+        print "Found a GC content of %s" % gc_content
+        self.assertEqual(type(gc_content), float)
+        self.assertTrue(gc_content <= 0.65 and gc_content >= 0.55)
 
 if __name__ == '__main__':
     unittest.main()

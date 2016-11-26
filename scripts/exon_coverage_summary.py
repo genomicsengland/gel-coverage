@@ -6,7 +6,7 @@ from collections import defaultdict
 import numpy as np
 from gelCoverage.tools.cellbase_helper import CellbaseHelper
 from gelCoverage.tools.panelapp_helper import PanelappHelper
-from gelCoverage.tools.coverage_stats import *
+import gelCoverage.tools.coverage_stats as coverage_stats
 
 
 def main():
@@ -113,7 +113,7 @@ def main():
         coverages = args.bw.values(chrom, start, end)
 
         # Computes statistics at exon level
-        exon_statistics = compute_exon_level_statistics(coverages,  gc_content)
+        exon_statistics = coverage_stats.compute_exon_level_statistics(coverages,  gc_content)
 
         # Store results in data structure
         if txid not in output:
@@ -128,12 +128,12 @@ def main():
 
         # compute gaps
         if args.coverage_threshold > 0:
-            gaps = find_gaps(coverages, start, args.coverage_threshold)
+            gaps = coverage_stats.find_gaps(coverages, start, args.coverage_threshold)
             output[txid]["exons"][exon_idx]["gaps"] = gaps
 
     # add an aggregation of statistics at transcript level
     for transcript, content in output.iteritems():
-        output[transcript]["statistics"] = compute_transcript_level_statistics(content["exons"])
+        output[transcript]["statistics"] = coverage_stats.compute_transcript_level_statistics(content["exons"])
 
     # TODO: output results in different formats
     if args.output == "json":

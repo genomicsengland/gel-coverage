@@ -1,4 +1,5 @@
 import numpy as np
+import re
 from collections import defaultdict
 
 
@@ -8,7 +9,8 @@ def find_gaps(coverages, start_position, coverage_threshold):
     :param coverages: list of depth of coverage values
     :param start_position: starting position of the coverages sequence
     :param coverage_threshold: the coverage threshold to determine gaps
-    :return: the gaps start and end genomic coordinates in JSON-friendly format. Chromosome is not set as this information
+    :return: the gaps start and end genomic coordinates in JSON-friendly format.
+    Chromosome is not set as this information
     will be embedded within an exon-transcript-gene where the chromosome is available.
     """
     end = start_position + len(coverages)
@@ -70,13 +72,13 @@ def compute_transcript_level_statistics(exons):
     """
     stats = defaultdict()
     stats["total_bases"] = np.sum([x["total_bases"] for _, x in exons.iteritems()])
-    stats["mean"] = np.mean([x["mean"] for _,x in exons.iteritems()])
+    stats["mean"] = np.mean([x["mean"] for _, x in exons.iteritems()])
     stats["weighted_median"] = np.sum(
-        [x["median"] * x["total_bases"] for _,x in exons.iteritems()]) / stats["total_bases"]
+        [x["median"] * x["total_bases"] for _, x in exons.iteritems()]) / stats["total_bases"]
     stats["weighted_pct75"] = np.sum(
-        [x["pct75"] * x["total_bases"] for _,x in exons.iteritems()]) / stats["total_bases"]
+        [x["pct75"] * x["total_bases"] for _, x in exons.iteritems()]) / stats["total_bases"]
     stats["weighted_pct25"] = np.sum(
-        [x["pct25"] * x["total_bases"] for _,x in exons.iteritems()]) / stats["total_bases"]
+        [x["pct25"] * x["total_bases"] for _, x in exons.iteritems()]) / stats["total_bases"]
     stats["bases_lt_3x"] = np.sum([x["bases_lt_3x"] for _,x in exons.iteritems()])
     stats["bases_lt_15x"] = np.sum([x["bases_lt_15x"] for _,x in exons.iteritems()])
     stats["bases_gte_15x"] = np.sum([x["bases_gte_15x"] for _,x in exons.iteritems()])
@@ -88,5 +90,4 @@ def compute_transcript_level_statistics(exons):
     stats["percent_gte_50x"] = float(stats["bases_gte_50x"] / stats["total_bases"])
     stats["gc_content"] = np.sum(
         [x["gc_content"] * x["total_bases"] for _, x in exons.iteritems()]) / stats["total_bases"]
-
     return stats
