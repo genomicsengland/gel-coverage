@@ -1,8 +1,8 @@
 import pybedtools
-from pycellbase.cbconfig import ConfigClient
 from pycellbase.cbclient import CellBaseClient
-import gelCoverage.tools.coverage_stats as coverage_stats
-import gelCoverage.tools.sequence_stats as sequence_stats
+from pycellbase.cbconfig import ConfigClient
+
+import gelCoverage.stats.sequence_stats as sequence_stats
 
 
 class CellbaseHelper:

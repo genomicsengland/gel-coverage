@@ -1,12 +1,12 @@
-import os
-import argparse
 import ConfigParser
+import argparse
 import json
+import os
 from collections import defaultdict
-import numpy as np
+
+import gelCoverage.stats.coverage_stats as coverage_stats
 from gelCoverage.tools.cellbase_helper import CellbaseHelper
 from gelCoverage.tools.panelapp_helper import PanelappHelper
-import gelCoverage.tools.coverage_stats as coverage_stats
 
 
 def main():
@@ -113,7 +113,7 @@ def main():
         coverages = args.bw.values(chrom, start, end)
 
         # Computes statistics at exon level
-        exon_statistics = coverage_stats.compute_exon_level_statistics(coverages,  gc_content)
+        exon_statistics = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
 
         # Store results in data structure
         if txid not in output:
