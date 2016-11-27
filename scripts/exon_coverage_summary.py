@@ -2,11 +2,8 @@ import ConfigParser
 import argparse
 import json
 import os
-from collections import defaultdict
 
-import gelCoverage.stats.coverage_stats as coverage_stats
-from gelCoverage.tools.cellbase_helper import CellbaseHelper
-from gelCoverage.tools.panelapp_helper import PanelappHelper
+from gelCoverage.gel_coverage import GelCoverageEngine
 
 
 def main():
@@ -22,7 +19,7 @@ def main():
     parser.add_argument('--panel-version', metavar = 'panel_version',
                         help='The panel version',
                         default = None)
-    parser.add_argument('--genes', metavar = 'genes',
+    parser.add_argument('--gene_list', metavar = 'gene_list',
                         default = None,
                         help = 'Comma separated list of genes (HGNC gene symbols) to analyse. Will be masked by a panel')
     #parser.add_argument('--transcripts', metavar='transcripts',
@@ -44,104 +41,41 @@ def main():
     args = parser.parse_args()
 
     # Reads configuration file
-    config = ConfigParser.ConfigParser()
+    config_parser = ConfigParser.ConfigParser()
     config_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), config_file)
-    config.readfp(open(config_filepath))
+    config_parser.readfp(open(config_filepath))
 
-    # Initialize CellBase helper
-    cellbase_helper = CellbaseHelper(species = config.get('cellbase', 'species'),
-                                     version = config.get('cellbase', 'version'),
-                                     assembly = config.get('cellbase', 'assembly'),
-                                     host = config.get('cellbase', 'host'),
-                                     filter_flags = config.get('transcript_filtering', 'flags').split(","),
-                                     filter_biotypes = config.get('transcript_filtering', 'biotypes').split(",")
-                                     )
-
-    ## Gets list of genes to analyse
-    if args.panel is not None and args.panel_version is not None:
-        # Initialize PanelApp helper
-        panelapp_helper = PanelappHelper(host=config.get('panelapp', 'host'))
-        # Get list of genes from PanelApp
-        gene_list = panelapp_helper.get_gene_list(args.panel, args.panel_version,
-                                                  config.get("panelapp", "gene_confidence"))
-    elif args.genes is not None:
-        gene_list = args.genes.split(",")
-    #elif args.transcripts is not None:
-    #    transcripts_list = args.transcripts.split(",")
-        # Get list of genes from CellBase client
-    #    gene_list = cellbase_helper.get_gene_list_from_transcripts(transcripts_list)
-    else:
-        # Warn the user as this will be time consuming
-        print "WARNING: you are going to run a whole exome coverage analysis!"
-        # Retrieve the list of all genes
-        gene_list = cellbase_helper.get_all_genes()
-
-    # Get genes annotations in BED format
-    bed = cellbase_helper.make_exons_bed(gene_list)
-
-    # Initialize results data structure
-    output = defaultdict()
-    output["parameters"] = defaultdict()
-    parameters = output["parameters"]
-    parameters["gap_coverage_threshold"] = args.coverage_threshold
-    parameters["input_file"] = args.bw
-    parameters["species"] = config.get('cellbase', 'species')
-    parameters["assembly"] = config.get('cellbase', 'assembly')
-    if args.panel is not None and args.panel_version is not None:
-        parameters["panel"] = args.panel
-        parameters["panel_version"] = args.panel_version
-        parameters["gene_list"] = gene_list
-    elif args.genes is not None:
-        parameters["gene_list"] = gene_list
-
-    output["results"] = defaultdict()
-    results = output["results"]
-
-    for interval in bed:
-        # Reads data from BED entry
-        chrom = interval.chrom
-        start = int(interval.start)
-        end = int(interval.end)
-        gene, txid, exon_idx = interval.name.split("|")
-        strand = interval.strand
-        # TODO: truncate this to two decimal positions
-        gc_content = interval.score
-
-        # Queries the bigwig for a specific interval
-        if start == end:
-            end += 1
-        coverages = args.bw.values(chrom, start, end)
-
-        # Computes statistics at exon level
-        exon_statistics = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
-
-        # Store results in data structure
-        if txid not in output:
-            output[txid] = defaultdict()
-            output[txid]["chrom"] = chrom
-            output[txid]["gene"] = gene
-            output[txid]["strand"] = strand
-            output[txid]["exons"] = defaultdict()
-        output[gene][txid]["exons"][exon_idx] = {
-            "statistics" : exon_statistics
-        }
-
-        # compute gaps
-        if args.coverage_threshold > 0:
-            gaps = coverage_stats.find_gaps(coverages, start, args.coverage_threshold)
-            output[txid]["exons"][exon_idx]["gaps"] = gaps
-
-    # add an aggregation of statistics at transcript level
-    for transcript, content in output.iteritems():
-        output[transcript]["statistics"] = coverage_stats.compute_transcript_level_statistics(content["exons"])
+    # Creates a data structure with all config parameters
+    config = {
+        # Sets parameters from CLI
+        "bw" : args.bw,
+        "panel" : args.panel,
+        "panel_version": args.panel_version,
+        "gene_list": args.gene_list,
+        "coverage_threshold": args.coverage_threshold,
+        # Sets parameters from config file
+        "cellbase_species": config_parser.get('cellbase', 'species'),
+        "cellbase_version": config_parser.get('cellbase', 'version'),
+        "cellbase_assembly": config_parser.get('cellbase', 'assembly'),
+        "cellbase_host": config_parser.get('cellbase', 'host'),
+        "panelapp_host": config_parser.get('panelapp', 'host'),
+        "panelapp_gene_confidence": config_parser.get('panelapp', 'gene_confidence'),
+        "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
+        "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes')
+    }
+    # Calls the GEL coverage engine
+    gel_coverage_engine = GelCoverageEngine(config)
+    output = gel_coverage_engine.run()
+    # Prints output to stdout
+    # TODO: we may want to write it to a file. Check that
+    print json.dumps(output, indent=4)
 
     # TODO: output results in different formats
-    if args.output == "json":
-        print json.dumps(output, indent = 4)
-    elif args.output == "tabular":
+    #if args.output == "json":
+    #    print json.dumps(output, indent = 4)
+    #elif args.output == "tabular":
         # TODO: flatten the dict into a table
-        pass
-
+    #    pass
 
 if __name__ == '__main__':
     main()

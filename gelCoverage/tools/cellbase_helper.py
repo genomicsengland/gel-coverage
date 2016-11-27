@@ -52,11 +52,11 @@ class CellbaseHelper:
         """
         return sum([y["annotationFlags"] if "annotationFlags" in y else [] for y in transcripts], [])
 
-    def get_all_genes(self, filter=True):
+    def get_all_gene_names(self, filter=True):
         """
-        Gets all existing genes ENSEMBL ids
+        Gets all existing HGNC gene names
         :param filter: flag indicating if filtering should be applied
-        :return: list of ENSEMBL identifiers
+        :return: list of HGNC gene names
         """
         cellbase_result = self.cellbase_gene_client.search(
             None,
@@ -68,6 +68,29 @@ class CellbaseHelper:
                      if self.is_any_flag_included(self.get_all_flags_for_gene(x["transcripts"]))]
 
         return gene_list
+
+    def get_gene_info(self, gene_list, filter = True):
+        """
+        For a list of HGNC gene names queries CellBase for all information about transcripts and
+        their corresponding exons, including the exonic sequence.
+        :param gene_list: the list of HGNC gene names
+        :param filter: flag indicating whether to filter by biotypes
+        :return: the data structure returned by CellBase
+        """
+        cellbase_genes = self.cellbase_gene_client.search(
+            None,
+            name=",".join(gene_list),
+            assembly=self.assembly,
+            include=",".join(["name", "chromosome", "transcripts.exons.start",
+                              "transcripts.exons.exonNumber",
+                              "transcripts.id,transcripts.strand",
+                              "transcripts.exons.end", "transcripts.exons.sequence",
+                              "exonNumber", "transcripts.annotationFlags"]),
+            **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
+        )
+        # TODO: check for errors and empty results
+        # TODO: unit test
+        return cellbase_genes
 
     def make_exons_bed(self, gene_list, filter=True):
         """
@@ -92,20 +115,9 @@ class CellbaseHelper:
             current_list = gene_list[gene_count: limit]
             gene_count += limit
             # Query CellBase for a subset of genes
-            cellbase_exons = self.cellbase_gene_client.search(
-                None,
-                name=",".join(current_list),
-                assembly=self.assembly,
-                include=",".join(["name", "chromosome", "transcripts.exons.start",
-                                  "transcripts.exons.exonNumber",
-                                  "transcripts.id,transcripts.strand",
-                                  "transcripts.exons.end", "transcripts.exons.sequence",
-                                  "exonNumber", "transcripts.annotationFlags"]),
-                **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
-            )
-            # TODO: check for errors and empty results
+            cellbase_genes = self.get_gene_info(current_list)
             # Parse results into BED fields
-            for gene in cellbase_exons[0]["result"]:
+            for gene in cellbase_genes[0]["result"]:
                 gene_name = gene["name"]
                 for transcript in gene["transcripts"]:
                     filtered_out = "annotationFlags" not in transcript or \
