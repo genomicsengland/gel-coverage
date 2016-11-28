@@ -1,3 +1,4 @@
+import logging
 import pyBigWig
 
 import gelcoverage.stats.coverage_stats as coverage_stats
@@ -22,6 +23,7 @@ class GelCoverageRunner:
         self.panelapp_helper = PanelappHelper(host=config['panelapp_host'])
         # Gets the list of genes to analyse
         self.gene_list = self.get_gene_list()
+        logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
         # Opens the bigwig file for reading
         self.bigwig = pyBigWig.open(self.config['bw'])
 
@@ -51,7 +53,7 @@ class GelCoverageRunner:
             #    gene_list = cellbase_helper.get_gene_list_from_transcripts(transcripts_list)
         else:
             # Warn the user as this will be time consuming
-            print "WARNING: you are going to run a whole exome coverage analysis!"
+            logging.warning("You are about to run a whole exome coverage analysis!")
             # Retrieve the list of all genes
             gene_list = self.cellbase_helper.get_all_genes()
         return gene_list
@@ -66,12 +68,13 @@ class GelCoverageRunner:
         parameters["input_file"] = self.config["bw"]
         parameters["species"] = self.config['cellbase_species']
         parameters["assembly"] = self.config['cellbase_assembly']
-        if self.config['panelapp_panel'] is not None and self.config['panelapp_panel_version'] is not None:
-            parameters["panel"] = self.config['panelapp_panel']
-            parameters["panel_version"] = self.config['panelapp_panel_version']
+        if 'panel' in self.config and self.config['panel'] is not None \
+                and 'panel_version' in self.config and self.config['panel_version'] is not None:
+            parameters["panel"] = self.config['panel']
+            parameters["panel_version"] = self.config['panel_version']
             parameters["panel_gene_confidence"] = self.config['panelapp_gene_confidence']
             parameters["gene_list"] = self.gene_list
-        elif self.config['gene_list'] is not None:
+        elif 'gene_list' in self.config and self.config['gene_list'] is not None:
             parameters["gene_list"] = self.gene_list
         # Beware that when performing analysis on the whole exome the gene list field is
         # not set. We don't want a list of 20K genes in here. Do we?
@@ -79,65 +82,129 @@ class GelCoverageRunner:
         parameters["transcript_filtering_biotypes"] = self.config['transcript_filtering_biotypes']
         return parameters
 
-    def run(self):
+    @staticmethod
+    def initialize_gene_dict(gene_name, chromosome):
         """
-        PRE: we assume that the BED generated is sorted by transcript and then by gene position
-        this assumption is true for BEDs generated with make_exons_bed() but might not be
-        always true.
+
+        :param gene_name:
+        :param chromosome:
         :return:
         """
-        # Get genes annotations in BED format
-        bed = self.cellbase_helper.make_exons_bed(self.gene_list)
-        # Initialize results data structure
-        results = []
-        current_gene = None
-        current_transcript = None
-        # Process every interval in the BED file
-        for interval in bed:
-            # Reads data from BED entry
-            chromosome = interval.chrom
-            start = int(interval.start)
-            end = int(interval.end)
-            gene_name, transcript_id, exon_number = interval.name.split("|")
-            strand = interval.strand
-            # TODO: truncate this to two decimal positions
-            gc_content = interval.score
-            # Store gene in data structure
-            if current_gene is not None and current_gene["name"] != gene_name:
-                # Save previous result
-                results.append(current_gene)
-                # Create a new data structure for new gene
-                current_gene = {
-                    "name": gene_name,
-                    "chromosome": chromosome,
-                    "transcripts": []
-                }
-            # Store transcript in data structure
-            if current_transcript is not None and current_transcript["id"] != transcript_id:
-                # Compute transcript level statistics by aggregating stats on every exon
-                current_transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
-                    current_transcript["exons"]
-                )
-                # Save previous result
-                current_gene["transcripts"].append(current_transcript)
-                # Create a new data structure for new gene
-                current_transcript = {
-                    "id": transcript_id,
-                    "biotype": None,  #TODO: we need to add this info into the BED or otherwise...?
-                    "basic_flag": None,  #TODO: we need to add this info into the BED or otherwise...?
-                    "exons": []
-                }
-            # Store exon in data structure
-            exon = {
+        return {
+            "name": gene_name,
+            "chromosome": chromosome,
+            "transcripts": []
+        }
+
+    @staticmethod
+    def initialize_transcript_dict(transcript_id):
+        """
+
+        :param transcript_id:
+        :return:
+        """
+        return {
+            "id": transcript_id,
+            "biotype": None,  # TODO: we need to add this info into the BED or otherwise...?
+            "basic_flag": None,  # TODO: we need to add this info into the BED or otherwise...?
+            "exons": []
+        }
+
+    @staticmethod
+    def initialize_exon_dict(exon_number, start, end):
+        """
+
+        :param exon_number:
+        :param start:
+        :param end:
+        :return:
+        """
+        return {
                 "exon_number": exon_number,
                 "start": start,
                 "end": end
             }
-            # Queries the bigwig for a specific interval
-            if start == end: # do we really need this?
-                end += 1
+
+    @staticmethod
+    def read_bed_interval(interval):
+        """
+
+        :param self:
+        :param interval:
+        :return:
+        """
+        chromosome = interval.chrom
+        start = int(interval.start)
+        end = int(interval.end)
+        gene_name, transcript_id, exon_number = interval.name.split("|")
+        strand = interval.strand
+        # TODO: truncate this to two decimal positions
+        gc_content = float(interval.score)
+        return chromosome, start, end, gene_name, transcript_id, exon_number, strand, gc_content
+
+    def read_bigwig_coverages(self, chromosome, start, end):
+        """
+
+        :param chromosome:
+        :param start:
+        :param end:
+        :return:
+        """
+        # Queries the bigwig for a specific interval
+        if start == end:  # do we really need this?
+            end += 1
+        # Read from the bigwig file
+        try:
+            # TODO: why our bigwig has "chr" prefix? BAMs don't
+            coverages = self.bigwig.values("chr" + str(chromosome), start, end)
+        except RuntimeError, e:
+            # TODO: deal with this errors
+            logging.error("Querying for unexisting interval %s:%s-%s" % (chromosome, start, end))
+            raise e
+        return coverages
+
+    def process_bed_file(self, bed):
+        """
+
+        :param bed:
+        :return:
+        """
+        # Initialize results data structure
+        results = []
+        current_gene = {}
+        current_transcript = {}
+        # Process every interval in the BED file
+        for interval in bed:
+            # Reads data from BED entry
+            chromosome, start, end, gene_name, transcript_id, \
+            exon_number, strand, gc_content = GelCoverageRunner.read_bed_interval(interval)
+            # Store transcript in data structure. Needs to run before gene
+            try:
+                if current_transcript["id"] != transcript_id:
+                    # Compute transcript level statistics by aggregating stats on every exon
+                    current_transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
+                        current_transcript["exons"]
+                    )
+                    # Save previous result
+                    current_gene["transcripts"].append(current_transcript)
+                    logging.info("Processed transcript %s of gene %s" % (transcript_id, gene_name))
+                    # Create a new data structure for new gene
+                    current_transcript = GelCoverageRunner.initialize_transcript_dict(transcript_id)
+            except KeyError:
+                current_transcript = GelCoverageRunner.initialize_transcript_dict(transcript_id)
+            # Store gene in data structure
+            try:
+                if current_gene["name"] != gene_name:
+                    # Save previous result
+                    results.append(current_gene)
+                    # Create a new data structure for new gene
+                    current_gene = GelCoverageRunner.initialize_gene_dict(gene_name, chromosome)
+            except KeyError:
+                current_gene = GelCoverageRunner.initialize_gene_dict(gene_name, chromosome)
+            # Store exon in data structure
+            exon = GelCoverageRunner.initialize_exon_dict(exon_number, start, end)
             # Read from the bigwig file
-            coverages = self.bigwig.values(chromosome, start, end)
+            coverages = self.read_bigwig_coverages(chromosome, start, end)
             # Compute statistics at exon level
             exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
             # compute gaps
@@ -151,8 +218,9 @@ class GelCoverageRunner:
         )
         # Save previous result
         current_gene["transcripts"].append(current_transcript)
+        logging.info("Processed transcript %s of gene %s" % (transcript_id, gene_name))
         results.append(current_gene)
-        return self.output(results)
+        return results
 
     def output(self, results):
         """
@@ -164,3 +232,17 @@ class GelCoverageRunner:
         output["parameters"] = self.get_parameters_output()
         output["results"] = results
         return output
+
+    def run(self):
+        """
+        PRE: we assume that the BED generated is sorted by transcript and then by gene position
+        this assumption is true for BEDs generated with make_exons_bed() but might not be
+        always true.
+        :return:
+        """
+        logging.info("Starting coverage analysis")
+        # Get genes annotations in BED format
+        bed = self.cellbase_helper.make_exons_bed(self.gene_list)
+        # Process the intervals in the BED file
+        results = self.process_bed_file(bed)
+        return self.output(results)
