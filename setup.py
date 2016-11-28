@@ -1,9 +1,9 @@
 from distutils.core import setup
 
 setup(
-    name='gelCoverage',
+    name='gelcoverage',
     version='1.0.0',
-    packages=['gelCoverage'],
+    packages=['gelcoverage'],
     scripts=['scripts/coverage_summary'],
     url='',
     license='',

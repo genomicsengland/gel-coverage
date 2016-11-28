@@ -1,6 +1,6 @@
 import unittest
-from gelCoverage.tools.cellbase_helper import CellbaseHelper
-from gelCoverage.tools.panelapp_helper import PanelappHelper
+from gelcoverage.tools.cellbase_helper import CellbaseHelper
+from gelcoverage.tools.panelapp_helper import PanelappHelper
 
 
 class CellbaseHelperTests(unittest.TestCase):
@@ -49,6 +49,8 @@ class CellbaseHelperTests(unittest.TestCase):
                      "IGHE" # gene with 3 transcripts flagged as basic and 1 not flagged as basic
                      ]
         bed = self.cellbase_helper.make_exons_bed(gene_list)
+        bed.saveas("/home/priesgo/test.bed")
+
         self.assertIsNotNone(bed)
         ighe_transcripts = []
         for interval in bed:

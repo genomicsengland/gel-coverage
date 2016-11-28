@@ -2,8 +2,8 @@ import collections
 import random
 import unittest
 import numpy
-import gelCoverage.stats.coverage_stats as coverage_stats
-import gelCoverage.stats.sequence_stats as sequence_stats
+import gelcoverage.stats.coverage_stats as coverage_stats
+import gelcoverage.stats.sequence_stats as sequence_stats
 
 class CoverageStatsTests(unittest.TestCase):
 

@@ -2,7 +2,7 @@
 import logging
 import os
 import argparse
-from gelCoverage.gelCoveragePy import Coverage
+from gelcoverage.gelCoveragePy import Coverage
 
 __author__ = 'mparker'
 

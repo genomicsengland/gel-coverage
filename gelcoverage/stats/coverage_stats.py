@@ -1,6 +1,4 @@
 import numpy as np
-import re
-from collections import defaultdict
 
 
 def find_gaps(coverages, start_position, coverage_threshold):
@@ -15,7 +13,7 @@ def find_gaps(coverages, start_position, coverage_threshold):
     """
     end = start_position + len(coverages)
     open_gap = False
-    current_gap = defaultdict()
+    current_gap = {}
     gaps = []
 
     # Iterates through every coverage position
@@ -26,8 +24,9 @@ def find_gaps(coverages, start_position, coverage_threshold):
         elif value >= coverage_threshold and open_gap:
             open_gap = False
             current_gap["end"] = start_position + idx - 1
+            current_gap["length"] = current_gap["end"] - current_gap["start"]
             gaps.append(current_gap)
-            current_gap = defaultdict()
+            current_gap = {}
     # Closes the last gap when it extends until the last position
     if open_gap:
         current_gap["end"] = end
@@ -43,7 +42,7 @@ def compute_exon_level_statistics(coverages, gc_content):
     :param gc_content: the GC content for this sequence precomputed
     :return: the coverage and GC content exon statistics in JSON-friendly format
     """
-    stats = defaultdict()
+    stats = {}
     stats["total_bases"] = len(coverages)
     stats["mean"] = np.mean(coverages)
     stats["median"] = np.median(coverages)
@@ -70,7 +69,7 @@ def compute_transcript_level_statistics(exons):
     :param exons: list of exon coverage and GC content statistics
     :return: the coverage and GC content gene statistics in JSON-friendly format
     """
-    stats = defaultdict()
+    stats = {}
     stats["total_bases"] = np.sum([x["total_bases"] for _, x in exons.iteritems()])
     stats["mean"] = np.mean([x["mean"] for _, x in exons.iteritems()])
     stats["weighted_median"] = np.sum(

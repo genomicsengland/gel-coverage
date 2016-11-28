@@ -1,12 +1,11 @@
 import pyBigWig
-from collections import defaultdict
 
-import gelCoverage.stats.coverage_stats as coverage_stats
-from gelCoverage.tools.cellbase_helper import CellbaseHelper
-from gelCoverage.tools.panelapp_helper import PanelappHelper
+import gelcoverage.stats.coverage_stats as coverage_stats
+from gelcoverage.tools.cellbase_helper import CellbaseHelper
+from gelcoverage.tools.panelapp_helper import PanelappHelper
 
 
-class GelCoverageEngine:
+class GelCoverageRunner:
 
     def __init__(self, config):
         self.config = config
@@ -59,10 +58,10 @@ class GelCoverageEngine:
 
     def get_parameters_output(self):
         """
-
-        :return:
+        Returns a dictionary with the formatted configuration parameters used to run the analysis.
+        :return: dict
         """
-        parameters = defaultdict()
+        parameters = {}
         parameters["gap_coverage_threshold"] = self.config["coverage_threshold"]
         parameters["input_file"] = self.config["bw"]
         parameters["species"] = self.config['cellbase_species']
@@ -70,57 +69,98 @@ class GelCoverageEngine:
         if self.config['panelapp_panel'] is not None and self.config['panelapp_panel_version'] is not None:
             parameters["panel"] = self.config['panelapp_panel']
             parameters["panel_version"] = self.config['panelapp_panel_version']
+            parameters["panel_gene_confidence"] = self.config['panelapp_gene_confidence']
             parameters["gene_list"] = self.gene_list
         elif self.config['gene_list'] is not None:
             parameters["gene_list"] = self.gene_list
         # Beware that when performing analysis on the whole exome the gene list field is
         # not set. We don't want a list of 20K genes in here. Do we?
+        parameters["transcript_filtering_flags"] = self.config['transcript_filtering_flags']
+        parameters["transcript_filtering_biotypes"] = self.config['transcript_filtering_biotypes']
         return parameters
 
     def run(self):
         """
-
+        PRE: we assume that the BED generated is sorted by transcript and then by gene position
+        this assumption is true for BEDs generated with make_exons_bed() but might not be
+        always true.
         :return:
         """
         # Get genes annotations in BED format
         bed = self.cellbase_helper.make_exons_bed(self.gene_list)
-        # Initialize and fill results data structure
-        output = defaultdict()
-        output["parameters"] = self.get_parameters_output()
-        output["results"] = defaultdict()
-        results = output["results"]
-        # TODO: adapt results to the new output schema
+        # Initialize results data structure
+        results = []
+        current_gene = None
+        current_transcript = None
+        # Process every interval in the BED file
         for interval in bed:
             # Reads data from BED entry
-            chrom = interval.chrom
+            chromosome = interval.chrom
             start = int(interval.start)
             end = int(interval.end)
-            gene, txid, exon_idx = interval.name.split("|")
+            gene_name, transcript_id, exon_number = interval.name.split("|")
             strand = interval.strand
             # TODO: truncate this to two decimal positions
             gc_content = interval.score
+            # Store gene in data structure
+            if current_gene is not None and current_gene["name"] != gene_name:
+                # Save previous result
+                results.append(current_gene)
+                # Create a new data structure for new gene
+                current_gene = {
+                    "name": gene_name,
+                    "chromosome": chromosome,
+                    "transcripts": []
+                }
+            # Store transcript in data structure
+            if current_transcript is not None and current_transcript["id"] != transcript_id:
+                # Compute transcript level statistics by aggregating stats on every exon
+                current_transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
+                    current_transcript["exons"]
+                )
+                # Save previous result
+                current_gene["transcripts"].append(current_transcript)
+                # Create a new data structure for new gene
+                current_transcript = {
+                    "id": transcript_id,
+                    "biotype": None,  #TODO: we need to add this info into the BED or otherwise...?
+                    "basic_flag": None,  #TODO: we need to add this info into the BED or otherwise...?
+                    "exons": []
+                }
+            # Store exon in data structure
+            exon = {
+                "exon_number": exon_number,
+                "start": start,
+                "end": end
+            }
             # Queries the bigwig for a specific interval
-            if start == end:
+            if start == end: # do we really need this?
                 end += 1
             # Read from the bigwig file
-            coverages = self.bigwig.values(chrom, start, end)
+            coverages = self.bigwig.values(chromosome, start, end)
             # Compute statistics at exon level
-            exon_statistics = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
-            # Store results in data structure
-            if txid not in output:
-                output[txid] = defaultdict()
-                output[txid]["chrom"] = chrom
-                output[txid]["gene"] = gene
-                output[txid]["strand"] = strand
-                output[txid]["exons"] = defaultdict()
-            output[gene][txid]["exons"][exon_idx] = {
-                "statistics": exon_statistics
-            }
+            exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
             # compute gaps
             if self.config['coverage_threshold'] > 0:
-                gaps = coverage_stats.find_gaps(coverages, start, self.config['coverage_threshold'])
-                output[txid]["exons"][exon_idx]["gaps"] = gaps
-        # add an aggregation of statistics at transcript level
-        for transcript, content in output.iteritems():
-            output[transcript]["statistics"] = coverage_stats.compute_transcript_level_statistics(content["exons"])
+                exon["gaps"] = coverage_stats.find_gaps(coverages, start, self.config['coverage_threshold'])
+            current_transcript["exons"].append(exon)
+        # Adds last ocurrences
+        # Compute transcript level statistics by aggregating stats on every exon
+        current_transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
+            current_transcript["exons"]
+        )
+        # Save previous result
+        current_gene["transcripts"].append(current_transcript)
+        results.append(current_gene)
+        return self.output(results)
+
+    def output(self, results):
+        """
+        Builds the output data structure
+        :param results:
+        :return:
+        """
+        output = {}
+        output["parameters"] = self.get_parameters_output()
+        output["results"] = results
         return output

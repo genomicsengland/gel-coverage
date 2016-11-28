@@ -4,7 +4,7 @@
     "type": "object",
     "properties": {
         "parameters": {
-            "description": "The input parameters used to generate this report",
+            "description": "The input parameters used to generate this report in order to assure reproducibility and traceability",
             "type": "object",
             "properties": {
                 "gap_coverage_threshold": {
@@ -12,15 +12,39 @@
                     "type": "integer"
                 },
                 "input_file": {
-                    "description": "The input file used to calculate coverage statistics",
+                    "description": "The bigwig input file used to calculate coverage statistics",
                     "type": "string"
                 },
                 "species": {
-                    "description": "The species (used for CellBase)",
+                    "description": "The species (required for CellBase)",
                     "type": "string"
                 },
                 "assembly": {
-                    "description": "The reference genome assembly (user for CellBase)",
+                    "description": "The reference genome assembly (required for CellBase)",
+                    "type": "string"
+                },
+                "panel": {
+                    "description": "The panel name as registered in PanelApp (only present when a panel is requested from PanelApp)",
+                    "type": "string"
+                },
+                "panel_version": {
+                    "description": "The panel version in PanelApp (only present when a panel is requested from PanelApp)",
+                    "type": "string"
+                },
+                "panel_gene_confidence": {
+                    "description": "The gene confidence for genes in the panel to be considered (only present when a panel is requested from PanelApp)",
+                    "type": "string"
+                },
+                "gene_list": {
+                    "description": "The list of genes to be analysed (not present when performing whole exome analysis)",
+                    "type": "string"
+                },
+                "transcript_filtering_flags": {
+                    "description": "Annotation flags used to filter transcripts",
+                    "type": "string"
+                },
+                "transcript_filtering_biotypes": {
+                    "description": "The biotypes used to filter transcripts",
                     "type": "string"
                 }
             }
@@ -153,6 +177,10 @@
                                                         },
                                                         "end": {
                                                             "description": "Gap ending position",
+                                                            "type": "integer"
+                                                        },
+                                                        "length": {
+                                                            "description": "Gap length",
                                                             "type": "integer"
                                                         }
                                                     }

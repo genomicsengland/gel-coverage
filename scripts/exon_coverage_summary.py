@@ -3,7 +3,7 @@ import argparse
 import json
 import os
 
-from gelCoverage.gel_coverage import GelCoverageEngine
+from gelcoverage.runner import GelCoverageRunner
 
 
 def main():
@@ -64,7 +64,7 @@ def main():
         "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes')
     }
     # Calls the GEL coverage engine
-    gel_coverage_engine = GelCoverageEngine(config)
+    gel_coverage_engine = GelCoverageRunner(config)
     output = gel_coverage_engine.run()
     # Prints output to stdout
     # TODO: we may want to write it to a file. Check that
