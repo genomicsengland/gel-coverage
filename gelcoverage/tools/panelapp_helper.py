@@ -8,7 +8,14 @@ class PanelappHelper:
         self.host = host
 
     def get_gene_list(self, panel, panel_version, gene_confidence_threshold):
-        # TODO: implement a call to the PanelApp webservice
+        """
+        Gets the HGNC gene names in a given panel identified by panel name and panel version.
+        Also, if provided, only gets those genes having a level of evidence listed in gene_confidence_threshold.
+        :param panel: the panel name
+        :param panel_version: the panel version
+        :param gene_confidence_threshold: the gene's level of evidence
+        :return: a list of HGNC gene names
+        """
         url = "{host}/get_panel/{panel}/".format(
             host=self.host,
             panel=panel)
@@ -23,5 +30,4 @@ class PanelappHelper:
         if type(panel) != dict:
             raise SystemError("PanelApp returned an error for the query %s" % url)
         gene_list = [x["GeneSymbol"] for x in panel["result"]["Genes"]]
-
         return gene_list

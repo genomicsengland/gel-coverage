@@ -11,5 +11,5 @@ def compute_gc_content(sequence):
     total_base_count = 0
     gc_count += len(re.findall("[GC]", sequence))
     total_base_count += len(re.findall("[GCTA]", sequence))
-    gc_fraction = float(gc_count) / total_base_count
-    return (gc_fraction)
+    gc_fraction = round(float(gc_count) / total_base_count, 5)
+    return gc_fraction

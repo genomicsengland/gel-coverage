@@ -38,14 +38,6 @@
                 "gene_list": {
                     "description": "The list of genes to be analysed (not present when performing whole exome analysis)",
                     "type": "string"
-                },
-                "transcript_filtering_flags": {
-                    "description": "Annotation flags used to filter transcripts",
-                    "type": "string"
-                },
-                "transcript_filtering_biotypes": {
-                    "description": "The biotypes used to filter transcripts",
-                    "type": "string"
                 }
             }
         },
@@ -100,6 +92,10 @@
                                             },
                                             "end": {
                                                 "description": "The exon end position",
+                                                "type": "integer"
+                                            },
+                                            "length": {
+                                                "description": "The exon's length",
                                                 "type": "integer"
                                             },
                                             "statistics": {

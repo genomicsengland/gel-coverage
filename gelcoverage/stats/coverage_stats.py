@@ -45,19 +45,19 @@ def compute_exon_level_statistics(coverages, gc_content):
     """
     stats = {}
     stats["total_bases"] = len(coverages)
-    stats["mean"] = float(np.mean(coverages))
-    stats["median"] = float(np.median(coverages))
-    stats["pct75"] = float(np.percentile(coverages, 75))
-    stats["pct25"] = float(np.percentile(coverages, 25))
+    stats["mean"] = round(float(np.mean(coverages)), 3)
+    stats["median"] = round(float(np.median(coverages)), 3)
+    stats["pct75"] = round(float(np.percentile(coverages, 75)), 3)
+    stats["pct25"] = round(float(np.percentile(coverages, 25)), 3)
     stats["bases_lt_3x"] = int(np.sum(1 for x in coverages if x < 3))
     stats["bases_lt_15x"] = int(np.sum(1 for x in coverages if x < 15))
     stats["bases_gte_15x"] = int(np.sum(1 for x in coverages if x >= 15))
     stats["bases_gte_30x"] = int(np.sum(1 for x in coverages if x >= 30))
     stats["bases_gte_50x"] = int(np.sum(1 for x in coverages if x >= 50))
-    stats["percent_lt_15x"] = float(stats["bases_lt_15x"]) / stats["total_bases"]
-    stats["percent_gte_15x"] = float(stats["bases_gte_15x"]) / stats["total_bases"]
-    stats["percent_gte_30x"] = float(stats["bases_gte_30x"]) / stats["total_bases"]
-    stats["percent_gte_50x"] = float(stats["bases_gte_50x"]) / stats["total_bases"]
+    stats["percent_lt_15x"] = round(float(stats["bases_lt_15x"]) / stats["total_bases"], 5)
+    stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
+    stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
+    stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
     stats["gc_content"] = gc_content
 
     return stats
@@ -73,22 +73,22 @@ def compute_transcript_level_statistics(exons):
     stats = {}
     exons_stats = [x["statistics"] for x in exons]
     stats["total_bases"] = int(np.sum([x["total_bases"] for x in exons_stats]))
-    stats["mean"] = float(np.mean([x["mean"] for x in exons_stats]))
-    stats["weighted_median"] = float(np.sum(
-        [x["median"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"])
-    stats["weighted_pct75"] = float(np.sum(
-        [x["pct75"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"])
-    stats["weighted_pct25"] = float(np.sum(
-        [x["pct25"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"])
+    stats["mean"] = round(float(np.mean([x["mean"] for x in exons_stats])), 3)
+    stats["weighted_median"] = round(float(np.sum(
+        [x["median"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"]), 3)
+    stats["weighted_pct75"] = round(float(np.sum(
+        [x["pct75"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"]), 3)
+    stats["weighted_pct25"] = round(float(np.sum(
+        [x["pct25"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"]), 3)
     stats["bases_lt_3x"] = int(np.sum([x["bases_lt_3x"] for x in exons_stats]))
     stats["bases_lt_15x"] = int(np.sum([x["bases_lt_15x"] for x in exons_stats]))
     stats["bases_gte_15x"] = int(np.sum([x["bases_gte_15x"] for x in exons_stats]))
     stats["bases_gte_30x"] = int(np.sum([x["bases_gte_30x"] for x in exons_stats]))
     stats["bases_gte_50x"] = int(np.sum([x["bases_gte_50x"] for x in exons_stats]))
-    stats["percent_lt_15x"] = float(stats["bases_lt_15x"]) / stats["total_bases"]
-    stats["percent_gte_15x"] = float(stats["bases_gte_15x"]) / stats["total_bases"]
-    stats["percent_gte_30x"] = float(stats["bases_gte_30x"]) / stats["total_bases"]
-    stats["percent_gte_50x"] = float(stats["bases_gte_50x"]) / stats["total_bases"]
+    stats["percent_lt_15x"] = round(float(stats["bases_lt_15x"]) / stats["total_bases"], 5)
+    stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
+    stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
+    stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
     stats["gc_content"] = float(np.sum(
         [x["gc_content"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"])
     return stats

@@ -36,7 +36,7 @@ class CellbaseHelper:
         self.cellbase_client = CellBaseClient(config)
         self.cellbase_gene_client = self.cellbase_client.get_gene_client()
 
-    def is_any_flag_included(self, flags):
+    def __is_any_flag_included(self, flags):
         """
         Returns a boolean indicating if the list of input flags contain anyone not to be filtered out
         :param flags: The input list of flags
@@ -44,7 +44,8 @@ class CellbaseHelper:
         """
         return len(set(self.filter_flags).intersection(set(flags))) > 0
 
-    def get_all_flags_for_gene(self, transcripts):
+    @staticmethod
+    def __get_all_flags_for_gene(transcripts):
         """
         For a list of transcripts, each with a set of flags gets a flattened list
         :param transcripts: the transcripts data structure
@@ -65,11 +66,11 @@ class CellbaseHelper:
             **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
         )
         gene_list = [x["name"] for x in cellbase_result[0]["result"]
-                     if self.is_any_flag_included(self.get_all_flags_for_gene(x["transcripts"]))]
+                     if self.__is_any_flag_included(CellbaseHelper.__get_all_flags_for_gene(x["transcripts"]))]
 
         return gene_list
 
-    def get_gene_info(self, gene_list, filter = True):
+    def __get_gene_info(self, gene_list, filter= True):
         """
         For a list of HGNC gene names queries CellBase for all information about transcripts and
         their corresponding exons, including the exonic sequence.
@@ -115,13 +116,13 @@ class CellbaseHelper:
             current_list = gene_list[gene_count: limit]
             gene_count += limit
             # Query CellBase for a subset of genes
-            cellbase_genes = self.get_gene_info(current_list)
+            cellbase_genes = self.__get_gene_info(current_list)
             # Parse results into BED fields
             for gene in cellbase_genes[0]["result"]:
                 gene_name = gene["name"]
                 for transcript in gene["transcripts"]:
                     filtered_out = "annotationFlags" not in transcript or \
-                                   not self.is_any_flag_included(transcript["annotationFlags"])
+                                   not self.__is_any_flag_included(transcript["annotationFlags"])
                     if filter and filtered_out:
                         # We ignore transcripts not flagged as any of a set of flags in the config file
                         continue

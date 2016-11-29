@@ -1,4 +1,5 @@
 import unittest
+import json
 from gelcoverage.runner import GelCoverageRunner
 
 
@@ -159,6 +160,8 @@ class GelCoverageRunnerTests(unittest.TestCase):
                     # Verify gaps
                     for gap in exon["gaps"]:
                         self.verify_gap(gap, exon)
+        with open('../resources/test/output1.json', 'w') as fp:
+            json.dump(output, fp)
 
     def test2(self):
         """
@@ -200,3 +203,5 @@ class GelCoverageRunnerTests(unittest.TestCase):
                     # Verify gaps
                     for gap in exon["gaps"]:
                         self.verify_gap(gap, exon)
+        with open('../resources/test/output2.json', 'w') as fp:
+            json.dump(output, fp)

@@ -23,7 +23,7 @@ class CellbaseHelperTests(unittest.TestCase):
         Tests get_all_genes()
         :return:
         """
-        genes = self.cellbase_helper.get_all_genes()
+        genes = self.cellbase_helper.get_all_gene_names()
         self.assertEqual(type(genes), list)
         self.assertEqual(len(genes), 20760)
         print "%s genes were returned" % str(len(genes))
@@ -34,7 +34,7 @@ class CellbaseHelperTests(unittest.TestCase):
         Tests get_all_genes() without filtering enabled
         :return:
         """
-        genes = self.cellbase_helper.get_all_genes(filter = False)
+        genes = self.cellbase_helper.get_all_gene_names(filter = False)
         self.assertEqual(type(genes), list)
         self.assertEqual(len(genes), 57905)
         print "%s genes were returned" % str(len(genes))

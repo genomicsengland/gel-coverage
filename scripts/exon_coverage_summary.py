@@ -2,6 +2,7 @@ import ConfigParser
 import argparse
 import json
 import os
+import codecs
 
 from gelcoverage.runner import GelCoverageRunner
 
@@ -10,8 +11,9 @@ def main():
 
     config_file = '../resources/exon_coverage_summary.config'
 
-    parser = argparse.ArgumentParser(description = 'Coverage summary for exons')
-    parser.add_argument('--bw', metavar='bw', help = 'This is the bigwig file')
+    parser = argparse.ArgumentParser(description = 'Coverage summary. Provide a panel name and version, a gene list '
+                                                   'or none of thee previous to run whole exome coverage analysis')
+    parser.add_argument('--bw', metavar='bw', help = 'This is the bigwig file [required]', required = True)
     parser.add_argument('--panel', metavar = 'panel',
                         help = 'The panel name or identifier in PanelApp /'
                              '(see https://bioinfo.extge.co.uk/crowdsourcing/WebServices/list_panels)',
@@ -32,8 +34,11 @@ def main():
     #                    choices = ["json", "tabular"],
     #                    default = "json")
     parser.add_argument('--coverage-threshold', metavar='coverage_threshold',
-                        help='The coverage threshold used to compute continuous gaps with low coverage (0 = disabled)',
+                        help='The coverage threshold used to compute continuous gaps with low coverage (0 = disabled) [default:15]',
                         default = 15)
+    parser.add_argument('--output', metavar='output',
+                        help='The file to which write the results [required]',
+                        required=True)
     #TODO: add parameter to add flanking regions to genes
     #TODO: add parameter to return only information about canonical transcripts
     #parser.add_argument('--cnv', metavar='cnv', help='cnv vcf - so that losses can be indicated', default=0)
@@ -65,10 +70,18 @@ def main():
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)
-    output = gel_coverage_engine.run()
+    results = gel_coverage_engine.run()
     # Prints output to stdout
     # TODO: we may want to write it to a file. Check that
-    print json.dumps(output, indent=4)
+    with codecs.open(args.output, 'w', 'utf8') as output_file:
+        output_file.write(
+            json.dumps(
+                results,
+                indent=4,
+                ensure_ascii=False,
+                sort_keys=True
+            )
+        )
 
     # TODO: output results in different formats
     #if args.output == "json":

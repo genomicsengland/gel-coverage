@@ -5,6 +5,7 @@ import numpy
 import gelcoverage.stats.coverage_stats as coverage_stats
 import gelcoverage.stats.sequence_stats as sequence_stats
 
+
 class CoverageStatsTests(unittest.TestCase):
 
     def setUp(self):
@@ -30,7 +31,7 @@ class CoverageStatsTests(unittest.TestCase):
         self.assertEqual(type(gaps), list)
         self.assertEqual(len(gaps), 3)
         for gap in gaps:
-            self.assertEqual(type(gap), collections.defaultdict)
+            self.assertEqual(type(gap), dict)
             self.assertTrue("start" in gap)
             self.assertTrue("end" in gap)
             self.assertEqual(type(gap["start"]), int)
@@ -43,7 +44,7 @@ class CoverageStatsTests(unittest.TestCase):
         :return:
         """
         stats = coverage_stats.compute_exon_level_statistics(self.coverages, self.gc_content)
-        self.assertEqual(type(stats), collections.defaultdict)
+        self.assertEqual(type(stats), dict)
         self.assertTrue("total_bases" in stats)
         self.assertTrue("mean" in stats)
         self.assertTrue("median" in stats)
@@ -83,9 +84,9 @@ class CoverageStatsTests(unittest.TestCase):
         exon1 = coverage_stats.compute_exon_level_statistics(self.coverages, self.gc_content)
         exon2 = coverage_stats.compute_exon_level_statistics(self.coverages2, self.gc_content)
         exon3 = coverage_stats.compute_exon_level_statistics(self.coverages3, self.gc_content)
-        exons = {1:exon1, 2:exon2, 3:exon3}
+        exons = [{"statistics":exon1}, {"statistics":exon2}, {"statistics":exon3}]
         stats = coverage_stats.compute_transcript_level_statistics(exons)
-        self.assertEqual(type(stats), collections.defaultdict)
+        self.assertEqual(type(stats), dict)
         self.assertTrue("total_bases" in stats)
         self.assertTrue("mean" in stats)
         self.assertTrue("weighted_median" in stats)
