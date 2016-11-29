@@ -42,208 +42,276 @@
             }
         },
         "results": {
-            "description": "The coverage results as hierarchy of genes-transcripts-exons",
-            "type": "array",
-            "items": {
-                "title": "Gene",
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "description": "The HGNC Symbol",
-                        "type": "string"
-                    },
-                    "chromosome": {
-                        "description": "The chromosome identifer (format TBD: chr1 or 1?)",
-                        "type": "string"
-                    },
-                    "transcripts": {
-                        "description": "The list of transcripts for this gene",
-                        "type": "array",
-                        "items": {
-                            "title": "Transcript",
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "description": "The Ensembl transcript identifier",
-                                    "type": "string"
-                                },
-                                "exons": {
-                                    "description": "The list of exons for this transcript",
-                                    "type": "array",
-                                    "items": {
-                                        "title": "Exon",
-                                        "type": "object",
-                                        "properties": {
-                                            "exon_number": {
-                                                "description": "The exon index in the gene",
-                                                "type": "integer"
-                                            },
-                                            "start": {
-                                                "description": "The exon start position",
-                                                "type": "integer"
-                                            },
-                                            "end": {
-                                                "description": "The exon end position",
-                                                "type": "integer"
-                                            },
-                                            "padded_start": {
-                                                "description": "The exon padded start position",
-                                                "type": "integer"
-                                            },
-                                            "padded_end": {
-                                                "description": "The exon padded end position",
-                                                "type": "integer"
-                                            },
-                                            "length": {
-                                                "description": "The exon's length",
-                                                "type": "integer"
-                                            },
-                                            "statistics": {
-                                                "description": "The set of coverage statistics",
+            "description": "The coverage results as hierarchy of panel-genes-transcripts-exons",
+            "type": "object",
+            "properties": {
+                "statistics": {
+                    "description": "The set of coverage statistics",
+                    "type": "object",
+                    "properties": {
+                        "total_bases": {
+                            "description": "The total number of bases",
+                            "type": "integer"
+                        },
+                        "mean": {
+                            "description": "The mean coverage",
+                            "type": "real"
+                        },
+                        "median": {
+                            "description": "The median coverage",
+                            "type": "real"
+                        },
+                        "pct75": {
+                            "description": "The 75th percentile coverage",
+                            "type": "real"
+                        },
+                        "pct25": {
+                            "description": "The 25th percentile coverage",
+                            "type": "real"
+                        },
+                        "bases_lt_3x": {
+                            "description": "Number of bases under 3x coverage",
+                            "type": "integer"
+                        },
+                        "bases_lt_15x": {
+                            "description": "Number of bases under 15x coverage",
+                            "type": "integer"
+                        },
+                        "bases_gte_15x": {
+                            "description": "Number of bases equal or over 15x coverage",
+                            "type": "integer"
+                        },
+                        "bases_gte_30x": {
+                            "description": "Number of bases equal or over 30x coverage",
+                            "type": "integer"
+                        },
+                        "bases_gte_50x": {
+                            "description": "Number of bases equal or over 50x coverage",
+                            "type": "integer"
+                        },
+                        "percent_lt_15x": {
+                            "description": "Percentage of bases under 15x coverage",
+                            "type": "real"
+                        },
+                        "percent_gte_15x": {
+                            "description": "Percentage of bases equal or over 15x coverage",
+                            "type": "real"
+                        },
+                        "percent_gte_30x": {
+                            "description": "Percentage of bases equal or over 30x coverage",
+                            "type": "real"
+                        },
+                        "percent_gte_50x": {
+                            "description": "Percentage of bases equal or over 50x coverage",
+                            "type": "real"
+                        }
+                    }
+                },
+                "genes": {
+                    "description": "The list of genes in the panel",
+                    "type": "array",
+                    "items": {
+                        "title": "Gene",
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "description": "The HGNC Symbol",
+                                "type": "string"
+                            },
+                            "chromosome": {
+                                "description": "The chromosome identifer (format TBD: chr1 or 1?)",
+                                "type": "string"
+                            },
+                            "transcripts": {
+                                "description": "The list of transcripts for this gene",
+                                "type": "array",
+                                "items": {
+                                    "title": "Transcript",
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "description": "The Ensembl transcript identifier",
+                                            "type": "string"
+                                        },
+                                        "exons": {
+                                            "description": "The list of exons for this transcript",
+                                            "type": "array",
+                                            "items": {
+                                                "title": "Exon",
                                                 "type": "object",
                                                 "properties": {
-                                                    "total_bases": {
-                                                        "description": "The total number of bases",
+                                                    "exon_number": {
+                                                        "description": "The exon index in the gene",
                                                         "type": "integer"
                                                     },
-                                                    "mean": {
-                                                        "description": "The mean coverage",
-                                                        "type": "real"
-                                                    },
-                                                    "median": {
-                                                        "description": "The median coverage",
-                                                        "type": "real"
-                                                    },
-                                                    "pct75": {
-                                                        "description": "The 75th percentile coverage",
-                                                        "type": "real"
-                                                    },
-                                                    "pct25": {
-                                                        "description": "The 25th percentile coverage",
-                                                        "type": "real"
-                                                    },
-                                                    "bases_lt_3x": {
-                                                        "description": "Number of bases under 3x coverage",
+                                                    "start": {
+                                                        "description": "The exon start position",
                                                         "type": "integer"
                                                     },
-                                                    "bases_lt_15x": {
-                                                        "description": "Number of bases under 15x coverage",
+                                                    "end": {
+                                                        "description": "The exon end position",
                                                         "type": "integer"
                                                     },
-                                                    "bases_gte_15x": {
-                                                        "description": "Number of bases equal or over 15x coverage",
+                                                    "padded_start": {
+                                                        "description": "The exon padded start position",
                                                         "type": "integer"
                                                     },
-                                                    "bases_gte_30x": {
-                                                        "description": "Number of bases equal or over 30x coverage",
+                                                    "padded_end": {
+                                                        "description": "The exon padded end position",
                                                         "type": "integer"
                                                     },
-                                                    "bases_gte_50x": {
-                                                        "description": "Number of bases equal or over 50x coverage",
+                                                    "length": {
+                                                        "description": "The exon's length",
                                                         "type": "integer"
                                                     },
-                                                    "percent_lt_15x": {
-                                                        "description": "Percentage of bases under 15x coverage",
-                                                        "type": "real"
+                                                    "statistics": {
+                                                        "description": "The set of coverage statistics",
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "total_bases": {
+                                                                "description": "The total number of bases",
+                                                                "type": "integer"
+                                                            },
+                                                            "mean": {
+                                                                "description": "The mean coverage",
+                                                                "type": "real"
+                                                            },
+                                                            "median": {
+                                                                "description": "The median coverage",
+                                                                "type": "real"
+                                                            },
+                                                            "pct75": {
+                                                                "description": "The 75th percentile coverage",
+                                                                "type": "real"
+                                                            },
+                                                            "pct25": {
+                                                                "description": "The 25th percentile coverage",
+                                                                "type": "real"
+                                                            },
+                                                            "bases_lt_3x": {
+                                                                "description": "Number of bases under 3x coverage",
+                                                                "type": "integer"
+                                                            },
+                                                            "bases_lt_15x": {
+                                                                "description": "Number of bases under 15x coverage",
+                                                                "type": "integer"
+                                                            },
+                                                            "bases_gte_15x": {
+                                                                "description": "Number of bases equal or over 15x coverage",
+                                                                "type": "integer"
+                                                            },
+                                                            "bases_gte_30x": {
+                                                                "description": "Number of bases equal or over 30x coverage",
+                                                                "type": "integer"
+                                                            },
+                                                            "bases_gte_50x": {
+                                                                "description": "Number of bases equal or over 50x coverage",
+                                                                "type": "integer"
+                                                            },
+                                                            "percent_lt_15x": {
+                                                                "description": "Percentage of bases under 15x coverage",
+                                                                "type": "real"
+                                                            },
+                                                            "percent_gte_15x": {
+                                                                "description": "Percentage of bases equal or over 15x coverage",
+                                                                "type": "real"
+                                                            },
+                                                            "percent_gte_30x": {
+                                                                "description": "Percentage of bases equal or over 30x coverage",
+                                                                "type": "real"
+                                                            },
+                                                            "percent_gte_50x": {
+                                                                "description": "Percentage of bases equal or over 50x coverage",
+                                                                "type": "real"
+                                                            }
+                                                        }
                                                     },
-                                                    "percent_gte_15x": {
-                                                        "description": "Percentage of bases equal or over 15x coverage",
-                                                        "type": "real"
-                                                    },
-                                                    "percent_gte_30x": {
-                                                        "description": "Percentage of bases equal or over 30x coverage",
-                                                        "type": "real"
-                                                    },
-                                                    "percent_gte_50x": {
-                                                        "description": "Percentage of bases equal or over 50x coverage",
-                                                        "type": "real"
-                                                    }
-                                                }
-                                            },
-                                            "gaps": {
-                                                "description": "The contiguous sequences of bases under a certain coverage",
-                                                "type": "array",
-                                                "items": {
-                                                    "title": "Gap",
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "start": {
-                                                            "description": "Gap starting position",
-                                                            "type": "integer"
-                                                        },
-                                                        "end": {
-                                                            "description": "Gap ending position",
-                                                            "type": "integer"
-                                                        },
-                                                        "length": {
-                                                            "description": "Gap length",
-                                                            "type": "integer"
+                                                    "gaps": {
+                                                        "description": "The contiguous sequences of bases under a certain coverage",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "title": "Gap",
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "start": {
+                                                                    "description": "Gap starting position",
+                                                                    "type": "integer"
+                                                                },
+                                                                "end": {
+                                                                    "description": "Gap ending position",
+                                                                    "type": "integer"
+                                                                },
+                                                                "length": {
+                                                                    "description": "Gap length",
+                                                                    "type": "integer"
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
-                                        }
-                                    }
-                                },
-                                "statistics": {
-                                    "description": "The set of coverage statistics",
-                                    "type": "object",
-                                    "properties": {
-                                        "total_bases": {
-                                            "description": "The total number of bases",
-                                            "type": "integer"
                                         },
-                                        "mean": {
-                                            "description": "The mean coverage",
-                                            "type": "real"
-                                        },
-                                        "median": {
-                                            "description": "The median coverage",
-                                            "type": "real"
-                                        },
-                                        "pct75": {
-                                            "description": "The 75th percentile coverage",
-                                            "type": "real"
-                                        },
-                                        "pct25": {
-                                            "description": "The 25th percentile coverage",
-                                            "type": "real"
-                                        },
-                                        "bases_lt_3x": {
-                                            "description": "Number of bases under 3x coverage",
-                                            "type": "integer"
-                                        },
-                                        "bases_lt_15x": {
-                                            "description": "Number of bases under 15x coverage",
-                                            "type": "integer"
-                                        },
-                                        "bases_gte_15x": {
-                                            "description": "Number of bases equal or over 15x coverage",
-                                            "type": "integer"
-                                        },
-                                        "bases_gte_30x": {
-                                            "description": "Number of bases equal or over 30x coverage",
-                                            "type": "integer"
-                                        },
-                                        "bases_gte_50x": {
-                                            "description": "Number of bases equal or over 50x coverage",
-                                            "type": "integer"
-                                        },
-                                        "percent_lt_15x": {
-                                            "description": "Percentage of bases under 15x coverage",
-                                            "type": "real"
-                                        },
-                                        "percent_gte_15x": {
-                                            "description": "Percentage of bases equal or over 15x coverage",
-                                            "type": "real"
-                                        },
-                                        "percent_gte_30x": {
-                                            "description": "Percentage of bases equal or over 30x coverage",
-                                            "type": "real"
-                                        },
-                                        "percent_gte_50x": {
-                                            "description": "Percentage of bases equal or over 50x coverage",
-                                            "type": "real"
+                                        "statistics": {
+                                            "description": "The set of coverage statistics",
+                                            "type": "object",
+                                            "properties": {
+                                                "total_bases": {
+                                                    "description": "The total number of bases",
+                                                    "type": "integer"
+                                                },
+                                                "mean": {
+                                                    "description": "The mean coverage",
+                                                    "type": "real"
+                                                },
+                                                "median": {
+                                                    "description": "The median coverage",
+                                                    "type": "real"
+                                                },
+                                                "pct75": {
+                                                    "description": "The 75th percentile coverage",
+                                                    "type": "real"
+                                                },
+                                                "pct25": {
+                                                    "description": "The 25th percentile coverage",
+                                                    "type": "real"
+                                                },
+                                                "bases_lt_3x": {
+                                                    "description": "Number of bases under 3x coverage",
+                                                    "type": "integer"
+                                                },
+                                                "bases_lt_15x": {
+                                                    "description": "Number of bases under 15x coverage",
+                                                    "type": "integer"
+                                                },
+                                                "bases_gte_15x": {
+                                                    "description": "Number of bases equal or over 15x coverage",
+                                                    "type": "integer"
+                                                },
+                                                "bases_gte_30x": {
+                                                    "description": "Number of bases equal or over 30x coverage",
+                                                    "type": "integer"
+                                                },
+                                                "bases_gte_50x": {
+                                                    "description": "Number of bases equal or over 50x coverage",
+                                                    "type": "integer"
+                                                },
+                                                "percent_lt_15x": {
+                                                    "description": "Percentage of bases under 15x coverage",
+                                                    "type": "real"
+                                                },
+                                                "percent_gte_15x": {
+                                                    "description": "Percentage of bases equal or over 15x coverage",
+                                                    "type": "real"
+                                                },
+                                                "percent_gte_30x": {
+                                                    "description": "Percentage of bases equal or over 30x coverage",
+                                                    "type": "real"
+                                                },
+                                                "percent_gte_50x": {
+                                                    "description": "Percentage of bases equal or over 50x coverage",
+                                                    "type": "real"
+                                                }
+                                            }
                                         }
                                     }
                                 }

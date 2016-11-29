@@ -183,7 +183,9 @@ class GelCoverageRunner:
             logging.error("Incorrect BED file!")
             raise RuntimeError("Incorrect BED file!")
         # Initialize results data structure
-        results = []
+        results = {
+            "genes": []
+        }
         current_gene = {}
         current_transcript = {}
         # Process every interval in the BED file
@@ -209,7 +211,7 @@ class GelCoverageRunner:
             try:
                 if current_gene["name"] != gene_name:
                     # Save previous result
-                    results.append(current_gene)
+                    results["genes"].append(current_gene)
                     # Create a new data structure for new gene
                     current_gene = GelCoverageRunner.__initialize_gene_dict(gene_name, chromosome)
             except KeyError:
@@ -234,7 +236,10 @@ class GelCoverageRunner:
         # Save previous result
         current_gene["transcripts"].append(current_transcript)
         logging.info("Processed transcript %s of gene %s" % (transcript_id, gene_name))
-        results.append(current_gene)
+        results["genes"].append(current_gene)
+        results["statistics"] = coverage_stats.compute_panel_level_statistics(
+            results["genes"]
+        )
         return results
 
     def __is_exon_padding_enabled(self):

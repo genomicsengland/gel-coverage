@@ -135,6 +135,41 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertEqual(type(gap["length"]), int)
         self.assertTrue(gap["length"] >= 1 and gap["length"] <= gap["end"] - gap["start"] + 1)
 
+    def verify_panel_stats(self, stats):
+        self.assertEqual(type(stats), dict)
+        self.assertEqual(type(stats["bases_gte_15x"]), int)
+        self.assertTrue(stats["bases_gte_15x"] >= 0)
+        self.assertEqual(type(stats["bases_gte_30x"]), int)
+        self.assertTrue(stats["bases_gte_30x"] >= 0)
+        self.assertEqual(type(stats["bases_gte_50x"]), int)
+        self.assertTrue(stats["bases_gte_50x"] >= 0)
+        self.assertEqual(type(stats["bases_lt_15x"]), int)
+        self.assertTrue(stats["bases_lt_15x"] >= 0)
+        self.assertEqual(type(stats["bases_lt_3x"]), int)
+        self.assertTrue(stats["bases_lt_3x"] >= 0)
+        self.assertEqual(type(stats["gc_content"]), float)
+        self.assertTrue(stats["gc_content"] >= 0 and
+                        stats["gc_content"] <= 1)
+        self.assertEqual(type(stats["mean"]), float)
+        self.assertTrue(stats["mean"] >= 0)
+        self.assertEqual(type(stats["percent_gte_15x"]), float)
+        self.assertTrue(stats["percent_gte_15x"] >= 0 and
+                        stats["percent_gte_15x"] <= 1)
+        self.assertTrue(stats["percent_gte_30x"] >= 0 and
+                        stats["percent_gte_30x"] <= 1)
+        self.assertTrue(stats["percent_gte_50x"] >= 0 and
+                        stats["percent_gte_50x"] <= 1)
+        self.assertTrue(stats["percent_lt_15x"] >= 0 and
+                        stats["percent_lt_15x"] <= 1)
+        self.assertEqual(type(stats["total_bases"]), int)
+        self.assertTrue(stats["total_bases"] >= 0)
+        self.assertEqual(type(stats["weighted_median"]), float)
+        self.assertTrue(stats["weighted_median"] >= 0)
+        self.assertEqual(type(stats["weighted_pct75"]), float)
+        self.assertTrue(stats["weighted_pct75"] >= 0)
+        self.assertEqual(type(stats["weighted_pct25"]), float)
+        self.assertTrue(stats["weighted_pct25"] >= 0)
+
     def test1(self):
         """
         Test 1: panel from PanelApp
@@ -153,9 +188,12 @@ class GelCoverageRunnerTests(unittest.TestCase):
         # Verify that content in parameters is correct
         self.verify_parameters(output["parameters"], expected_gene_list)
         # Verify that coverage results are correct
-        self.assertEqual(type(output["results"]), list)
+        self.assertEqual(type(output["results"]), dict)
+        self.assertEqual(type(output["results"]["genes"]), list)
+        self.assertEqual(type(output["results"]["statistics"]), dict)
+        self.verify_panel_stats(output["results"]["statistics"])
         # Verify every gene
-        for gene in output["results"]:
+        for gene in output["results"]["genes"]:
             self.assertTrue(gene["name"] in expected_gene_list)
             self.assertEqual(type(gene["chromosome"]), unicode)
             # Verify every transcript
@@ -199,9 +237,12 @@ class GelCoverageRunnerTests(unittest.TestCase):
         # Verify that content in parameters is correct
         self.verify_parameters(output["parameters"], expected_gene_list)
         # Verify that coverage results are correct
-        self.assertEqual(type(output["results"]), list)
+        self.assertEqual(type(output["results"]), dict)
+        self.assertEqual(type(output["results"]["genes"]), list)
+        self.assertEqual(type(output["results"]["statistics"]), dict)
+        self.verify_panel_stats(output["results"]["statistics"])
         # Verify every gene
-        for gene in output["results"]:
+        for gene in output["results"]["genes"]:
             self.assertTrue(gene["name"] in expected_gene_list)
             self.assertEqual(type(gene["chromosome"]), unicode)
             # Verify every transcript
@@ -236,9 +277,12 @@ class GelCoverageRunnerTests(unittest.TestCase):
         # Verify that content in parameters is correct
         self.verify_parameters(output["parameters"], expected_gene_list)
         # Verify that coverage results are correct
-        self.assertEqual(type(output["results"]), list)
+        self.assertEqual(type(output["results"]), dict)
+        self.assertEqual(type(output["results"]["genes"]), list)
+        self.assertEqual(type(output["results"]["statistics"]), dict)
+        self.verify_panel_stats(output["results"]["statistics"])
         # Verify every gene
-        for gene in output["results"]:
+        for gene in output["results"]["genes"]:
             self.assertTrue(gene["name"] in expected_gene_list)
             self.assertEqual(type(gene["chromosome"]), unicode)
             # Verify every transcript
@@ -284,9 +328,12 @@ class GelCoverageRunnerTests(unittest.TestCase):
         # Verify that content in parameters is correct
         self.verify_parameters(output["parameters"], expected_gene_list)
         # Verify that coverage results are correct
-        self.assertEqual(type(output["results"]), list)
+        self.assertEqual(type(output["results"]), dict)
+        self.assertEqual(type(output["results"]["genes"]), list)
+        self.assertEqual(type(output["results"]["statistics"]), dict)
+        self.verify_panel_stats(output["results"]["statistics"])
         # Verify every gene
-        for gene in output["results"]:
+        for gene in output["results"]["genes"]:
             self.assertTrue(gene["name"] in expected_gene_list)
             self.assertEqual(type(gene["chromosome"]), unicode)
             # Verify every transcript

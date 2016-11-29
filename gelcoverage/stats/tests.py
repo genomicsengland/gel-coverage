@@ -118,6 +118,7 @@ class CoverageStatsTests(unittest.TestCase):
         self.assertEqual(type(stats["percent_gte_50x"]), float)
         self.assertEqual(type(stats["gc_content"]), float)
 
+    # TODO: test the panel level statistics
 
 class SequenceStatsTests(unittest.TestCase):
 

@@ -63,7 +63,6 @@ def compute_exon_level_statistics(coverages, gc_content):
 
     return stats
 
-
 def compute_transcript_level_statistics(exons):
     """
     Computes coverage and GC content statistics at gene level by aggregating the statistics at exon level.
@@ -90,6 +89,36 @@ def compute_transcript_level_statistics(exons):
     stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
     stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
     stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
-    stats["gc_content"] = float(np.sum(
-        [x["gc_content"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"])
+    stats["gc_content"] = round(float(np.sum(
+        [x["gc_content"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"]), 5)
+    return stats
+
+def compute_panel_level_statistics(genes):
+    """
+
+    :param genes:
+    :return:
+    """
+    stats = {}
+    # TODO: compute the stats aggregated for union transcript
+    genes_stats = [y["statistics"] for x in genes for y in x["transcripts"]]
+    stats["total_bases"] = int(np.sum([x["total_bases"] for x in genes_stats]))
+    stats["mean"] = round(float(np.mean([x["mean"] for x in genes_stats])), 3)
+    stats["weighted_median"] = round(float(np.sum(
+        [x["weighted_median"] * x["total_bases"] for x in genes_stats]) / stats["total_bases"]), 3)
+    stats["weighted_pct75"] = round(float(np.sum(
+        [x["weighted_pct75"] * x["total_bases"] for x in genes_stats]) / stats["total_bases"]), 3)
+    stats["weighted_pct25"] = round(float(np.sum(
+        [x["weighted_pct25"] * x["total_bases"] for x in genes_stats]) / stats["total_bases"]), 3)
+    stats["bases_lt_3x"] = int(np.sum([x["bases_lt_3x"] for x in genes_stats]))
+    stats["bases_lt_15x"] = int(np.sum([x["bases_lt_15x"] for x in genes_stats]))
+    stats["bases_gte_15x"] = int(np.sum([x["bases_gte_15x"] for x in genes_stats]))
+    stats["bases_gte_30x"] = int(np.sum([x["bases_gte_30x"] for x in genes_stats]))
+    stats["bases_gte_50x"] = int(np.sum([x["bases_gte_50x"] for x in genes_stats]))
+    stats["percent_lt_15x"] = round(float(stats["bases_lt_15x"]) / stats["total_bases"], 5)
+    stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
+    stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
+    stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
+    stats["gc_content"] = round(float(np.sum(
+        [x["gc_content"] * x["total_bases"] for x in genes_stats]) / stats["total_bases"]), 5)
     return stats
