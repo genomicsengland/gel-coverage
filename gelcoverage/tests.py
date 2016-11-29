@@ -122,22 +122,29 @@ class GelCoverageRunnerTests(unittest.TestCase):
     def verify_gap(self, gap, exon):
         self.assertEqual(type(gap), dict)
         self.assertEqual(type(gap["start"]), int)
-        self.assertTrue(gap["start"] >= exon["start"] and gap["start"] <= exon["end"])
+        if "padded_start" in exon:
+            start = exon["padded_start"]
+            end = exon["padded_end"]
+        else:
+            start = exon["start"]
+            end = exon["end"]
+        self.assertTrue(gap["start"] >= start and gap["start"] <= end)
         self.assertEqual(type(gap["end"]), int)
-        self.assertTrue(gap["end"] >= exon["start"] and gap["start"] <= exon["end"] and
+        self.assertTrue(gap["end"] >= start and gap["start"] <= end and
                         gap["end"] >= gap["start"])
         self.assertEqual(type(gap["length"]), int)
         self.assertTrue(gap["length"] >= 1 and gap["length"] <= gap["end"] - gap["start"] + 1)
 
     def test1(self):
         """
-        Test 1
+        Test 1: panel from PanelApp
         :return:
         """
         expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
         self.config["bw"] = "../resources/test/test1.bw"
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "0.2"
+        self.config["exon_padding"] = 0
         runner = GelCoverageRunner(
             config=self.config
         )
@@ -157,21 +164,24 @@ class GelCoverageRunnerTests(unittest.TestCase):
                 # Verify every exon
                 for exon in transcript["exons"]:
                     self.verify_exon(exon)
+                    self.assertTrue("padded_start" not in exon)
+                    self.assertTrue("padded_end" not in exon)
                     # Verify gaps
                     for gap in exon["gaps"]:
                         self.verify_gap(gap, exon)
-        with open('../resources/test/output1.json', 'w') as fp:
+        with open('../resources/test/sample_output_1.json', 'w') as fp:
             json.dump(output, fp)
 
     def test2(self):
         """
-        Test 2
+        Test 2: gene list
         :return:
         """
         self.config["panel"] = None
         self.config["panel_version"] = None
         self.config["bw"] = "../resources/test/test2.bw"
         self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE"
+        self.config["exon_padding"] = 0
         expected_gene_list = map(
             lambda x: unicode(x),
             self.config["gene_list"].split(",")
@@ -200,8 +210,97 @@ class GelCoverageRunnerTests(unittest.TestCase):
                 # Verify every exon
                 for exon in transcript["exons"]:
                     self.verify_exon(exon)
+                    self.assertTrue("padded_start" not in exon)
+                    self.assertTrue("padded_end" not in exon)
                     # Verify gaps
                     for gap in exon["gaps"]:
                         self.verify_gap(gap, exon)
-        with open('../resources/test/output2.json', 'w') as fp:
+        with open('../resources/test/sample_output_2.json', 'w') as fp:
+            json.dump(output, fp)
+
+    def test3(self):
+        """
+        Test 1: panel from PanelApp with exon padding of 15 bp
+        :return:
+        """
+        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "Epileptic encephalopathy"
+        self.config["panel_version"] = "0.2"
+        self.config["exon_padding"] = 15
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output = runner.run()
+        self.assertEqual(type(output), dict)
+        # Verify that content in parameters is correct
+        self.verify_parameters(output["parameters"], expected_gene_list)
+        # Verify that coverage results are correct
+        self.assertEqual(type(output["results"]), list)
+        # Verify every gene
+        for gene in output["results"]:
+            self.assertTrue(gene["name"] in expected_gene_list)
+            self.assertEqual(type(gene["chromosome"]), unicode)
+            # Verify every transcript
+            for transcript in gene["transcripts"]:
+                self.verify_transcript(transcript)
+                # Verify every exon
+                for exon in transcript["exons"]:
+                    self.verify_exon(exon)
+                    self.assertTrue("padded_start" in exon)
+                    self.assertTrue("padded_end" in exon)
+                    self.assertTrue(exon["padded_start"] + output["parameters"]["exon_padding"], exon["start"])
+                    self.assertTrue(exon["padded_end"] - output["parameters"]["exon_padding"], exon["end"])
+                    # Verify gaps
+                    for gap in exon["gaps"]:
+                        self.verify_gap(gap, exon)
+        with open('../resources/test/sample_output_3.json', 'w') as fp:
+            json.dump(output, fp)
+
+    def test4(self):
+        """
+        Test 2: gene list with exon padding of 15 bp
+        :return:
+        """
+        self.config["panel"] = None
+        self.config["panel_version"] = None
+        self.config["bw"] = "../resources/test/test2.bw"
+        self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE"
+        self.config["exon_padding"] = 15
+        expected_gene_list = map(
+            lambda x: unicode(x),
+            self.config["gene_list"].split(",")
+        )
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output = runner.run()
+        self.assertEqual(type(output), dict)
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output = runner.run()
+        self.assertEqual(type(output), dict)
+        # Verify that content in parameters is correct
+        self.verify_parameters(output["parameters"], expected_gene_list)
+        # Verify that coverage results are correct
+        self.assertEqual(type(output["results"]), list)
+        # Verify every gene
+        for gene in output["results"]:
+            self.assertTrue(gene["name"] in expected_gene_list)
+            self.assertEqual(type(gene["chromosome"]), unicode)
+            # Verify every transcript
+            for transcript in gene["transcripts"]:
+                self.verify_transcript(transcript)
+                # Verify every exon
+                for exon in transcript["exons"]:
+                    self.verify_exon(exon)
+                    self.assertTrue("padded_start" in exon)
+                    self.assertTrue("padded_end" in exon)
+                    self.assertTrue(exon["padded_start"] + output["parameters"]["exon_padding"], exon["start"])
+                    self.assertTrue(exon["padded_end"] - output["parameters"]["exon_padding"], exon["end"])
+                    # Verify gaps
+                    for gap in exon["gaps"]:
+                        self.verify_gap(gap, exon)
+        with open('../resources/test/sample_output_4.json', 'w') as fp:
             json.dump(output, fp)

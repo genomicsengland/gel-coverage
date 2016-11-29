@@ -58,7 +58,8 @@ def compute_exon_level_statistics(coverages, gc_content):
     stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
     stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
     stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
-    stats["gc_content"] = gc_content
+    if gc_content is not None:  # GC content is not provided for padded exons
+        stats["gc_content"] = gc_content
 
     return stats
 

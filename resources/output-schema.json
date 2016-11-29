@@ -67,14 +67,6 @@
                                     "description": "The Ensembl transcript identifier",
                                     "type": "string"
                                 },
-                                "biotype": {
-                                    "description": "The biotype",
-                                    "type": "string"
-                                },
-                                "basic_flag": {
-                                    "description": "The basic flag from GeneCode",
-                                    "type": "string"
-                                },
                                 "exons": {
                                     "description": "The list of exons for this transcript",
                                     "type": "array",
@@ -92,6 +84,14 @@
                                             },
                                             "end": {
                                                 "description": "The exon end position",
+                                                "type": "integer"
+                                            },
+                                            "padded_start": {
+                                                "description": "The exon padded start position",
+                                                "type": "integer"
+                                            },
+                                            "padded_end": {
+                                                "description": "The exon padded end position",
                                                 "type": "integer"
                                             },
                                             "length": {

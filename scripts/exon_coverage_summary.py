@@ -66,7 +66,8 @@ def main():
         "panelapp_host": config_parser.get('panelapp', 'host'),
         "panelapp_gene_confidence": config_parser.get('panelapp', 'gene_confidence'),
         "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
-        "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes')
+        "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
+        "exon_padding": int(config_parser.get("exon", "exon_padding"))
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)

@@ -26,6 +26,11 @@ class GelCoverageRunner:
         logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
         # Opens the bigwig file for reading
         self.bigwig = pyBigWig.open(self.config['bw'])
+        # Flag indicating if exon padding is enabled
+        if "exon_padding" not in self.config or type(self.config["exon_padding"]) != int or \
+            self.config["exon_padding"] <= 0:
+            self.config["exon_padding"] = 0
+        self.is_exon_padding_enabled = self.config["exon_padding"] > 0
 
     def get_gene_list(self):
         """
@@ -69,7 +74,8 @@ class GelCoverageRunner:
             "species": self.config['cellbase_species'],
             "assembly": self.config['cellbase_assembly'],
             "transcript_filtering_flags": self.config['transcript_filtering_flags'],
-            "transcript_filtering_biotypes": self.config['transcript_filtering_biotypes']
+            "transcript_filtering_biotypes": self.config['transcript_filtering_biotypes'],
+            "exon_padding": self.config["exon_padding"]
         }
         if 'panel' in self.config and self.config['panel'] is not None \
                 and 'panel_version' in self.config and self.config['panel_version'] is not None:
@@ -110,7 +116,7 @@ class GelCoverageRunner:
         }
 
     @staticmethod
-    def __initialize_exon_dict(exon_number, start, end):
+    def __initialize_exon_dict(exon_number, start, end, padded_start, padded_end):
         """
         Returns the dictionary that will store exon information
         :param exon_number: the exon number
@@ -118,12 +124,16 @@ class GelCoverageRunner:
         :param end: the end position
         :return:
         """
-        return {
+        exon = {
                 "exon_number": exon_number,
                 "start": start,
                 "end": end,
                 "length": end - start + 1
             }
+        if padded_start != start:
+            exon["padded_start"] = padded_start
+            exon["padded_end"] = padded_end
+        return exon
 
     @staticmethod
     def __read_bed_interval(interval):
@@ -205,14 +215,16 @@ class GelCoverageRunner:
             except KeyError:
                 current_gene = GelCoverageRunner.__initialize_gene_dict(gene_name, chromosome)
             # Store exon in data structure
-            exon = GelCoverageRunner.__initialize_exon_dict(exon_number, start, end)
+            padded_start = max(0, start - self.config["exon_padding"])
+            padded_end = end + self.config["exon_padding"]  # TODO: potential problem here overflowing chromosome
+            exon = GelCoverageRunner.__initialize_exon_dict(exon_number, start, end, padded_start, padded_end)
             # Read from the bigwig file
-            coverages = self.__read_bigwig_coverages(chromosome, start, end)
+            coverages = self.__read_bigwig_coverages(chromosome, padded_start, padded_end)
             # Compute statistics at exon level
             exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
             # compute gaps
             if self.config['coverage_threshold'] > 0:
-                exon["gaps"] = coverage_stats.find_gaps(coverages, start, self.config['coverage_threshold'])
+                exon["gaps"] = coverage_stats.find_gaps(coverages, padded_start, self.config['coverage_threshold'])
             current_transcript["exons"].append(exon)
         # Adds last ocurrences
         # Compute transcript level statistics by aggregating stats on every exon
@@ -224,6 +236,13 @@ class GelCoverageRunner:
         logging.info("Processed transcript %s of gene %s" % (transcript_id, gene_name))
         results.append(current_gene)
         return results
+
+    def __is_exon_padding_enabled(self):
+        """
+
+        :return:
+        """
+        return self.is_exon_padding_enabled
 
     def __output(self, results):
         """
