@@ -30,7 +30,8 @@ class GelCoverageRunner:
         if "exon_padding" not in self.config or type(self.config["exon_padding"]) != int or \
             self.config["exon_padding"] <= 0:
             self.config["exon_padding"] = 0
-        self.is_exon_padding_enabled = self.config["exon_padding"] > 0
+        self.is_exon_padding = self.config["exon_padding"] > 0
+        self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
 
     def get_gene_list(self):
         """
@@ -173,99 +174,85 @@ class GelCoverageRunner:
         return coverages
 
     def __get_union_transcript(self, gene):
+        """
+
+        :param gene:
+        :return:
+        """
         all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
         all_exons.sort(key = lambda x: x["start"])
-        is_exon_padding = self.config["exon_padding"] > 0
         union_exons = []
-        current_exon = GelCoverageRunner.__initialize_exon_dict(
-            "exon1",
-            all_exons[0]["start"],
-            all_exons[0]["end"],
-            None,
-            None
-        )
-        if is_exon_padding:
-            current_exon["padded_start"] = all_exons[0]["padded_start"]
-            current_exon["padded_end"] = all_exons[0]["padded_end"]
-        current_start = current_exon["padded_start"] if is_exon_padding else current_exon["start"]
-        current_end = current_exon["padded_end"] if is_exon_padding else current_exon["end"]
+        first_exon = all_exons[0]
+        current_start = first_exon["padded_start"] if self.is_exon_padding else first_exon["start"]
+        current_end = first_exon["padded_end"] if self.is_exon_padding else first_exon["end"]
         exon_idx = 1
         for exon in all_exons[1:]:
-            start = exon["padded_start"] if is_exon_padding else exon["start"]
-            end = exon["padded_end"] if is_exon_padding else exon["end"]
+            start = exon["padded_start"] if self.is_exon_padding else exon["start"]
+            end = exon["padded_end"] if self.is_exon_padding else exon["end"]
             if start <= current_end:
                 # Exons overlaps, we join them
-                if is_exon_padding:
-                    current_exon["padded_end"] = max(
-                        current_end,
-                        end
-                    )
-                current_exon["end"] = max(
-                    current_exon["end"],
-                    exon["end"]
-                )
-                current_end = current_exon["padded_end"] if is_exon_padding else current_exon["end"]
+                current_end = max(current_end, end)
             else:
                 # Exons do not overlap, they are different exons in the union transcript
-                # Update length
-                current_exon["length"] = current_end - current_start + 1
-                # Read from the bigwig file
-                coverages = self.__read_bigwig_coverages(
+                current_exon = self.__create_exon(
                     gene["chromosome"],
                     current_start,
-                    current_end)
-                # Compute statistics at exon level (no GC content information)
-                current_exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, None)
-                # Compute gaps
-                if self.config['coverage_threshold'] > 0:
-                    current_exon["gaps"] = coverage_stats.find_gaps(
-                        coverages,
-                        current_start,
-                        self.config['coverage_threshold']
-                    )
+                    current_end,
+                    exon_idx
+                )
                 # Saves current exon and stores the next
                 union_exons.append(current_exon)
-
-                current_exon = GelCoverageRunner.__initialize_exon_dict(
-                    1,
-                    exon["start"],
-                    exon["end"],
-                    None,
-                    None
-                )
-                if is_exon_padding:
-                    current_exon["padded_start"] = exon["padded_start"]
-                    current_exon["padded_end"] = exon["padded_end"]
                 exon_idx += 1
-                current_exon["exon_number"] = "exon%s" % str(exon_idx)
-                current_start = current_exon["padded_start"] if is_exon_padding else current_exon["start"]
-                current_end = current_exon["padded_end"] if is_exon_padding else current_exon["end"]
         # Stores the last exon
-        # Update length
-        current_exon["length"] = end - start + 1
-        # Read from the bigwig file
-        coverages = self.__read_bigwig_coverages(
+        last_exon = self.__create_exon(
             gene["chromosome"],
             start,
-            end)
-        # Compute statistics at exon level (no GC content information)
-        current_exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, None)
-        # Compute gaps
-        if self.config['coverage_threshold'] > 0:
-            current_exon["gaps"] = coverage_stats.find_gaps(
-                coverages,
-                start,
-                self.config['coverage_threshold']
-            )
+            end,
+            exon_idx
+        )
         # Saves current exon and stores the next
-        union_exons.append(current_exon)
+        union_exons.append(last_exon)
         # Create union transcript dict
         union_transcript = {
             "exons" : union_exons,
             "statistics": coverage_stats.compute_transcript_level_statistics(union_exons)
         }
-
         return union_transcript
+
+    def __create_exon(self, chromosome, start, end, exon_idx, gc_content = None):
+        """
+        Creates an exon data structure, computes the coverage statistics and find gaps
+        :param chromosome:
+        :param start:
+        :param end:
+        :param exon_idx:
+        :param gc_content:
+        :return:
+        """
+        exon = GelCoverageRunner.__initialize_exon_dict(
+            "exon%s" % exon_idx if type(exon_idx) == int else exon_idx,
+            start + self.config["exon_padding"] if self.is_exon_padding else start,
+            end - self.config["exon_padding"] if self.is_exon_padding else end,
+            start if self.is_exon_padding else None,
+            end if self.is_exon_padding else None,
+        )
+        # Update length
+        exon["length"] = end - start + 1
+        # Read from the bigwig file
+        coverages = self.__read_bigwig_coverages(
+            chromosome,
+            start,
+            end)
+        # Compute statistics at exon level (no GC content information)
+        exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
+        # Compute gaps
+        if self.is_find_gaps_enabled:
+            exon["gaps"] = coverage_stats.find_gaps(
+                coverages,
+                start,
+                self.config['coverage_threshold']
+            )
+        return exon
 
     def __process_bed_file(self, bed):
         """
@@ -315,16 +302,13 @@ class GelCoverageRunner:
             except KeyError:
                 current_gene = GelCoverageRunner.__initialize_gene_dict(gene_name, chromosome)
             # Store exon in data structure
-            padded_start = max(0, start - self.config["exon_padding"])
-            padded_end = end + self.config["exon_padding"]  # TODO: potential problem here overflowing chromosome
-            exon = GelCoverageRunner.__initialize_exon_dict(exon_number, start, end, padded_start, padded_end)
-            # Read from the bigwig file
-            coverages = self.__read_bigwig_coverages(chromosome, padded_start, padded_end)
-            # Compute statistics at exon level
-            exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
-            # compute gaps
-            if self.config['coverage_threshold'] > 0:
-                exon["gaps"] = coverage_stats.find_gaps(coverages, padded_start, self.config['coverage_threshold'])
+            exon = self.__create_exon(
+                chromosome,
+                start,
+                end,
+                exon_number,
+                gc_content
+            )
             current_transcript["exons"].append(exon)
         # Adds last ocurrences
         # Compute transcript level statistics by aggregating stats on every exon
