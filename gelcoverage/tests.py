@@ -43,47 +43,51 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertEqual(type(transcript["id"]), unicode)
         self.assertTrue(str(transcript["id"]).startswith("ENS"))
         # TODO: test flags and biotype
-        self.assertEqual(type(transcript["statistics"]), dict)
-        self.assertEqual(type(transcript["statistics"]["bases_gte_15x"]), int)
-        self.assertTrue(transcript["statistics"]["bases_gte_15x"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["bases_gte_30x"]), int)
-        self.assertTrue(transcript["statistics"]["bases_gte_30x"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["bases_gte_50x"]), int)
-        self.assertTrue(transcript["statistics"]["bases_gte_50x"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["bases_lt_15x"]), int)
-        self.assertTrue(transcript["statistics"]["bases_lt_15x"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["bases_lt_3x"]), int)
-        self.assertTrue(transcript["statistics"]["bases_lt_3x"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["gc_content"]), float)
-        self.assertTrue(transcript["statistics"]["gc_content"] >= 0 and
-                        transcript["statistics"]["gc_content"] <= 1)
-        self.assertEqual(type(transcript["statistics"]["mean"]), float)
-        self.assertTrue(transcript["statistics"]["mean"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["percent_gte_15x"]), float)
-        self.assertTrue(transcript["statistics"]["percent_gte_15x"] >= 0 and
-                        transcript["statistics"]["percent_gte_15x"] <= 1)
-        self.assertTrue(transcript["statistics"]["percent_gte_30x"] >= 0 and
-                        transcript["statistics"]["percent_gte_30x"] <= 1)
-        self.assertTrue(transcript["statistics"]["percent_gte_50x"] >= 0 and
-                        transcript["statistics"]["percent_gte_50x"] <= 1)
-        self.assertTrue(transcript["statistics"]["percent_lt_15x"] >= 0 and
-                        transcript["statistics"]["percent_lt_15x"] <= 1)
-        self.assertEqual(type(transcript["statistics"]["total_bases"]), int)
-        self.assertTrue(transcript["statistics"]["total_bases"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["weighted_median"]), float)
-        self.assertTrue(transcript["statistics"]["weighted_median"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["weighted_pct75"]), float)
-        self.assertTrue(transcript["statistics"]["weighted_pct75"] >= 0)
-        self.assertEqual(type(transcript["statistics"]["weighted_pct25"]), float)
-        self.assertTrue(transcript["statistics"]["weighted_pct25"] >= 0)
+        self.verify_transcript_stats(transcript["statistics"])
 
-    def verify_exon(self, exon):
+    def verify_transcript_stats(self, stats, has_gc = True):
+        self.assertEqual(type(stats), dict)
+        self.assertEqual(type(stats["bases_gte_15x"]), int)
+        self.assertTrue(stats["bases_gte_15x"] >= 0)
+        self.assertEqual(type(stats["bases_gte_30x"]), int)
+        self.assertTrue(stats["bases_gte_30x"] >= 0)
+        self.assertEqual(type(stats["bases_gte_50x"]), int)
+        self.assertTrue(stats["bases_gte_50x"] >= 0)
+        self.assertEqual(type(stats["bases_lt_15x"]), int)
+        self.assertTrue(stats["bases_lt_15x"] >= 0)
+        self.assertEqual(type(stats["bases_lt_3x"]), int)
+        self.assertTrue(stats["bases_lt_3x"] >= 0)
+        if has_gc:
+            self.assertEqual(type(stats["gc_content"]), float)
+            self.assertTrue(stats["gc_content"] >= 0 and
+                            stats["gc_content"] <= 1)
+        self.assertEqual(type(stats["mean"]), float)
+        self.assertTrue(stats["mean"] >= 0)
+        self.assertEqual(type(stats["percent_gte_15x"]), float)
+        self.assertTrue(stats["percent_gte_15x"] >= 0 and
+                        stats["percent_gte_15x"] <= 1)
+        self.assertTrue(stats["percent_gte_30x"] >= 0 and
+                        stats["percent_gte_30x"] <= 1)
+        self.assertTrue(stats["percent_gte_50x"] >= 0 and
+                        stats["percent_gte_50x"] <= 1)
+        self.assertTrue(stats["percent_lt_15x"] >= 0 and
+                        stats["percent_lt_15x"] <= 1)
+        self.assertEqual(type(stats["total_bases"]), int)
+        self.assertTrue(stats["total_bases"] >= 0)
+        self.assertEqual(type(stats["weighted_median"]), float)
+        self.assertTrue(stats["weighted_median"] >= 0)
+        self.assertEqual(type(stats["weighted_pct75"]), float)
+        self.assertTrue(stats["weighted_pct75"] >= 0)
+        self.assertEqual(type(stats["weighted_pct25"]), float)
+        self.assertTrue(stats["weighted_pct25"] >= 0)
+
+    def verify_exon(self, exon, has_gc = True):
         self.assertEqual(type(exon), dict)
         self.assertEqual(type(exon["start"]), int)
         self.assertTrue(exon["start"] >= 0)
         self.assertEqual(type(exon["end"]), int)
         self.assertTrue(exon["end"] >= 0)
-        self.assertEqual(type(exon["exon_number"]), unicode)
+        self.assertEqual(type(exon["exon_number"]), str)
         self.assertTrue(str(exon["exon_number"]).startswith("exon"))
         self.assertEqual(type(exon["statistics"]), dict)
         self.assertEqual(type(exon["statistics"]["bases_gte_15x"]), int)
@@ -96,9 +100,10 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertTrue(exon["statistics"]["bases_lt_15x"] >= 0)
         self.assertEqual(type(exon["statistics"]["bases_lt_3x"]), int)
         self.assertTrue(exon["statistics"]["bases_lt_3x"] >= 0)
-        self.assertEqual(type(exon["statistics"]["gc_content"]), float)
-        self.assertTrue(exon["statistics"]["gc_content"] >= 0 and
-                        exon["statistics"]["gc_content"] <= 1)
+        if has_gc:
+            self.assertEqual(type(exon["statistics"]["gc_content"]), float)
+            self.assertTrue(exon["statistics"]["gc_content"] >= 0 and
+                            exon["statistics"]["gc_content"] <= 1)
         self.assertEqual(type(exon["statistics"]["mean"]), float)
         self.assertTrue(exon["statistics"]["mean"] >= 0)
         self.assertEqual(type(exon["statistics"]["percent_gte_15x"]), float)
@@ -147,9 +152,6 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertTrue(stats["bases_lt_15x"] >= 0)
         self.assertEqual(type(stats["bases_lt_3x"]), int)
         self.assertTrue(stats["bases_lt_3x"] >= 0)
-        self.assertEqual(type(stats["gc_content"]), float)
-        self.assertTrue(stats["gc_content"] >= 0 and
-                        stats["gc_content"] <= 1)
         self.assertEqual(type(stats["mean"]), float)
         self.assertTrue(stats["mean"] >= 0)
         self.assertEqual(type(stats["percent_gte_15x"]), float)
@@ -196,9 +198,11 @@ class GelCoverageRunnerTests(unittest.TestCase):
         for gene in output["results"]["genes"]:
             self.assertTrue(gene["name"] in expected_gene_list)
             self.assertEqual(type(gene["chromosome"]), unicode)
+            #print gene["name"]
             # Verify every transcript
             for transcript in gene["transcripts"]:
                 self.verify_transcript(transcript)
+                #print transcript["id"]
                 # Verify every exon
                 for exon in transcript["exons"]:
                     self.verify_exon(exon)
@@ -207,6 +211,16 @@ class GelCoverageRunnerTests(unittest.TestCase):
                     # Verify gaps
                     for gap in exon["gaps"]:
                         self.verify_gap(gap, exon)
+            union_transcript = gene["union_transcript"]
+            self.verify_transcript_stats(union_transcript["statistics"], has_gc=False)
+            for exon in union_transcript["exons"]:
+                self.verify_exon(exon, has_gc=False)
+                self.assertTrue("padded_start" not in exon)
+                self.assertTrue("padded_end" not in exon)
+                # Verify gaps
+                for gap in exon["gaps"]:
+                    self.verify_gap(gap, exon)
+
         with open('../resources/test/sample_output_1.json', 'w') as fp:
             json.dump(output, fp)
 
@@ -256,6 +270,15 @@ class GelCoverageRunnerTests(unittest.TestCase):
                     # Verify gaps
                     for gap in exon["gaps"]:
                         self.verify_gap(gap, exon)
+            union_transcript = gene["union_transcript"]
+            self.verify_transcript_stats(union_transcript["statistics"], has_gc=False)
+            for exon in union_transcript["exons"]:
+                self.verify_exon(exon, has_gc=False)
+                self.assertTrue("padded_start" not in exon)
+                self.assertTrue("padded_end" not in exon)
+                # Verify gaps
+                for gap in exon["gaps"]:
+                    self.verify_gap(gap, exon)
         with open('../resources/test/sample_output_2.json', 'w') as fp:
             json.dump(output, fp)
 
@@ -298,6 +321,17 @@ class GelCoverageRunnerTests(unittest.TestCase):
                     # Verify gaps
                     for gap in exon["gaps"]:
                         self.verify_gap(gap, exon)
+            union_transcript = gene["union_transcript"]
+            self.verify_transcript_stats(union_transcript["statistics"], has_gc=False)
+            for exon in union_transcript["exons"]:
+                self.verify_exon(exon, has_gc=False)
+                self.assertTrue("padded_start" in exon)
+                self.assertTrue("padded_end" in exon)
+                self.assertTrue(exon["padded_start"] + output["parameters"]["exon_padding"], exon["start"])
+                self.assertTrue(exon["padded_end"] - output["parameters"]["exon_padding"], exon["end"])
+                # Verify gaps
+                for gap in exon["gaps"]:
+                    self.verify_gap(gap, exon)
         with open('../resources/test/sample_output_3.json', 'w') as fp:
             json.dump(output, fp)
 
@@ -349,5 +383,16 @@ class GelCoverageRunnerTests(unittest.TestCase):
                     # Verify gaps
                     for gap in exon["gaps"]:
                         self.verify_gap(gap, exon)
+            union_transcript = gene["union_transcript"]
+            self.verify_transcript_stats(union_transcript["statistics"], has_gc=False)
+            for exon in union_transcript["exons"]:
+                self.verify_exon(exon, has_gc=False)
+                self.assertTrue("padded_start" in exon)
+                self.assertTrue("padded_end" in exon)
+                self.assertTrue(exon["padded_start"] + output["parameters"]["exon_padding"], exon["start"])
+                self.assertTrue(exon["padded_end"] - output["parameters"]["exon_padding"], exon["end"])
+                # Verify gaps
+                for gap in exon["gaps"]:
+                    self.verify_gap(gap, exon)
         with open('../resources/test/sample_output_4.json', 'w') as fp:
             json.dump(output, fp)
