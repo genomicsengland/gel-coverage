@@ -112,7 +112,7 @@ class GelCoverageRunner:
         Returns the dictionary that will store gene information
         :param gene_name: the gene name
         :param chromosome: the chromosome
-        :return: the dictionary
+        :return: the basic gene data structure
         """
         return {
             "name": gene_name,
@@ -125,7 +125,7 @@ class GelCoverageRunner:
         """
         Returns the dictionary that will store transcript information
         :param transcript_id: the transcript id
-        :return: the dictionary
+        :return: the basic transcript data structure
         """
         return {
             "id": transcript_id,
@@ -139,7 +139,7 @@ class GelCoverageRunner:
         :param exon_number: the exon number
         :param start: the start position
         :param end: the end position
-        :return:
+        :return: the basic exon data structure
         """
         exon = {
                 "exon_number": exon_number,
@@ -155,12 +155,12 @@ class GelCoverageRunner:
     def __create_exon(self, chromosome, start, end, exon_idx, gc_content = None):
         """
         Creates an exon data structure, computes the coverage statistics and find gaps
-        :param chromosome:
-        :param start:
-        :param end:
-        :param exon_idx:
-        :param gc_content:
-        :return:
+        :param chromosome: the chromosome
+        :param start: the padded start position
+        :param end: the padded end position
+        :param exon_idx: the exon index (two possible formats: int or str like exonN)
+        :param gc_content: the GC content for the exon
+        :return: the exon data structure
         """
         exon_number = "exon%s" % exon_idx if type(exon_idx) == int else exon_idx
         exon = GelCoverageRunner.__initialize_exon_dict(
@@ -190,7 +190,12 @@ class GelCoverageRunner:
         return exon
 
     def __create_transcript(self, id, exons):
-
+        """
+        Creates a transcript data structure and computes statistics
+        :param id: the transcript id
+        :param exons: the exons data structure
+        :return: the transcript data structure
+        """
         transcript = self.__initialize_transcript_dict(id, exons)
         # Compute transcript level statistics by aggregating stats on every exon
         transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
@@ -201,9 +206,9 @@ class GelCoverageRunner:
 
     def __create_union_transcript(self, gene):
         """
-
-        :param gene:
-        :return:
+        Creates union transcript and computes statistics for each of the exons and the union transcript
+        :param gene: the gene data structure containing all exons
+        :return: the data structure for the union transcript
         """
         logging.debug("Creating union transcript for gene %s" % gene["name"])
         all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
@@ -248,7 +253,13 @@ class GelCoverageRunner:
         return union_transcript
 
     def __create_gene(self, gene_name, chromosome, transcripts):
-
+        """
+        Creates the gene data structure and creates the union transcript
+        :param gene_name: the gene name
+        :param chromosome: the chromosome
+        :param transcripts: the data structure for all transcripts belonging to this gene
+        :return: the gene data structure
+        """
         gene = self.__initialize_gene_dict(gene_name, chromosome, transcripts)
         # Calculate union transcript and compute stats
         gene["union_transcript"] = self.__create_union_transcript(gene)
@@ -332,7 +343,7 @@ class GelCoverageRunner:
     def __output(self, results):
         """
         Builds the output data structure
-        :param results:
+        :param results: the coverage analysis data structure
         :return:
         """
         return {
@@ -345,7 +356,7 @@ class GelCoverageRunner:
         PRE: we assume that the BED generated is sorted by transcript and then by gene position
         this assumption is true for BEDs generated with make_exons_bed() but might not be
         always true.
-        :return:
+        :return: the output data structure
         """
         logging.info("Starting coverage analysis")
         # Get genes annotations in BED format
