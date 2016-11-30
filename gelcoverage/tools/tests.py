@@ -1,4 +1,5 @@
 import unittest
+import logging
 from gelcoverage.tools.cellbase_helper import CellbaseHelper
 from gelcoverage.tools.panelapp_helper import PanelappHelper
 
@@ -6,6 +7,7 @@ from gelcoverage.tools.panelapp_helper import PanelappHelper
 class CellbaseHelperTests(unittest.TestCase):
 
     def setUp(self):
+        logging.basicConfig(level=logging.DEBUG)
         self.species = "hsapiens"
         self.version = "latest"
         self.assembly = "GRCh37"
@@ -210,6 +212,7 @@ class CellbaseHelperTests(unittest.TestCase):
 class PanelappHelperTests(unittest.TestCase):
 
     def setUp(self):
+        logging.basicConfig(level=logging.DEBUG)
         host = "bioinfo.extge.co.uk/crowdsourcing/WebServices"
         self.panelapp_helper = PanelappHelper(host)
 

@@ -2,6 +2,7 @@ import collections
 import random
 import unittest
 import numpy
+import logging
 import gelcoverage.stats.coverage_stats as coverage_stats
 import gelcoverage.stats.sequence_stats as sequence_stats
 
@@ -9,6 +10,7 @@ import gelcoverage.stats.sequence_stats as sequence_stats
 class CoverageStatsTests(unittest.TestCase):
 
     def setUp(self):
+        logging.basicConfig(level=logging.DEBUG)
         # Creates 1000 random coverage values between 0 and 400
         self.coverages = [random.randint(a=30, b=400) for p in range(0,1000)]
         self.coverages[100:150] = [random.randint(a=0, b=29) for p in range(0,50)]
@@ -123,6 +125,7 @@ class CoverageStatsTests(unittest.TestCase):
 class SequenceStatsTests(unittest.TestCase):
 
     def setUp(self):
+        logging.basicConfig(level=logging.DEBUG)
         # Creates random sequence with a GC content close 0.6
         self.sequence = numpy.random.choice(["G", "C", "A", "T"], 10000, p=[0.3, 0.3, 0.2, 0.2])
 
