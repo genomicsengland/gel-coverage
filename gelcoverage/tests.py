@@ -1,11 +1,13 @@
 import unittest
 import json
+import logging
 from gelcoverage.runner import GelCoverageRunner
 
 
 class GelCoverageRunnerTests(unittest.TestCase):
 
     def setUp(self):
+        logging.basicConfig(level=logging.DEBUG)
         self.config = {
             # Sets parameters from CLI
             "bw": "../resources/test/test1.bw",  # TODO: find a testing file

@@ -1,9 +1,9 @@
 import logging
-import pyBigWig
 
 import gelcoverage.stats.coverage_stats as coverage_stats
 from gelcoverage.tools.cellbase_helper import CellbaseHelper
 from gelcoverage.tools.panelapp_helper import PanelappHelper
+from gelcoverage.tools.bigwig_reader import BigWigReader
 
 
 class GelCoverageRunner:
@@ -24,8 +24,8 @@ class GelCoverageRunner:
         # Gets the list of genes to analyse
         self.gene_list = self.get_gene_list()
         logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
-        # Opens the bigwig file for reading
-        self.bigwig = pyBigWig.open(self.config['bw'])
+        # Opens the bigwig reader
+        self.bigwig_reader = BigWigReader(self.config['bw'])
         # Flag indicating if exon padding is enabled
         if "exon_padding" not in self.config or type(self.config["exon_padding"]) != int or \
             self.config["exon_padding"] <= 0:
@@ -91,7 +91,23 @@ class GelCoverageRunner:
         return parameters
 
     @staticmethod
-    def __initialize_gene_dict(gene_name, chromosome):
+    def __parse_bed_interval(interval):
+        """
+        Extracts information from a BED interval.
+        :param interval: the BED interval
+        :return: the extracted information in separate variables
+        """
+        chromosome = interval.chrom
+        start = int(interval.start)
+        end = int(interval.end)
+        gene_name, transcript_id, exon_number = interval.name.split("|")
+        exon_number = str(exon_number)
+        strand = interval.strand
+        gc_content = float(interval.score)
+        return chromosome, start, end, gene_name, transcript_id, exon_number, strand, gc_content
+
+    @staticmethod
+    def __initialize_gene_dict(gene_name, chromosome, transcripts):
         """
         Returns the dictionary that will store gene information
         :param gene_name: the gene name
@@ -101,11 +117,11 @@ class GelCoverageRunner:
         return {
             "name": gene_name,
             "chromosome": chromosome,
-            "transcripts": []
+            "transcripts": transcripts
         }
 
     @staticmethod
-    def __initialize_transcript_dict(transcript_id):
+    def __initialize_transcript_dict(transcript_id, exons):
         """
         Returns the dictionary that will store transcript information
         :param transcript_id: the transcript id
@@ -113,7 +129,7 @@ class GelCoverageRunner:
         """
         return {
             "id": transcript_id,
-            "exons": []
+            "exons": exons
         }
 
     @staticmethod
@@ -136,49 +152,60 @@ class GelCoverageRunner:
             exon["padded_end"] = padded_end
         return exon
 
-    @staticmethod
-    def __read_bed_interval(interval):
+    def __create_exon(self, chromosome, start, end, exon_idx, gc_content = None):
         """
-        Extracts information from a BED interval.
-        :param interval: the BED interval
-        :return: the extracted information in separate variables
+        Creates an exon data structure, computes the coverage statistics and find gaps
+        :param chromosome:
+        :param start:
+        :param end:
+        :param exon_idx:
+        :param gc_content:
+        :return:
         """
-        chromosome = interval.chrom
-        start = int(interval.start)
-        end = int(interval.end)
-        gene_name, transcript_id, exon_number = interval.name.split("|")
-        exon_number = str(exon_number)
-        strand = interval.strand
-        gc_content = float(interval.score)
-        return chromosome, start, end, gene_name, transcript_id, exon_number, strand, gc_content
-
-    def __read_bigwig_coverages(self, chromosome, start, end):
-        """
-        Reads the coverage values in a region from the bigwig file
-        :param chromosome: the region chromosome
-        :param start: the start position
-        :param end: the end position
-        :return: the sequence of coverages (one integer per position)
-        """
-        # Queries the bigwig for a specific interval
-        if start == end:  # do we really need this?
-            end += 1
+        exon_number = "exon%s" % exon_idx if type(exon_idx) == int else exon_idx
+        exon = GelCoverageRunner.__initialize_exon_dict(
+            exon_number,
+            start + self.config["exon_padding"] if self.is_exon_padding else start,
+            end - self.config["exon_padding"] if self.is_exon_padding else end,
+            start if self.is_exon_padding else None,
+            end if self.is_exon_padding else None,
+        )
+        # Update length
+        exon["length"] = end - start + 1
         # Read from the bigwig file
-        try:
-            # TODO: why our bigwig has "chr" prefix? BAMs don't
-            coverages = self.bigwig.values("chr" + str(chromosome), start, end)
-        except RuntimeError, e:
-            # TODO: deal with this errors
-            logging.error("Querying for unexisting interval %s:%s-%s" % (chromosome, start, end))
-            raise e
-        return coverages
+        coverages = self.bigwig_reader.read_bigwig_coverages(
+            chromosome,
+            start,
+            end)
+        # Compute statistics at exon level (no GC content information)
+        exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
+        # Compute gaps
+        if self.is_find_gaps_enabled:
+            exon["gaps"] = coverage_stats.find_gaps(
+                coverages,
+                start,
+                self.config['coverage_threshold']
+            )
+        logging.debug("Created exon %s" % exon_number)
+        return exon
 
-    def __get_union_transcript(self, gene):
+    def __create_transcript(self, id, exons):
+
+        transcript = self.__initialize_transcript_dict(id, exons)
+        # Compute transcript level statistics by aggregating stats on every exon
+        transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
+            transcript["exons"]
+        )
+        logging.debug("Created transcript %s" % id)
+        return transcript
+
+    def __create_union_transcript(self, gene):
         """
 
         :param gene:
         :return:
         """
+        logging.debug("Creating union transcript for gene %s" % gene["name"])
         all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
         all_exons.sort(key = lambda x: x["start"])
         union_exons = []
@@ -217,42 +244,16 @@ class GelCoverageRunner:
             "exons" : union_exons,
             "statistics": coverage_stats.compute_transcript_level_statistics(union_exons)
         }
+        logging.debug("Created union transcript for gene %s" % gene["name"])
         return union_transcript
 
-    def __create_exon(self, chromosome, start, end, exon_idx, gc_content = None):
-        """
-        Creates an exon data structure, computes the coverage statistics and find gaps
-        :param chromosome:
-        :param start:
-        :param end:
-        :param exon_idx:
-        :param gc_content:
-        :return:
-        """
-        exon = GelCoverageRunner.__initialize_exon_dict(
-            "exon%s" % exon_idx if type(exon_idx) == int else exon_idx,
-            start + self.config["exon_padding"] if self.is_exon_padding else start,
-            end - self.config["exon_padding"] if self.is_exon_padding else end,
-            start if self.is_exon_padding else None,
-            end if self.is_exon_padding else None,
-        )
-        # Update length
-        exon["length"] = end - start + 1
-        # Read from the bigwig file
-        coverages = self.__read_bigwig_coverages(
-            chromosome,
-            start,
-            end)
-        # Compute statistics at exon level (no GC content information)
-        exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
-        # Compute gaps
-        if self.is_find_gaps_enabled:
-            exon["gaps"] = coverage_stats.find_gaps(
-                coverages,
-                start,
-                self.config['coverage_threshold']
-            )
-        return exon
+    def __create_gene(self, gene_name, chromosome, transcripts):
+
+        gene = self.__initialize_gene_dict(gene_name, chromosome, transcripts)
+        # Calculate union transcript and compute stats
+        gene["union_transcript"] = self.__create_union_transcript(gene)
+        logging.debug("Created gene %s" % gene_name)
+        return gene
 
     def __process_bed_file(self, bed):
         """
@@ -269,38 +270,46 @@ class GelCoverageRunner:
         results = {
             "genes": []
         }
-        current_gene = {}
-        current_transcript = {}
+
+        current_exons = []
+        current_transcripts = []
+        current_transcript_id = None
+        current_gene_name = None
+        current_chromosome = None
         # Process every interval in the BED file
         for interval in bed:
             # Reads data from BED entry
             chromosome, start, end, gene_name, transcript_id, \
-                exon_number, strand, gc_content = GelCoverageRunner.__read_bed_interval(interval)
+                exon_number, strand, gc_content = GelCoverageRunner.__parse_bed_interval(interval)
+
             # Store transcript in data structure. Needs to run before gene
-            try:
-                if current_transcript["id"] != transcript_id:
-                    # Compute transcript level statistics by aggregating stats on every exon
-                    current_transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
-                        current_transcript["exons"]
-                    )
-                    # Save previous result
-                    current_gene["transcripts"].append(current_transcript)
-                    logging.info("Processed transcript %s of gene %s" % (transcript_id, gene_name))
+            if current_transcript_id != transcript_id:
+                if current_transcript_id is None:
+                    # Initialize for the first transcript
+                    current_transcript_id = transcript_id
+                else:
+                    transcript = self.__create_transcript(current_transcript_id, current_exons)
+                    current_transcripts.append(transcript)
+                    logging.info("Processed transcript %s of gene %s" % (current_transcript_id, current_gene_name))
                     # Create a new data structure for new gene
-                    current_transcript = GelCoverageRunner.__initialize_transcript_dict(transcript_id)
-            except KeyError:
-                current_transcript = GelCoverageRunner.__initialize_transcript_dict(transcript_id)
+                    current_transcript_id = transcript_id
+                    current_exons = []
             # Store gene in data structure
-            try:
-                if current_gene["name"] != gene_name:
-                    # Obtain the union transcript and compute coverage statistics
-                    current_gene["union_transcript"] = self.__get_union_transcript(current_gene)
+            if current_gene_name != gene_name:
+                if current_gene_name is None:
+                    # Initialize for the first transcript
+                    current_gene_name = gene_name
+                    current_chromosome = chromosome
+                else:
+                    gene = self.__create_gene(current_gene_name, current_chromosome, current_transcripts)
                     # Save previous result
-                    results["genes"].append(current_gene)
-                    # Create a new data structure for new gene
-                    current_gene = GelCoverageRunner.__initialize_gene_dict(gene_name, chromosome)
-            except KeyError:
-                current_gene = GelCoverageRunner.__initialize_gene_dict(gene_name, chromosome)
+                    results["genes"].append(gene)
+                    logging.info("Processed all transcripts for gene %s" % current_gene_name)
+                    # Sets data for next gene
+                    current_transcripts = []
+                    current_gene_name = gene_name
+                    current_chromosome = chromosome
+
             # Store exon in data structure
             exon = self.__create_exon(
                 chromosome,
@@ -309,29 +318,16 @@ class GelCoverageRunner:
                 exon_number,
                 gc_content
             )
-            current_transcript["exons"].append(exon)
+            current_exons.append(exon)
         # Adds last ocurrences
-        # Compute transcript level statistics by aggregating stats on every exon
-        current_transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
-            current_transcript["exons"]
-        )
-        # Save previous result
-        current_gene["transcripts"].append(current_transcript)
-        logging.info("Processed transcript %s of gene %s" % (transcript_id, gene_name))
-        # Obtain the union transcript and compute coverage statistics
-        current_gene["union_transcript"] = self.__get_union_transcript(current_gene)
-        results["genes"].append(current_gene)
+        transcript = self.__create_transcript(current_transcript_id, current_exons)
+        current_transcripts.append(transcript)
+        gene = self.__create_gene(gene_name, chromosome, current_transcripts)
+        results["genes"].append(gene)
         results["statistics"] = coverage_stats.compute_panel_level_statistics(
             results["genes"]
         )
         return results
-
-    def __is_exon_padding_enabled(self):
-        """
-
-        :return:
-        """
-        return self.is_exon_padding_enabled
 
     def __output(self, results):
         """
