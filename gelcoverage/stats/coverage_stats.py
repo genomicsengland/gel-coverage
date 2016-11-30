@@ -89,8 +89,12 @@ def compute_transcript_level_statistics(exons):
     stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
     stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
     stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
-    stats["gc_content"] = round(float(np.sum(
-        [x["gc_content"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"]), 5)
+    try:
+        stats["gc_content"] = round(float(np.sum(
+            [x["gc_content"] * x["total_bases"] for x in exons_stats]) / stats["total_bases"]), 5)
+    except KeyError:
+        # There is no GC content data to show (e.g.: the union transcript)
+        pass
     return stats
 
 def compute_panel_level_statistics(genes):
@@ -101,7 +105,7 @@ def compute_panel_level_statistics(genes):
     """
     stats = {}
     # TODO: compute the stats aggregated for union transcript
-    genes_stats = [y["statistics"] for x in genes for y in x["transcripts"]]
+    genes_stats = [x["union_transcript"]["statistics"] for x in genes]
     stats["total_bases"] = int(np.sum([x["total_bases"] for x in genes_stats]))
     stats["mean"] = round(float(np.mean([x["mean"] for x in genes_stats])), 3)
     stats["weighted_median"] = round(float(np.sum(
@@ -119,6 +123,4 @@ def compute_panel_level_statistics(genes):
     stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
     stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
     stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
-    stats["gc_content"] = round(float(np.sum(
-        [x["gc_content"] * x["total_bases"] for x in genes_stats]) / stats["total_bases"]), 5)
     return stats

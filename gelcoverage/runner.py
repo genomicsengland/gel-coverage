@@ -171,6 +171,81 @@ class GelCoverageRunner:
             raise e
         return coverages
 
+    def __get_union_transcript(self, gene):
+        all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
+        all_exons.sort(key = lambda x: x["start"])
+        union_exons = []
+        current_exon = GelCoverageRunner.__initialize_exon_dict(
+            1,
+            all_exons[0]["start"],
+            all_exons[0]["end"],
+            all_exons[0]["padded_start"] if "padded_start" in all_exons else None,
+            all_exons[0]["padded_end"] if "padded_end" in all_exons else None
+        )
+        exon_number = 1
+        for exon in all_exons[1:]:
+            start = exon["padded_start"] if "padded_start" in exon else exon["start"]
+            end = exon["padded_end"] if "padded_end" in exon else exon["end"]
+            if start <= end:
+                # Exons overlaps, we join them
+                current_exon["padded_end"] = max(
+                    current_exon["padded_end"],
+                    exon["padded_end"]
+                )
+                current_exon["end"] = max(
+                    current_exon["end"],
+                    exon["end"]
+                )
+            else:
+                # Exons do not overlap, they are different exons in the union transcript
+                # Update length
+                current_exon["length"] = current_exon["end"] - current_exon["start"] + 1
+                # Read from the bigwig file
+                coverages = self.__read_bigwig_coverages(
+                    gene["chromosome"],
+                    current_exon["padded_start"],
+                    current_exon["padded_end"])
+                # Compute statistics at exon level (no GC content information)
+                current_exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, None)
+                # Compute gaps
+                if self.config['coverage_threshold'] > 0:
+                    current_exon["gaps"] = coverage_stats.find_gaps(
+                        coverages,
+                        current_exon["padded_start"],
+                        self.config['coverage_threshold']
+                    )
+                # Saves current exon and stores the next
+                union_exons.append(current_exon)
+                exon_number += 1
+                exon["exon_number"] = "exon%s" % str(exon_number)
+                current_exon = exon
+        # Stores the last exon
+        # Update length
+        current_exon["length"] = current_exon["end"] - current_exon["start"] + 1
+        # Read from the bigwig file
+        coverages = self.__read_bigwig_coverages(
+            gene["chromosome"],
+            current_exon["padded_start"],
+            current_exon["padded_end"])
+        # Compute statistics at exon level (no GC content information)
+        current_exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, None)
+        # Compute gaps
+        if self.config['coverage_threshold'] > 0:
+            current_exon["gaps"] = coverage_stats.find_gaps(
+                coverages,
+                current_exon["padded_start"],
+                self.config['coverage_threshold']
+            )
+        # Saves current exon and stores the next
+        union_exons.append(current_exon)
+        # Create union transcript dict
+        union_transcript = {
+            "exons" : union_exons,
+            "statistics": coverage_stats.compute_transcript_level_statistics(union_exons)
+        }
+
+        return union_transcript
+
     def __process_bed_file(self, bed):
         """
         Reads every interval defined in the BED file, gets the coverage information from the BigWig data, computes
@@ -210,6 +285,8 @@ class GelCoverageRunner:
             # Store gene in data structure
             try:
                 if current_gene["name"] != gene_name:
+                    # Obtain the union transcript and compute coverage statistics
+                    current_gene["union_transcript"] = self.__get_union_transcript(current_gene)
                     # Save previous result
                     results["genes"].append(current_gene)
                     # Create a new data structure for new gene
@@ -236,6 +313,8 @@ class GelCoverageRunner:
         # Save previous result
         current_gene["transcripts"].append(current_transcript)
         logging.info("Processed transcript %s of gene %s" % (transcript_id, gene_name))
+        # Obtain the union transcript and compute coverage statistics
+        current_gene["union_transcript"] = self.__get_union_transcript(current_gene)
         results["genes"].append(current_gene)
         results["statistics"] = coverage_stats.compute_panel_level_statistics(
             results["genes"]
