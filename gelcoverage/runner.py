@@ -174,18 +174,19 @@ class GelCoverageRunner:
     def __get_union_transcript(self, gene):
         all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
         all_exons.sort(key = lambda x: x["start"])
+        is_exon_padding = self.config["exon_padding"] > 0
         union_exons = []
         current_exon = GelCoverageRunner.__initialize_exon_dict(
             1,
             all_exons[0]["start"],
             all_exons[0]["end"],
-            all_exons[0]["padded_start"] if "padded_start" in all_exons else None,
-            all_exons[0]["padded_end"] if "padded_end" in all_exons else None
+            all_exons[0]["padded_start"] if is_exon_padding else None,
+            all_exons[0]["padded_end"] if is_exon_padding else None
         )
         exon_number = 1
         for exon in all_exons[1:]:
-            start = exon["padded_start"] if "padded_start" in exon else exon["start"]
-            end = exon["padded_end"] if "padded_end" in exon else exon["end"]
+            start = exon["padded_start"] if is_exon_padding else exon["start"]
+            end = exon["padded_end"] if is_exon_padding else exon["end"]
             if start <= end:
                 # Exons overlaps, we join them
                 current_exon["padded_end"] = max(
