@@ -338,6 +338,9 @@ class GelCoverageRunner:
         results["statistics"] = coverage_stats.compute_panel_level_statistics(
             results["genes"]
         )
+        results["whole_genome_statistics"] = coverage_stats.compute_whole_genome_statistics(
+            self.bigwig_reader
+        )
         return results
 
     def __output(self, results):
