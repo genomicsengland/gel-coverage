@@ -29,3 +29,27 @@ class BigWigReader:
             logging.error("Querying for unexisting interval %s:%s-%s" % (chromosome, start, end))
             raise e
         return coverages
+
+    def get_chromosome_lengths(self, format):
+        """
+        get chromosome lengths from header of bigWig file
+
+        :param bw: pyBigWig file object
+        :param format: specify "dict" to return a dict instead of a bed recognisable format
+        :return: list of chromosomes and length in a bed recognisable format
+        """
+        chromosomes = []
+        chromosomes_dict = {}
+        for i in range(1, 25):
+            chromosome = "chr" + str(i)
+            if i == 23:
+                chromosome = "chrX"
+            elif i == 24:
+                chromosome = "chrY"
+            length = int(self.bigwig.chroms(chromosome))
+            chromosomes.append((chromosome, 1, length))
+            chromosomes_dict[chromosome] = length
+        if format == "dict":
+            return chromosomes_dict
+        else:
+            return chromosomes
