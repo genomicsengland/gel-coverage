@@ -10,7 +10,8 @@ class GelCoverageRunnerTests(unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG)
         self.config = {
             # Sets parameters from CLI
-            "bw": "../resources/test/test1.bw",  # TODO: find a testing file
+            "bw": "../resources/test/test1.bw",
+            "configuration_file": "../resources/exon_coverage_summary.config",
             "panel": "Epileptic encephalopathy",
             "panel_version": "0.2",
             #"gene_list": args.gene_list,
@@ -30,6 +31,7 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertEqual(type(parameters), dict)
         self.assertEqual(parameters["gap_coverage_threshold"], self.config["coverage_threshold"])
         self.assertEqual(parameters["input_file"], self.config["bw"])
+        self.assertEqual(parameters["configuration_file"], self.config["configuration_file"])
         self.assertEqual(parameters["species"], self.config["cellbase_species"])
         self.assertEqual(parameters["assembly"], self.config["cellbase_assembly"])
         #self.assertEqual(parameters["panel"], self.config["panel"])

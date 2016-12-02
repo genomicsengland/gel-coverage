@@ -30,7 +30,7 @@ def main():
     parser.add_argument('--output', metavar='output',
                         help='The file to which write the results [required]',
                         required=True)
-    parser.add_argument('--config', metavar='config_file',
+    parser.add_argument('--config', metavar='config',
                         help='The configuration file [required]',
                         required=True)
     #parser.add_argument('--cnv', metavar='cnv', help='cnv vcf - so that losses can be indicated', default=0)
@@ -39,7 +39,7 @@ def main():
 
     # Reads configuration file
     config_parser = ConfigParser.ConfigParser()
-    config_parser.readfp(open(args.config_file))
+    config_parser.readfp(open(args.config))
 
     # Creates a data structure with all config parameters
     config = {
@@ -50,6 +50,7 @@ def main():
         "gene_list": args.gene_list,
         "coverage_threshold": args.coverage_threshold,
         # Sets parameters from config file
+        'configuration_file': args.config,
         "cellbase_species": config_parser.get('cellbase', 'species'),
         "cellbase_version": config_parser.get('cellbase', 'version'),
         "cellbase_assembly": config_parser.get('cellbase', 'assembly'),

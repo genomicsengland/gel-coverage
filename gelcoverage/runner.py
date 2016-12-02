@@ -72,6 +72,7 @@ class GelCoverageRunner:
         parameters = {
             "gap_coverage_threshold": self.config["coverage_threshold"],
             "input_file": self.config["bw"],
+            "configuration_file": self.config["configuration_file"],
             "species": self.config['cellbase_species'],
             "assembly": self.config['cellbase_assembly'],
             "transcript_filtering_flags": self.config['transcript_filtering_flags'],
