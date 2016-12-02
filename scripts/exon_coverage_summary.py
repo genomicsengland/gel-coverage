@@ -9,8 +9,6 @@ from gelcoverage.runner import GelCoverageRunner
 
 def main():
 
-    config_file = '../resources/exon_coverage_summary.config'
-
     parser = argparse.ArgumentParser(description = 'Coverage summary. Provide a panel name and version, a gene list '
                                                    'or none of thee previous to run whole exome coverage analysis')
     parser.add_argument('--bw', metavar='bw', help = 'This is the bigwig file [required]', required = True)
@@ -26,29 +24,22 @@ def main():
                         help = 'Comma separated list of genes (HGNC gene symbols) to analyse. Will be masked by a panel')
     #parser.add_argument('--transcripts', metavar='transcripts',
     #                    help='Comma separated list of transcripts to analyse. Will be masked by a panel or a list of genes')
-    #parser.add_argument('--canonical_transcript', metavar='canonical_transcript',
-    #                    help='collapse transcripts to one cannonical transcript - only used when using panel or genes as input',
-    #                    default=0)
-    #parser.add_argument('--output', metavar='output',
-    #                    help='Output format',
-    #                    choices = ["json", "tabular"],
-    #                    default = "json")
     parser.add_argument('--coverage-threshold', metavar='coverage_threshold',
                         help='The coverage threshold used to compute continuous gaps with low coverage (0 = disabled) [default:15]',
                         default = 15)
     parser.add_argument('--output', metavar='output',
                         help='The file to which write the results [required]',
                         required=True)
-    #TODO: add parameter to add flanking regions to genes
-    #TODO: add parameter to return only information about canonical transcripts
+    parser.add_argument('--config', metavar='config_file',
+                        help='The configuration file [required]',
+                        required=True)
     #parser.add_argument('--cnv', metavar='cnv', help='cnv vcf - so that losses can be indicated', default=0)
 
     args = parser.parse_args()
 
     # Reads configuration file
     config_parser = ConfigParser.ConfigParser()
-    config_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), config_file)
-    config_parser.readfp(open(config_filepath))
+    config_parser.readfp(open(args.config_file))
 
     # Creates a data structure with all config parameters
     config = {
