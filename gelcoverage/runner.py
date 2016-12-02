@@ -32,6 +32,7 @@ class GelCoverageRunner:
             self.config["exon_padding"] = 0
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
+        self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
 
     def get_gene_list(self):
         """
@@ -341,9 +342,6 @@ class GelCoverageRunner:
         results["statistics"] = coverage_stats.compute_panel_level_statistics(
             results["genes"]
         )
-        results["whole_genome_statistics"] = coverage_stats.compute_whole_genome_statistics(
-            self.bigwig_reader
-        )
         return results
 
     def __output(self, results):
@@ -369,4 +367,9 @@ class GelCoverageRunner:
         bed = self.cellbase_helper.make_exons_bed(self.gene_list)
         # Process the intervals in the BED file
         results = self.__process_bed_file(bed)
+        # Compute the whole genome statistics if enabled (this is time consuming)
+        if self.is_wg_stats_enabled:
+            results["whole_genome_statistics"] = coverage_stats.compute_whole_genome_statistics(
+                self.bigwig_reader
+            )
         return self.__output(results)

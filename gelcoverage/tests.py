@@ -24,7 +24,8 @@ class GelCoverageRunnerTests(unittest.TestCase):
             "panelapp_host": "bioinfo.extge.co.uk/crowdsourcing/WebServices",
             "panelapp_gene_confidence": "HighEvidence",
             "transcript_filtering_flags": "basic",
-            "transcript_filtering_biotypes": "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene"
+            "transcript_filtering_biotypes": "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene",
+            "wg_stats_enabled": False
         }
 
     def verify_parameters(self, parameters, expected_gene_list):

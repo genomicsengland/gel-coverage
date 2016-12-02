@@ -33,6 +33,8 @@ def main():
     parser.add_argument('--config', metavar='config',
                         help='The configuration file [required]',
                         required=True)
+    parser.add_argument('--disable-wg-stats', dest='wg_stats_enabled', action='store_false')
+    parser.set_defaults(wg_stats_enabled=True)
     #parser.add_argument('--cnv', metavar='cnv', help='cnv vcf - so that losses can be indicated', default=0)
 
     args = parser.parse_args()
@@ -59,7 +61,8 @@ def main():
         "panelapp_gene_confidence": config_parser.get('panelapp', 'gene_confidence'),
         "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
         "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
-        "exon_padding": int(config_parser.get("exon", "exon_padding"))
+        "exon_padding": int(config_parser.get("exon", "exon_padding")),
+        "wg_stats_enabled": args.wg_stats_enabled
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)
