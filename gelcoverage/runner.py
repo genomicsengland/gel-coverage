@@ -235,12 +235,14 @@ class GelCoverageRunner:
                 )
                 # Saves current exon and stores the next
                 union_exons.append(current_exon)
+                current_start = start
+                current_end = end
                 exon_idx += 1
         # Stores the last exon
         last_exon = self.__create_exon(
             gene["chromosome"],
-            start,
-            end,
+            current_start,
+            current_end,
             exon_idx
         )
         # Saves current exon and stores the next
