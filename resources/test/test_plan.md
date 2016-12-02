@@ -2,7 +2,7 @@
 
 ## Test plan
 
-The GEL_coverage application covers three scenarios and as such we have mainly three test cases:
+The GEL_coverage application covers three scenarios:
 1. Coverage analysis of all genes in a panel from PanelApp
 2. Coverage analysis of genes in a provided gene list
 3. Coverage analysis of all genes in the genome
@@ -11,19 +11,23 @@ Consider extreme cases and error control:
 TBD
 
 ### Test case 1
-Coverage analysis of all gene in a panel from PanelApp.
-Panel name: `Epileptic encephalopathy`
-Panel version: `0.2`
-Gene confidence: `HighEvidence`
+Coverage analysis of PanelApp panel in a reduced dataset.
 
 ### Test case 2
-Coverage analysis of a gene list.
-Gene list: `BRCA1, BRCA2, CFTR, IGHE`
+Coverage analysis of a gene list in a reduced dataset.
 
 ### Test case 3
-Coverage analysis of whole exome. This will be a long running test....
+Coverage analysis of whole exome in a whole genome dataset.
+
+### Test case 4
+Coverage analysis of PanelApp panel in a whole genome dataset.
+
+### Test case 5
+Coverage analysis of a gene list in a whole genome dataset.
 
 ## Test data
+
+### Small datasets
 
 We need to create small datasets for testing. We will create a subset BAM for very specific intervals that contains the genes that we will be analysing as our tests are defined.
 
@@ -68,3 +72,78 @@ Create the bigwigs as follows:
 /genomes/software/apps/jdk1.8.0_45/bin/java -jar ~/src/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam ~/data/test1.bam -stdout | /genomes/software/src/ucsc/wigToBigWig stdin ~/data/test1.chr ~/data/test1.bw
 /genomes/software/apps/jdk1.8.0_45/bin/java -jar ~/src/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam ~/data/test2.bam -stdout | /genomes/software/src/ucsc/wigToBigWig stdin ~/data/test1.chr ~/data/test2.bw
 ```
+
+### Big datasets
+
+The folllowing file contains the coverage information of a whole genome cancer sample:
+```
+/genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
+```
+
+## Test description
+
+### Test 1
+
+Run the coverage analysis in a PanelApp panel on a reduced dataset.
+
+* Panel name: `Epileptic encephalopathy`
+* Panel version: `0.2`
+* Gene confidence: `HighEvidence`
+
+Run:
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/exon_coverage_summary.py --bw TBD --output test1.json --panel "Epileptic encephalopathy" --panel-version 0.2
+```
+
+### Test 2
+
+Run the coverage analysis in a gene list on a reduced dataset.
+
+* Gene list: `BRCA1, BRCA2, CFTR, IGHE`
+
+Run:
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/exon_coverage_summary.py --bw TBD --output test1.json --gene-list BRCA1, BRCA2, CFTR, IGHE
+```
+
+### Test 3
+
+Run the whole exome coverage analysis on a whole genome sample.
+
+* Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
+
+Run the following in SGE:
+```
+#!/bin/bash
+#$ -cwd -V
+#$ -q all.q
+#$ -S /bin/bash
+#$ -o /home/pferreiro/data
+#$ -e /home/pferreiro/data
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/exon_coverage_summary.py --bw /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw --output LP3000079-DNA_F03.wg.json > LP3000079-DNA_F03.wg.time
+```
+
+### Test 4
+
+Run a panel coverage analysis  on a whole genome sample.
+
+* Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
+* Panel name: Familial colon cancer
+* Panel version: 1.3
+
+Run the following in SGE:
+```
+#!/bin/bash
+#$ -cwd -V
+#$ -q all.q
+#$ -S /bin/bash
+#$ -o /home/pferreiro/data
+#$ -e /home/pferreiro/data
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/exon_coverage_summary.py --bw /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw --panel "Familial colon cancer" --panel-version 1.3 --output LP3000079-DNA_F03.panel.json > LP3000079-DNA_F03.panel.time
+```
+
+### Test 5
+
+TBD
+
+
