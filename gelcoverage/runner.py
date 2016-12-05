@@ -352,7 +352,8 @@ class GelCoverageRunner:
         """
         return {
             "parameters": self.__get_parameters_output(),
-            "results": results
+            "results": results,
+            "unsequenced_coding_regions": self.bigwig_reader.unsequenced_coding_regions
         }
 
     def run(self):

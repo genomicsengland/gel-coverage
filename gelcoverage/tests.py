@@ -44,6 +44,13 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertEqual(parameters["transcript_filtering_biotypes"],
                          self.config["transcript_filtering_biotypes"])
 
+    def verify_unsequenced_regions(self, unsequenced_regions):
+        self.assertEqual(type(unsequenced_regions), list)
+        for unsequenced_region in unsequenced_regions:
+            self.assertEqual(type(unsequenced_region["chromosome"]), str)
+            self.assertEqual(type(unsequenced_region["start"]), int)
+            self.assertEqual(type(unsequenced_region["end"]), int)
+
     def verify_transcript(self, transcript):
         self.assertEqual(type(transcript["id"]), unicode)
         self.assertTrue(str(transcript["id"]).startswith("ENS"))
@@ -194,6 +201,8 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertEqual(type(output), dict)
         # Verify that content in parameters is correct
         self.verify_parameters(output["parameters"], expected_gene_list)
+        # Verify that the content in "unsequenced_coding_regions" is correct
+        self.verify_unsequenced_regions(output["unsequenced_coding_regions"])
         # Verify that coverage results are correct
         self.assertEqual(type(output["results"]), dict)
         self.assertEqual(type(output["results"]["genes"]), list)
@@ -255,6 +264,8 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertEqual(type(output), dict)
         # Verify that content in parameters is correct
         self.verify_parameters(output["parameters"], expected_gene_list)
+        # Verify that the content in "unsequenced_coding_regions" is correct
+        self.verify_unsequenced_regions(output["unsequenced_coding_regions"])
         # Verify that coverage results are correct
         self.assertEqual(type(output["results"]), dict)
         self.assertEqual(type(output["results"]["genes"]), list)
@@ -304,6 +315,8 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertEqual(type(output), dict)
         # Verify that content in parameters is correct
         self.verify_parameters(output["parameters"], expected_gene_list)
+        # Verify that the content in "unsequenced_coding_regions" is correct
+        self.verify_unsequenced_regions(output["unsequenced_coding_regions"])
         # Verify that coverage results are correct
         self.assertEqual(type(output["results"]), dict)
         self.assertEqual(type(output["results"]["genes"]), list)
@@ -366,6 +379,8 @@ class GelCoverageRunnerTests(unittest.TestCase):
         self.assertEqual(type(output), dict)
         # Verify that content in parameters is correct
         self.verify_parameters(output["parameters"], expected_gene_list)
+        # Verify that the content in "unsequenced_coding_regions" is correct
+        self.verify_unsequenced_regions(output["unsequenced_coding_regions"])
         # Verify that coverage results are correct
         self.assertEqual(type(output["results"]), dict)
         self.assertEqual(type(output["results"]["genes"]), list)

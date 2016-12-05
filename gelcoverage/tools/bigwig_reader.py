@@ -8,6 +8,7 @@ class BigWigReader:
         # Opens the bigwig file for reading
         self.bigwig = bigwig
         self.reader = pyBigWig.open(self.bigwig)
+        self.unsequenced_coding_regions = []
 
     def read_bigwig_coverages(self, chromosome, start, end, strict = True):
         """
@@ -25,19 +26,24 @@ class BigWigReader:
         if type(chromosome) == int or not chromosome.startswith("chr"):
             chromosome = "chr" + str(chromosome)
         # Read from the bigwig file
-        try:
-            # TODO: why our bigwig has "chr" prefix? BAMs don't
-            if strict:
+        # TODO: why our bigwig has "chr" prefix? BAMs don't
+        if strict:
+            try:
                 coverages = self.reader.values(chromosome, start, end)
-            else:
-                # By using the function intervals we make sure that we are not querying coordinates not present in the
-                # bigwig file
-                intervals = self.reader.intervals(chromosome, start, end)
-                coverages = [coverage for _, _, coverage in intervals]
-        except RuntimeError, e:
-            # TODO: deal with this errors
-            logging.error("Querying for unexisting interval %s:%s-%s" % (chromosome, start, end))
-            raise e
+            except RuntimeError, e:
+                # When te queried interval is not present in the bigwig file it returns all 0s coverage and logs it
+                logging.warn("Unexisting interval in bigwig %s:%s-%s" % (chromosome, start, end))
+                self.unsequenced_coding_regions.append({
+                    "chromosome": chromosome,
+                    "start": start,
+                    "end": end
+                })
+                coverages = [0] * (end - start + 1)
+        else:
+            # By using the function intervals we make sure that we are not querying coordinates not present in the
+            # bigwig file
+            intervals = self.reader.intervals(chromosome, start, end)
+            coverages = [coverage for _, _, coverage in intervals]
         return coverages
 
     def get_chromosome_lengths(self, format):

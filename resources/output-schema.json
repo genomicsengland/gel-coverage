@@ -41,6 +41,24 @@
                 }
             }
         },
+        "unsequenced_coding_regions": {
+            "description": "The regions of the genome that contained no information in the BigWig file",
+            "type": "object",
+            "properties": {
+                "chromosome":{
+                    "description": "The chromosome",
+                    "type": "string"
+                },
+                "start":{
+                    "description": "The start position",
+                    "type": "int"
+                },
+                "end":{
+                    "description": "The end position",
+                    "type": "int"
+                }
+            }
+        },
         "results": {
             "description": "The coverage results as hierarchy of panel-genes-transcripts-exons",
             "type": "object",
