@@ -1,4 +1,4 @@
-import json
+import ujson
 import urllib2
 
 
@@ -25,7 +25,7 @@ class PanelappHelper:
             confidence=",".join(gene_confidence_threshold) if type(gene_confidence_threshold) == list
             else gene_confidence_threshold)
         url = urllib2.quote(url) + parameters  # we don't want parameters quoted
-        panel = json.load(urllib2.urlopen("https://" + url))
+        panel = ujson.load(urllib2.urlopen("https://" + url))
         # TODO: refine error management
         if type(panel) != dict:
             raise SystemError("PanelApp returned an error for the query %s" % url)

@@ -259,7 +259,7 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(exon["start"] >= 0)
             self.__verify_dict_field(exon, "end", int)
             self.assertTrue(exon["end"] >= 0)
-            self.assertTrue(exon["end"] > exon["start"], msg="End <= start")
+            self.assertTrue(exon["end"] >= exon["start"], msg="End < start")
             if self.__is_padding_enabled():
                 self.__verify_dict_field(exon, "padded_start", int)
                 self.assertTrue(exon["padded_start"] >= 0)
