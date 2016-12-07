@@ -21,6 +21,7 @@ Test cases 3,4,5,6,7 and 8 are using whole genome datasets and they are not inte
 * **Test case 6**: Coverage analysis of whole exome in a rare disease whole genome dataset
 * **Test case 7**: Coverage analysis of PanelApp panel in a rare disease whole genome dataset
 * **Test case 8**: Coverage analysis of a gene list in a rare disease whole genome dataset
+* **Test case 9**: Coverage analysis of a whole genome aligned to GRCh38
 
 Parameters are tested on unit tests.
 
@@ -80,15 +81,8 @@ Create the bigwigs as follows:
 The folllowing files contains the coverage information of cancer whole genome samples:
 ```
 /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
-LP3000079-DNA_G03
-LP3000079-DNA_H03
-LP3000079-DNA_A04
-LP3000079-DNA_B04
-LP3000079-DNA_D04
-LP3000079-DNA_C05
-LP3000079-DNA_E05
-LP3000079-DNA_G05
-LP3000079-DNA_B06
+/genomes/analysis/by_date/2016-09-27/HX01166491/CancerLP3000079-DNA_G03_NormalLP3000067-DNA_A07/coverage/LP3000079-DNA_G03.bw
+/genomes/analysis/by_date/2016-09-27/HX01166465/CancerLP3000079-DNA_H03_NormalLP3000067-DNA_E05/coverage/LP3000079-DNA_H03.bw
 ```
 
 #### Rare diseases datasets
@@ -176,7 +170,7 @@ Run:
 
 ### Test 3
 
-Run the whole exome coverage analysis on a whole genome sample.
+Run the whole exome coverage analysis on a cancer whole genome sample.
 
 * Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
 
@@ -193,16 +187,30 @@ where gel-coverage.test3.sh:
 #$ -S /bin/bash
 #$ -o /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.log
 #$ -j y
-time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/exon_coverage_summary.py --bw /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config  --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.json
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config  --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.json
+```
+
+After the job has finished you should find the following files:
+```
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.log
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.json
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.json.bed
+```
+
+Run the automated verifications on the output JSON as follows (you may want to enqueue this in SGE):
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.json
 ```
 
 ### Test 4
 
-Run a panel coverage analysis  on a whole genome sample.
+Run a panel coverage analysis  on a cancer whole genome sample.
 
-* Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
+* Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166491/CancerLP3000079-DNA_G03_NormalLP3000067-DNA_A07/coverage/LP3000079-DNA_G03.bw
 * Panel name: Familial colon cancer
 * Panel version: 1.3
+
+Status: PASSED
 
 Run the following job:
 ```
@@ -217,11 +225,162 @@ where gel-coverage.test4.sh:
 #$ -S /bin/bash
 #$ -o /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test4.log
 #$ -j y
-time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/exon_coverage_summary.py --bw /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw --panel "Familial colon cancer" --panel-version 1.3 --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test4.json
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2016-09-27/HX01166491/CancerLP3000079-DNA_G03_NormalLP3000067-DNA_A07/coverage/LP3000079-DNA_G03.bw --panel "Familial colon cancer" --panel-version 1.3 --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test4.json
+```
+
+After the job has finished you should find the following files:
+```
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test4.log
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test4.json
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test4.json.bed
+```
+
+Run the automated verifications on the output JSON as follows:
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test4.json
 ```
 
 ### Test 5
 
-TBD
+Run a gene list coverage analysis  on a cancer whole genome sample.
+
+* Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166465/CancerLP3000079-DNA_H03_NormalLP3000067-DNA_E05/coverage/LP3000079-DNA_H03.bw
+* Gene list: ABL1,EVI1,MYC,APC,IL2,TNFAIP3,ABL2,EWSR1,MYCL1,ARHGEF12,JAK2,TP53,AKT1,FEV,MYCN,ATM,MAP2K4,TSC1,AKT2,FGFR1 
+
+Run the following job:
+```
+qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.sh
+```
+
+where gel-coverage.test5.sh:
+```
+#!/bin/bash
+#$ -N gel-coverage.test5
+#$ -q all.q
+#$ -S /bin/bash
+#$ -o /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.log
+#$ -j y
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2016-09-27/HX01166465/CancerLP3000079-DNA_H03_NormalLP3000067-DNA_E05/coverage/LP3000079-DNA_H03.bw --gene-list ABL1,EVI1,MYC,APC,IL2,TNFAIP3,ABL2,EWSR1,MYCL1,ARHGEF12,JAK2,TP53,AKT1,FEV,MYCN,ATM,MAP2K4,TSC1,AKT2,FGFR1 --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.json
+```
+
+After the job has finished you should find the following files:
+```
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.log
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.json
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.json.bed
+```
+
+Run the automated verifications on the output JSON as follows:
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.json
+```
+
+### Test 6
+
+Run the whole exome coverage analysis on a rare disease whole genome sample.
+
+* Bigwig: /genomes/analysis/by_date/2016-02-15/CH00349553/LP2000873-DNA_B02/coverage/LP2000873-DNA_B02.bw
+
+Run the following job:
+```
+qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.sh
+```
+
+where gel-coverage.test6.sh:
+```
+#!/bin/bash
+#$ -N gel-coverage.test6
+#$ -q all.q
+#$ -S /bin/bash
+#$ -o /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.log
+#$ -j y
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2016-02-15/CH00349553/LP2000873-DNA_B02/coverage/LP2000873-DNA_B02.bw --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config  --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.json
+```
+
+After the job has finished you should find the following files:
+```
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.log
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.json
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.json.bed
+```
+
+Run the automated verifications on the output JSON as follows (you may want to enqueue this in SGE):
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.json
+```
+
+### Test 7
+
+Run a panel coverage analysis  on a rare disease whole genome sample.
+
+* Bigwig: /genomes/analysis/by_date/2015-01-08/RAREP01497/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.bw
+* Panel name: "Charcot-Marie-Tooth disease"
+* Panel version: 1.1
+
+Run the following job:
+```
+qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.sh
+```
+
+where gel-coverage.test7.sh:
+```
+#!/bin/bash
+#$ -N gel-coverage.test7
+#$ -q all.q
+#$ -S /bin/bash
+#$ -o /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.log
+#$ -j y
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2016-09-27/HX01166491/CancerLP3000079-DNA_G03_NormalLP3000067-DNA_A07/coverage/LP3000079-DNA_G03.bw --panel "Charcot-Marie-Tooth disease" --panel-version 1.1 --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.json
+```
+
+After the job has finished you should find the following files:
+```
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.log
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.json
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.json.bed
+```
+
+Run the automated verifications on the output JSON as follows:
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.json
+```
+
+### Test 8
+
+Run a gene list coverage analysis on a rare disease whole genome sample.
+
+* Bigwig: /genomes/analysis/by_date/2014-12-18/RAREP01384/LP2000274-DNA_D01/coverage/LP2000274-DNA_D01.bw
+* Gene list: DIAPH1,KCNQ4,GJB3,GJB2,MYH14,DFNA5,WFS1,TECTA,COCH,EYA4,MYO7A,COL11A2,POU4F3,MYH9,ACTG1,MYO6,SIX1,SLC17A8,GRHL2,TMC1,DSPP,P2RX2,CCDC50,MYO1A,MIR96,TJP2
+(Clinical Manifestations and Molecular Genetics of Known Genes Causing Autosomal Dominant Nonsyndromic Hearing Impairment from GeneReviews)
+
+
+
+Run the following job:
+```
+qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test8.sh
+```
+
+where gel-coverage.test4.sh:
+```
+#!/bin/bash
+#$ -N gel-coverage.test8
+#$ -q all.q
+#$ -S /bin/bash
+#$ -o /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test8.log
+#$ -j y
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2014-12-18/RAREP01384/LP2000274-DNA_D01/coverage/LP2000274-DNA_D01.bw --gene-list DIAPH1,KCNQ4,GJB3,GJB2,MYH14,DFNA5,WFS1,TECTA,COCH,EYA4,MYO7A,COL11A2,POU4F3,MYH9,ACTG1,MYO6,SIX1,SLC17A8,GRHL2,TMC1,DSPP,P2RX2,CCDC50,MYO1A,MIR96,TJP2 --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test8.json
+```
+
+After the job has finished you should find the following files:
+```
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test8.log
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test8.json
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test8.json.bed
+```
+
+Run the automated verifications on the output JSON as follows:
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.json
+```
 
 
