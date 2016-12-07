@@ -1,4 +1,4 @@
 pyBigWig==0.3.0
 pybedtools==0.7.8
-pycellbase==0.1
+pycellbase==0.3.2
 numpy==1.11.2

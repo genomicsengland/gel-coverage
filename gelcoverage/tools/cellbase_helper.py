@@ -61,7 +61,6 @@ class CellbaseHelper:
         :return: list of HGNC gene names
         """
         cellbase_result = self.cellbase_gene_client.search(
-            None,
             assembly=self.assembly,
             include=",".join(["name", "transcripts.annotationFlags"]),
             **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
@@ -80,15 +79,14 @@ class CellbaseHelper:
         :return: the data structure returned by CellBase
         """
         cellbase_genes = self.cellbase_gene_client.search(
-            None,
-            name=",".join(gene_list),
+            name=gene_list,
             assembly=self.assembly,
-            include=",".join(["name", "chromosome", "transcripts.exons.start",
+            include=["name", "chromosome", "transcripts.exons.start",
                               "transcripts.exons.exonNumber",
                               "transcripts.id,transcripts.strand",
                               "transcripts.exons.end", "transcripts.exons.sequence",
-                              "exonNumber", "transcripts.annotationFlags"]),
-            **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
+                              "exonNumber", "transcripts.annotationFlags"],
+            **{"transcripts.biotype": self.filter_biotypes if filter else []}
         )
         # TODO: check for errors and empty results
         # TODO: unit test
