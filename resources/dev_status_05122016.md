@@ -37,4 +37,5 @@
 2. Cache queries to CellBase
 3. Create the coverage distribution tables and plots created by the old script
 4. Median and percentiles at whole genome level (this will require some weighting)
-3. Automate test data download using OpenCGA	
+5. Automate test data download using OpenCGA
+6. Simple tool to inspect coverage analysis output and even transform into tables ingestable by R
