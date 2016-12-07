@@ -20,7 +20,7 @@ def main():
     parser.add_argument('--panel-version', metavar = 'panel_version',
                         help='The panel version',
                         default = None)
-    parser.add_argument('--gene_list', metavar = 'gene_list',
+    parser.add_argument('--gene-list', metavar = 'gene_list',
                         default = None,
                         help = 'Comma separated list of genes (HGNC gene symbols) to analyse. Will be masked by a panel')
     #parser.add_argument('--transcripts', metavar='transcripts',
