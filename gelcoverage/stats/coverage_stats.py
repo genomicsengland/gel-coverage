@@ -1,5 +1,6 @@
 import numpy as np
 import logging
+import gelcoverage.tools.bed_parser as bed_parser
 
 
 def find_gaps(coverages, start_position, coverage_threshold):
@@ -126,16 +127,19 @@ def compute_panel_level_statistics(genes):
     stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
     return stats
 
-def compute_whole_genome_statistics(bigwig_reader):
+def compute_whole_genome_statistics(bigwig_reader, bed = None):
     """
-
+    Iterates through the whole genome in a sliding window to obtain some metrics
     :param bigwig_reader:
     :return:
     """
     logging.info("Computing whole genome statistics...")
     stats = {}
     chunk_size = 100000
-    chromosome_lengths = bigwig_reader.get_chromosome_lengths(format="dict")
+    if bed is None:
+        analysis_regions = bigwig_reader.get_chromosome_lengths()
+    else:
+        analysis_regions = bed_parser.get_regions_dictionary(bed)
     rmsds = []
     means = []
     total_bases = []
@@ -144,42 +148,58 @@ def compute_whole_genome_statistics(bigwig_reader):
     bases_gte_15x = []
     bases_gte_30x = []
     bases_gte_50x = []
-    for chromosome, length in chromosome_lengths.iteritems():
-        start = 0
-        end = min(start + chunk_size - 1, length)
-        while end < length:
-            coverages = bigwig_reader.read_bigwig_coverages(chromosome, start, end, strict=False)
-            chunk_mean = np.mean(coverages)
-            if chunk_mean == 0:
-                # As coverage values are positive values we infer that all values are zero
-                # this may speed up things for missing long regions in the bigwig file, if any
-                chunk_rmsd = 0
-            else:
-                # Gets the squared root sum of squares of the deviation from the mean
-                chunk_rmsd = np.sqrt(np.sum([(x - chunk_mean) ** 2 for x in coverages]) / len(coverages))
-            total_bases.append(np.sum([1 for coverage in coverages]))
-            bases_lt_3x.append(np.sum([1 for coverage in coverages if coverage < 3]))
-            bases_lt_15x.append(np.sum([1 for coverage in coverages if coverage < 15]))
-            bases_gte_15x.append(np.sum([1 for coverage in coverages if coverage >= 15]))
-            bases_gte_30x.append(np.sum([1 for coverage in coverages if coverage >= 30]))
-            bases_gte_50x.append(np.sum([1 for coverage in coverages if coverage >= 50]))
-            means.append(chunk_mean)
-            rmsds.append(chunk_rmsd)
-            start = end + 1
-            end = min(start + chunk_size - 1, length)
-    stats["uneveness"] = round(float(np.median(rmsds)), 3)
-    stats["mean"] = round(float(np.mean(means)), 3)
-    stats["total_bases"] = int(np.sum(total_bases))
-    stats["bases_lt_3x"] = int(np.sum(bases_lt_3x))
-    stats["bases_lt_15x"] = int(np.sum(bases_lt_15x))
-    stats["bases_gte_15x"] = int(np.sum(bases_gte_15x))
-    stats["bases_gte_30x"] = int(np.sum(bases_gte_30x))
-    stats["bases_gte_50x"] = int(np.sum(bases_gte_50x))
-    stats["percent_lt_15x"] = round(float(stats["bases_lt_15x"]) / stats["total_bases"], 5)
-    stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
-    stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
-    stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
-    logging.info("Whole genome statistics computed!")
-    return stats
+    medians = []
+    pct25s = []
+    pct75s = []
+    lengths = []
+    for chromosome, regions in analysis_regions.iteritems():
+        for (start, end) in regions:
+            current_start = start
+            current_end = min(current_start + chunk_size - 1, end)
+            while current_end < end:
+                coverages = bigwig_reader.read_bigwig_coverages(chromosome, current_start, current_end, strict=False)
+                length = len(coverages)
+                chunk_mean = np.mean(coverages)
+                if chunk_mean == 0:
+                    # As coverage values are positive values we infer that all values are zero
+                    # this may speed up things for missing long regions in the bigwig file, if any
+                    chunk_rmsd = 0
+                else:
+                    # Gets the squared root sum of squares of the deviation from the mean
+                    chunk_rmsd = np.sqrt(np.sum([(x - chunk_mean) ** 2 for x in coverages]) / length)
+                total_bases.append(np.sum([1 for coverage in coverages]))
+                bases_lt_3x.append(np.sum([1 for coverage in coverages if coverage < 3]))
+                bases_lt_15x.append(np.sum([1 for coverage in coverages if coverage < 15]))
+                bases_gte_15x.append(np.sum([1 for coverage in coverages if coverage >= 15]))
+                bases_gte_30x.append(np.sum([1 for coverage in coverages if coverage >= 30]))
+                bases_gte_50x.append(np.sum([1 for coverage in coverages if coverage >= 50]))
+                means.append(chunk_mean)
+                rmsds.append(chunk_rmsd)
+                medians.append(np.median(coverages))
+                pct25s.append(np.percentile(coverages, 25))
+                pct75s.append(np.percentile(coverages, 75))
+                lengths.append(length)
+                current_start = current_end + 1
+                current_end = min(current_start + chunk_size - 1, end)
+        stats["uneveness"] = round(float(np.median(rmsds)), 3)
+        stats["mean"] = round(float(np.mean(means)), 3)
+        stats["total_bases"] = int(np.sum(total_bases))
+        stats["bases_lt_3x"] = int(np.sum(bases_lt_3x))
+        stats["bases_lt_15x"] = int(np.sum(bases_lt_15x))
+        stats["bases_gte_15x"] = int(np.sum(bases_gte_15x))
+        stats["bases_gte_30x"] = int(np.sum(bases_gte_30x))
+        stats["bases_gte_50x"] = int(np.sum(bases_gte_50x))
+        stats["percent_lt_15x"] = round(float(stats["bases_lt_15x"]) / stats["total_bases"], 5)
+        stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
+        stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
+        stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
+        stats["weighted_median"] = round(float(np.sum([median * length for median in medians for length in lengths]) /
+                                               np.sum(lengths)), 3)
+        stats["weighted_pct75"] = round(float(np.sum([pct75 * length for pct75 in pct75s for length in lengths]) /
+                                               np.sum(lengths)), 3)
+        stats["weighted_pct25"] = round(float(np.sum([pct25 * length for pct25 in pct25s for length in lengths]) /
+                                               np.sum(lengths)), 3)
+        logging.info("Whole genome statistics computed!")
+        return stats
 
 

@@ -210,7 +210,8 @@ Run a panel coverage analysis  on a cancer whole genome sample.
 * Panel name: Familial colon cancer
 * Panel version: 1.3
 
-Status: PASSED
+Status: **PASSED**
+Execution time: 62m
 
 Run the following job:
 ```
@@ -246,6 +247,9 @@ Run a gene list coverage analysis  on a cancer whole genome sample.
 
 * Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166465/CancerLP3000079-DNA_H03_NormalLP3000067-DNA_E05/coverage/LP3000079-DNA_H03.bw
 * Gene list: ABL1,EVI1,MYC,APC,IL2,TNFAIP3,ABL2,EWSR1,MYCL1,ARHGEF12,JAK2,TP53,AKT1,FEV,MYCN,ATM,MAP2K4,TSC1,AKT2,FGFR1 
+
+Status: **PASSED**
+Execution time: 71m
 
 Run the following job:
 ```
