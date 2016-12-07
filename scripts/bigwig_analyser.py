@@ -1,6 +1,6 @@
 import ConfigParser
 import argparse
-import json
+import ujson
 import os
 import codecs
 import logging
@@ -75,7 +75,7 @@ def main():
     # TODO: we may want to write it to a file. Check that
     with codecs.open(args.output, 'w', 'utf8') as output_file:
         output_file.write(
-            json.dumps(
+            ujson.dumps(
                 results,
                 indent=4,
                 ensure_ascii=False,
