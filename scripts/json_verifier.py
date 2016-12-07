@@ -1,5 +1,5 @@
 import argparse
-import json
+import ujson
 import logging
 import unittest
 from gelcoverage.test.output_verifier import OutputVerifier
@@ -18,7 +18,7 @@ def main():
     parser.add_argument('--expected-gene-list', metavar='expected_gene_list',
                         help='The expected comma-separated gene list', default=None)
     args = parser.parse_args()
-    coverage_data = json.load(open(args.json, 'r'))
+    coverage_data = ujson.load(open(args.json, 'r'))
 
     class TestWrapper(OutputVerifier):
         def run_test(self):

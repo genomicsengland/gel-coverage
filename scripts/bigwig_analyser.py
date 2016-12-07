@@ -1,7 +1,6 @@
 import ConfigParser
 import argparse
 import ujson
-import os
 import codecs
 import logging
 
