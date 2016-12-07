@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 
 def find_gaps(coverages, start_position, coverage_threshold):
@@ -131,6 +132,7 @@ def compute_whole_genome_statistics(bigwig_reader):
     :param bigwig_reader:
     :return:
     """
+    logging.info("Computing whole genome statistics...")
     stats = {}
     chunk_size = 100000
     chromosome_lengths = bigwig_reader.get_chromosome_lengths(format="dict")
@@ -177,6 +179,7 @@ def compute_whole_genome_statistics(bigwig_reader):
     stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
     stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
     stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
+    logging.info("Whole genome statistics computed!")
     return stats
 
 

@@ -1,10 +1,12 @@
 import unittest
 import json
 import logging
+import pybedtools
 from gelcoverage.runner import GelCoverageRunner
+from gelcoverage.test.output_verifier import OutputVerifier
 
 
-class GelCoverageRunnerTests(unittest.TestCase):
+class GelCoverageRunnerTests(OutputVerifier):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
@@ -25,164 +27,9 @@ class GelCoverageRunnerTests(unittest.TestCase):
             "panelapp_gene_confidence": "HighEvidence",
             "transcript_filtering_flags": "basic",
             "transcript_filtering_biotypes": "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene",
-            "wg_stats_enabled": False
+            "wg_stats_enabled": False,
+            "exon_padding": 15
         }
-
-    def verify_parameters(self, parameters, expected_gene_list):
-        self.assertEqual(type(parameters), dict)
-        self.assertEqual(parameters["gap_coverage_threshold"], self.config["coverage_threshold"])
-        self.assertEqual(parameters["input_file"], self.config["bw"])
-        self.assertEqual(parameters["configuration_file"], self.config["configuration_file"])
-        self.assertEqual(parameters["species"], self.config["cellbase_species"])
-        self.assertEqual(parameters["assembly"], self.config["cellbase_assembly"])
-        #self.assertEqual(parameters["panel"], self.config["panel"])
-        #self.assertEqual(parameters["panel_version"], self.config["panel_version"])
-        self.assertEqual(parameters["gene_list"],
-                         expected_gene_list)
-        self.assertEqual(parameters["transcript_filtering_flags"],
-                         self.config["transcript_filtering_flags"])
-        self.assertEqual(parameters["transcript_filtering_biotypes"],
-                         self.config["transcript_filtering_biotypes"])
-
-    def verify_unsequenced_regions(self, unsequenced_regions):
-        self.assertEqual(type(unsequenced_regions), list)
-        for unsequenced_region in unsequenced_regions:
-            self.assertEqual(type(unsequenced_region["chromosome"]), str)
-            self.assertEqual(type(unsequenced_region["start"]), int)
-            self.assertEqual(type(unsequenced_region["end"]), int)
-
-    def verify_transcript(self, transcript):
-        self.assertEqual(type(transcript["id"]), unicode)
-        self.assertTrue(str(transcript["id"]).startswith("ENS"))
-        # TODO: test flags and biotype
-        self.verify_transcript_stats(transcript["statistics"])
-
-    def verify_transcript_stats(self, stats, has_gc = True):
-        self.assertEqual(type(stats), dict)
-        self.assertEqual(type(stats["bases_gte_15x"]), int)
-        self.assertTrue(stats["bases_gte_15x"] >= 0)
-        self.assertEqual(type(stats["bases_gte_30x"]), int)
-        self.assertTrue(stats["bases_gte_30x"] >= 0)
-        self.assertEqual(type(stats["bases_gte_50x"]), int)
-        self.assertTrue(stats["bases_gte_50x"] >= 0)
-        self.assertEqual(type(stats["bases_lt_15x"]), int)
-        self.assertTrue(stats["bases_lt_15x"] >= 0)
-        self.assertEqual(type(stats["bases_lt_3x"]), int)
-        self.assertTrue(stats["bases_lt_3x"] >= 0)
-        if has_gc:
-            self.assertEqual(type(stats["gc_content"]), float)
-            self.assertTrue(stats["gc_content"] >= 0 and
-                            stats["gc_content"] <= 1)
-        self.assertEqual(type(stats["mean"]), float)
-        self.assertTrue(stats["mean"] >= 0)
-        self.assertEqual(type(stats["percent_gte_15x"]), float)
-        self.assertTrue(stats["percent_gte_15x"] >= 0 and
-                        stats["percent_gte_15x"] <= 1)
-        self.assertTrue(stats["percent_gte_30x"] >= 0 and
-                        stats["percent_gte_30x"] <= 1)
-        self.assertTrue(stats["percent_gte_50x"] >= 0 and
-                        stats["percent_gte_50x"] <= 1)
-        self.assertTrue(stats["percent_lt_15x"] >= 0 and
-                        stats["percent_lt_15x"] <= 1)
-        self.assertEqual(type(stats["total_bases"]), int)
-        self.assertTrue(stats["total_bases"] >= 0)
-        self.assertEqual(type(stats["weighted_median"]), float)
-        self.assertTrue(stats["weighted_median"] >= 0)
-        self.assertEqual(type(stats["weighted_pct75"]), float)
-        self.assertTrue(stats["weighted_pct75"] >= 0)
-        self.assertEqual(type(stats["weighted_pct25"]), float)
-        self.assertTrue(stats["weighted_pct25"] >= 0)
-
-    def verify_exon(self, exon, has_gc = True):
-        self.assertEqual(type(exon), dict)
-        self.assertEqual(type(exon["start"]), int)
-        self.assertTrue(exon["start"] >= 0)
-        self.assertEqual(type(exon["end"]), int)
-        self.assertTrue(exon["end"] >= 0)
-        self.assertEqual(type(exon["exon_number"]), str)
-        self.assertTrue(str(exon["exon_number"]).startswith("exon"))
-        self.assertEqual(type(exon["statistics"]), dict)
-        self.assertEqual(type(exon["statistics"]["bases_gte_15x"]), int)
-        self.assertTrue(exon["statistics"]["bases_gte_15x"] >= 0)
-        self.assertEqual(type(exon["statistics"]["bases_gte_30x"]), int)
-        self.assertTrue(exon["statistics"]["bases_gte_30x"] >= 0)
-        self.assertEqual(type(exon["statistics"]["bases_gte_50x"]), int)
-        self.assertTrue(exon["statistics"]["bases_gte_50x"] >= 0)
-        self.assertEqual(type(exon["statistics"]["bases_lt_15x"]), int)
-        self.assertTrue(exon["statistics"]["bases_lt_15x"] >= 0)
-        self.assertEqual(type(exon["statistics"]["bases_lt_3x"]), int)
-        self.assertTrue(exon["statistics"]["bases_lt_3x"] >= 0)
-        if has_gc:
-            self.assertEqual(type(exon["statistics"]["gc_content"]), float)
-            self.assertTrue(exon["statistics"]["gc_content"] >= 0 and
-                            exon["statistics"]["gc_content"] <= 1)
-        self.assertEqual(type(exon["statistics"]["mean"]), float)
-        self.assertTrue(exon["statistics"]["mean"] >= 0)
-        self.assertEqual(type(exon["statistics"]["percent_gte_15x"]), float)
-        self.assertTrue(exon["statistics"]["percent_gte_15x"] >= 0 and
-                        exon["statistics"]["percent_gte_15x"] <= 1)
-        self.assertTrue(exon["statistics"]["percent_gte_30x"] >= 0 and
-                        exon["statistics"]["percent_gte_30x"] <= 1)
-        self.assertTrue(exon["statistics"]["percent_gte_50x"] >= 0 and
-                        exon["statistics"]["percent_gte_50x"] <= 1)
-        self.assertTrue(exon["statistics"]["percent_lt_15x"] >= 0 and
-                        exon["statistics"]["percent_lt_15x"] <= 1)
-        self.assertEqual(type(exon["statistics"]["total_bases"]), int)
-        self.assertTrue(exon["statistics"]["total_bases"] >= 0)
-        self.assertEqual(type(exon["statistics"]["median"]), float)
-        self.assertTrue(exon["statistics"]["median"] >= 0)
-        self.assertEqual(type(exon["statistics"]["pct75"]), float)
-        self.assertTrue(exon["statistics"]["pct75"] >= 0)
-        self.assertEqual(type(exon["statistics"]["pct25"]), float)
-        self.assertTrue(exon["statistics"]["pct25"] >= 0)
-
-    def verify_gap(self, gap, exon):
-        self.assertEqual(type(gap), dict)
-        self.assertEqual(type(gap["start"]), int)
-        if "padded_start" in exon:
-            start = exon["padded_start"]
-            end = exon["padded_end"]
-        else:
-            start = exon["start"]
-            end = exon["end"]
-        self.assertTrue(gap["start"] >= start and gap["start"] <= end)
-        self.assertEqual(type(gap["end"]), int)
-        self.assertTrue(gap["end"] >= start and gap["start"] <= end and
-                        gap["end"] >= gap["start"])
-        self.assertEqual(type(gap["length"]), int)
-        self.assertTrue(gap["length"] >= 1 and gap["length"] <= gap["end"] - gap["start"] + 1)
-
-    def verify_panel_stats(self, stats):
-        self.assertEqual(type(stats), dict)
-        self.assertEqual(type(stats["bases_gte_15x"]), int)
-        self.assertTrue(stats["bases_gte_15x"] >= 0)
-        self.assertEqual(type(stats["bases_gte_30x"]), int)
-        self.assertTrue(stats["bases_gte_30x"] >= 0)
-        self.assertEqual(type(stats["bases_gte_50x"]), int)
-        self.assertTrue(stats["bases_gte_50x"] >= 0)
-        self.assertEqual(type(stats["bases_lt_15x"]), int)
-        self.assertTrue(stats["bases_lt_15x"] >= 0)
-        self.assertEqual(type(stats["bases_lt_3x"]), int)
-        self.assertTrue(stats["bases_lt_3x"] >= 0)
-        self.assertEqual(type(stats["mean"]), float)
-        self.assertTrue(stats["mean"] >= 0)
-        self.assertEqual(type(stats["percent_gte_15x"]), float)
-        self.assertTrue(stats["percent_gte_15x"] >= 0 and
-                        stats["percent_gte_15x"] <= 1)
-        self.assertTrue(stats["percent_gte_30x"] >= 0 and
-                        stats["percent_gte_30x"] <= 1)
-        self.assertTrue(stats["percent_gte_50x"] >= 0 and
-                        stats["percent_gte_50x"] <= 1)
-        self.assertTrue(stats["percent_lt_15x"] >= 0 and
-                        stats["percent_lt_15x"] <= 1)
-        self.assertEqual(type(stats["total_bases"]), int)
-        self.assertTrue(stats["total_bases"] >= 0)
-        self.assertEqual(type(stats["weighted_median"]), float)
-        self.assertTrue(stats["weighted_median"] >= 0)
-        self.assertEqual(type(stats["weighted_pct75"]), float)
-        self.assertTrue(stats["weighted_pct75"] >= 0)
-        self.assertEqual(type(stats["weighted_pct25"]), float)
-        self.assertTrue(stats["weighted_pct25"] >= 0)
 
     def test1(self):
         """
@@ -197,46 +44,18 @@ class GelCoverageRunnerTests(unittest.TestCase):
         runner = GelCoverageRunner(
             config=self.config
         )
-        output = runner.run()
-        self.assertEqual(type(output), dict)
-        # Verify that content in parameters is correct
-        self.verify_parameters(output["parameters"], expected_gene_list)
-        # Verify that the content in "unsequenced_coding_regions" is correct
-        self.verify_unsequenced_regions(output["unsequenced_coding_regions"])
-        # Verify that coverage results are correct
-        self.assertEqual(type(output["results"]), dict)
-        self.assertEqual(type(output["results"]["genes"]), list)
-        self.assertEqual(type(output["results"]["statistics"]), dict)
-        self.verify_panel_stats(output["results"]["statistics"])
-        # Verify every gene
-        for gene in output["results"]["genes"]:
-            self.assertTrue(gene["name"] in expected_gene_list)
-            self.assertEqual(type(gene["chromosome"]), unicode)
-            #print gene["name"]
-            # Verify every transcript
-            for transcript in gene["transcripts"]:
-                self.verify_transcript(transcript)
-                #print transcript["id"]
-                # Verify every exon
-                for exon in transcript["exons"]:
-                    self.verify_exon(exon)
-                    self.assertTrue("padded_start" not in exon)
-                    self.assertTrue("padded_end" not in exon)
-                    # Verify gaps
-                    for gap in exon["gaps"]:
-                        self.verify_gap(gap, exon)
-            union_transcript = gene["union_transcript"]
-            self.verify_transcript_stats(union_transcript["statistics"], has_gc=False)
-            for exon in union_transcript["exons"]:
-                self.verify_exon(exon, has_gc=False)
-                self.assertTrue("padded_start" not in exon)
-                self.assertTrue("padded_end" not in exon)
-                # Verify gaps
-                for gap in exon["gaps"]:
-                    self.verify_gap(gap, exon)
-
+        output, bed = runner.run()
+        # Writes the JSON
         with open('../resources/test/sample_output_1.json', 'w') as fp:
             json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_1.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+
+
 
     def test2(self):
         """
@@ -255,52 +74,21 @@ class GelCoverageRunnerTests(unittest.TestCase):
         runner = GelCoverageRunner(
             config=self.config
         )
-        output = runner.run()
-        self.assertEqual(type(output), dict)
-        runner = GelCoverageRunner(
-            config=self.config
-        )
-        output = runner.run()
-        self.assertEqual(type(output), dict)
-        # Verify that content in parameters is correct
-        self.verify_parameters(output["parameters"], expected_gene_list)
-        # Verify that the content in "unsequenced_coding_regions" is correct
-        self.verify_unsequenced_regions(output["unsequenced_coding_regions"])
-        # Verify that coverage results are correct
-        self.assertEqual(type(output["results"]), dict)
-        self.assertEqual(type(output["results"]["genes"]), list)
-        self.assertEqual(type(output["results"]["statistics"]), dict)
-        self.verify_panel_stats(output["results"]["statistics"])
-        # Verify every gene
-        for gene in output["results"]["genes"]:
-            self.assertTrue(gene["name"] in expected_gene_list)
-            self.assertEqual(type(gene["chromosome"]), unicode)
-            # Verify every transcript
-            for transcript in gene["transcripts"]:
-                self.verify_transcript(transcript)
-                # Verify every exon
-                for exon in transcript["exons"]:
-                    self.verify_exon(exon)
-                    self.assertTrue("padded_start" not in exon)
-                    self.assertTrue("padded_end" not in exon)
-                    # Verify gaps
-                    for gap in exon["gaps"]:
-                        self.verify_gap(gap, exon)
-            union_transcript = gene["union_transcript"]
-            self.verify_transcript_stats(union_transcript["statistics"], has_gc=False)
-            for exon in union_transcript["exons"]:
-                self.verify_exon(exon, has_gc=False)
-                self.assertTrue("padded_start" not in exon)
-                self.assertTrue("padded_end" not in exon)
-                # Verify gaps
-                for gap in exon["gaps"]:
-                    self.verify_gap(gap, exon)
+        output, bed = runner.run()
+        # Writes the JSON
         with open('../resources/test/sample_output_2.json', 'w') as fp:
             json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_2.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+
 
     def test3(self):
         """
-        Test 1: panel from PanelApp with exon padding of 15 bp
+        Test 3: panel from PanelApp with exon padding of 15 bp
         :return:
         """
         expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
@@ -311,51 +99,21 @@ class GelCoverageRunnerTests(unittest.TestCase):
         runner = GelCoverageRunner(
             config=self.config
         )
-        output = runner.run()
-        self.assertEqual(type(output), dict)
-        # Verify that content in parameters is correct
-        self.verify_parameters(output["parameters"], expected_gene_list)
-        # Verify that the content in "unsequenced_coding_regions" is correct
-        self.verify_unsequenced_regions(output["unsequenced_coding_regions"])
-        # Verify that coverage results are correct
-        self.assertEqual(type(output["results"]), dict)
-        self.assertEqual(type(output["results"]["genes"]), list)
-        self.assertEqual(type(output["results"]["statistics"]), dict)
-        self.verify_panel_stats(output["results"]["statistics"])
-        # Verify every gene
-        for gene in output["results"]["genes"]:
-            self.assertTrue(gene["name"] in expected_gene_list)
-            self.assertEqual(type(gene["chromosome"]), unicode)
-            # Verify every transcript
-            for transcript in gene["transcripts"]:
-                self.verify_transcript(transcript)
-                # Verify every exon
-                for exon in transcript["exons"]:
-                    self.verify_exon(exon)
-                    self.assertTrue("padded_start" in exon)
-                    self.assertTrue("padded_end" in exon)
-                    self.assertTrue(exon["padded_start"] + output["parameters"]["exon_padding"], exon["start"])
-                    self.assertTrue(exon["padded_end"] - output["parameters"]["exon_padding"], exon["end"])
-                    # Verify gaps
-                    for gap in exon["gaps"]:
-                        self.verify_gap(gap, exon)
-            union_transcript = gene["union_transcript"]
-            self.verify_transcript_stats(union_transcript["statistics"], has_gc=False)
-            for exon in union_transcript["exons"]:
-                self.verify_exon(exon, has_gc=False)
-                self.assertTrue("padded_start" in exon)
-                self.assertTrue("padded_end" in exon)
-                self.assertTrue(exon["padded_start"] + output["parameters"]["exon_padding"], exon["start"])
-                self.assertTrue(exon["padded_end"] - output["parameters"]["exon_padding"], exon["end"])
-                # Verify gaps
-                for gap in exon["gaps"]:
-                    self.verify_gap(gap, exon)
+        output, bed = runner.run()
+        # Writes the JSON
         with open('../resources/test/sample_output_3.json', 'w') as fp:
             json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_3.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+
 
     def test4(self):
         """
-        Test 2: gene list with exon padding of 15 bp
+        Test 4: gene list with exon padding of 15 bp
         :return:
         """
         self.config["panel"] = None
@@ -370,49 +128,126 @@ class GelCoverageRunnerTests(unittest.TestCase):
         runner = GelCoverageRunner(
             config=self.config
         )
-        output = runner.run()
-        self.assertEqual(type(output), dict)
+        output, bed = runner.run()
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_4.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+        # Writes the JSON
+        with open('../resources/test/sample_output_4.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+
+    def test5(self):
+        """
+        Test 5: tests the union transcript build up
+        :return:
+        """
+        def create_test_exon(start, end, exon_number):
+            return {
+                "start": start,
+                "end": end,
+                "padded_start": start - self.config["exon_padding"],
+                "padded_end": end + self.config["exon_padding"],
+                "exon_number": exon_number
+            }
+        # Interval covered in the input file SCN2A: 2: 165,995,882-166,349,242
+        offset = 165995882
         runner = GelCoverageRunner(
             config=self.config
         )
-        output = runner.run()
-        self.assertEqual(type(output), dict)
-        # Verify that content in parameters is correct
-        self.verify_parameters(output["parameters"], expected_gene_list)
-        # Verify that the content in "unsequenced_coding_regions" is correct
-        self.verify_unsequenced_regions(output["unsequenced_coding_regions"])
-        # Verify that coverage results are correct
-        self.assertEqual(type(output["results"]), dict)
-        self.assertEqual(type(output["results"]["genes"]), list)
-        self.assertEqual(type(output["results"]["statistics"]), dict)
-        self.verify_panel_stats(output["results"]["statistics"])
-        # Verify every gene
-        for gene in output["results"]["genes"]:
-            self.assertTrue(gene["name"] in expected_gene_list)
-            self.assertEqual(type(gene["chromosome"]), unicode)
-            # Verify every transcript
-            for transcript in gene["transcripts"]:
-                self.verify_transcript(transcript)
-                # Verify every exon
-                for exon in transcript["exons"]:
-                    self.verify_exon(exon)
-                    self.assertTrue("padded_start" in exon)
-                    self.assertTrue("padded_end" in exon)
-                    self.assertTrue(exon["padded_start"] + output["parameters"]["exon_padding"], exon["start"])
-                    self.assertTrue(exon["padded_end"] - output["parameters"]["exon_padding"], exon["end"])
-                    # Verify gaps
-                    for gap in exon["gaps"]:
-                        self.verify_gap(gap, exon)
-            union_transcript = gene["union_transcript"]
-            self.verify_transcript_stats(union_transcript["statistics"], has_gc=False)
-            for exon in union_transcript["exons"]:
-                self.verify_exon(exon, has_gc=False)
-                self.assertTrue("padded_start" in exon)
-                self.assertTrue("padded_end" in exon)
-                self.assertTrue(exon["padded_start"] + output["parameters"]["exon_padding"], exon["start"])
-                self.assertTrue(exon["padded_end"] - output["parameters"]["exon_padding"], exon["end"])
-                # Verify gaps
-                for gap in exon["gaps"]:
-                    self.verify_gap(gap, exon)
-        with open('../resources/test/sample_output_4.json', 'w') as fp:
-            json.dump(output, fp)
+        # Runs union transcript with exon padding 15bp
+        self.config["exon_padding"] = 15
+        gene_15bp_padding = {
+            "chromosome": "2",
+            "name": "TEST",
+            "transcripts": [
+                {
+                    "id": "1",
+                    "exons": [
+                        create_test_exon(offset + 10, offset + 15, 1),
+                        create_test_exon(offset + 20, offset + 25, 2),
+                        create_test_exon(offset + 30, offset + 35, 3),
+                        create_test_exon(offset + 40, offset + 45, 4),
+                        create_test_exon(offset + 50, offset + 55, 5),
+                        create_test_exon(offset + 60, offset + 65, 6)
+                    ]
+                },
+                {
+                    "id": "2",
+                    "exons": [
+                        create_test_exon(offset + 10, offset + 15, 1),
+                        create_test_exon(offset + 20, offset + 25, 2),
+                        create_test_exon(offset + 30, offset + 35, 3),
+                        create_test_exon(offset + 40, offset + 45, 4),
+                        create_test_exon(offset + 50, offset + 55, 5),
+                        create_test_exon(offset + 60, offset + 65, 6),
+                        create_test_exon(offset + 70, offset + 75, 7)
+                    ]
+                },
+                {
+                    "id": "3",
+                    "exons": [
+                        create_test_exon(offset + 0, offset + 5, 1),
+                        create_test_exon(offset + 10, offset + 15, 2),
+                        create_test_exon(offset + 20, offset + 25, 3),
+                        create_test_exon(offset + 30, offset + 35, 4),
+                        create_test_exon(offset + 40, offset + 45, 5),
+                        create_test_exon(offset + 50, offset + 55, 6),
+                        create_test_exon(offset + 60, offset + 65, 7)
+                    ]
+                }
+            ]
+        }
+        union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_15bp_padding)
+        self.assertEqual(len(union_transcript["exons"]), 1)
+        gene_15bp_padding["union_transcript"] = union_transcript
+        self.verify_union_transcript(gene_15bp_padding)
+        # Runs union transcript with exon padding 0bp
+        self.config["exon_padding"] = 0
+        gene_0bp_padding = {
+            "chromosome": "2",
+            "name": "TEST",
+            "transcripts": [
+                {
+                    "id": "1",
+                    "exons": [
+                        create_test_exon(offset + 10, offset + 15, 1),
+                        create_test_exon(offset + 20, offset + 25, 2),
+                        create_test_exon(offset + 30, offset + 35, 3),
+                        create_test_exon(offset + 40, offset + 45, 4),
+                        create_test_exon(offset + 50, offset + 55, 5),
+                        create_test_exon(offset + 60, offset + 65, 6)
+                    ]
+                },
+                {
+                    "id": "2",
+                    "exons": [
+                        create_test_exon(offset + 10, offset + 15, 1),
+                        create_test_exon(offset + 20, offset + 25, 2),
+                        create_test_exon(offset + 30, offset + 35, 3),
+                        create_test_exon(offset + 40, offset + 45, 4),
+                        create_test_exon(offset + 50, offset + 55, 5),
+                        create_test_exon(offset + 60, offset + 65, 6),
+                        create_test_exon(offset + 70, offset + 75, 7)
+                    ]
+                },
+                {
+                    "id": "3",
+                    "exons": [
+                        create_test_exon(offset + 0, offset + 5, 1),
+                        create_test_exon(offset + 10, offset + 15, 2),
+                        create_test_exon(offset + 20, offset + 25, 3),
+                        create_test_exon(offset + 30, offset + 35, 4),
+                        create_test_exon(offset + 40, offset + 45, 5),
+                        create_test_exon(offset + 50, offset + 55, 6),
+                        create_test_exon(offset + 60, offset + 65, 7)
+                    ]
+                }
+            ]
+        }
+        union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_0bp_padding)
+        self.assertEqual(len(union_transcript["exons"]), 8)
+        gene_0bp_padding["union_transcript"] = union_transcript
+        self.verify_union_transcript(gene_0bp_padding)

@@ -1,6 +1,7 @@
 import pybedtools
 from pycellbase.cbclient import CellBaseClient
 from pycellbase.cbconfig import ConfigClient
+import logging
 
 import gelcoverage.stats.sequence_stats as sequence_stats
 
@@ -101,6 +102,7 @@ class CellbaseHelper:
         :param filter: flag indicating if filtering should be applied
         :return: pybedtools object
         """
+        logging.info("Building gene annotations bed file from CellBase...")
         if gene_list is None or len(gene_list) == 0:
             raise SystemError("Input gene list is not correct")
         number_genes = len(gene_list)
@@ -136,6 +138,7 @@ class CellbaseHelper:
                             (gene["chromosome"], exon["start"], exon["end"], row_id, str(gc), strand))
         # Build BED file
         bed = pybedtools.BedTool(all_exons)
+        logging.info("Gene annotations bed file built!")
         return bed
 
     def get_gene_list_from_transcripts (self, transcripts_list):

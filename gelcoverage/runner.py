@@ -3,7 +3,7 @@ import logging
 import gelcoverage.stats.coverage_stats as coverage_stats
 from gelcoverage.tools.cellbase_helper import CellbaseHelper
 from gelcoverage.tools.panelapp_helper import PanelappHelper
-from gelcoverage.tools.bigwig_reader import BigWigReader
+from gelcoverage.tools.bigwig_reader import BigWigReader, UncoveredIntervalException
 
 
 class GelCoverageRunner:
@@ -78,7 +78,11 @@ class GelCoverageRunner:
             "assembly": self.config['cellbase_assembly'],
             "transcript_filtering_flags": self.config['transcript_filtering_flags'],
             "transcript_filtering_biotypes": self.config['transcript_filtering_biotypes'],
-            "exon_padding": self.config["exon_padding"]
+            "exon_padding": self.config["exon_padding"],
+            "cellbase_host": self.config["cellbase_host"],
+            "cellbase_version": self.config["cellbase_version"],
+            "panelapp_host": self.config["panelapp_host"],
+            "panelapp_gene_confidence": self.config["panelapp_gene_confidence"],
         }
         if 'panel' in self.config and self.config['panel'] is not None \
                 and 'panel_version' in self.config and self.config['panel_version'] is not None:
@@ -167,10 +171,10 @@ class GelCoverageRunner:
         exon_number = "exon%s" % exon_idx if type(exon_idx) == int else exon_idx
         exon = GelCoverageRunner.__initialize_exon_dict(
             exon_number,
-            start + self.config["exon_padding"] if self.is_exon_padding else start,
-            end - self.config["exon_padding"] if self.is_exon_padding else end,
-            start if self.is_exon_padding else None,
-            end if self.is_exon_padding else None,
+            start = start,
+            end = end,
+            padded_start = start - self.config["exon_padding"] if self.is_exon_padding else None,
+            padded_end = end + self.config["exon_padding"] if self.is_exon_padding else None
         )
         # Update length
         exon["length"] = end - start + 1
@@ -188,7 +192,7 @@ class GelCoverageRunner:
                 start,
                 self.config['coverage_threshold']
             )
-        logging.debug("Created exon %s" % exon_number)
+        #logging.debug("Created exon %s" % exon_number)
         return exon
 
     def __create_transcript(self, id, exons):
@@ -203,7 +207,6 @@ class GelCoverageRunner:
         transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
             transcript["exons"]
         )
-        logging.debug("Created transcript %s" % id)
         return transcript
 
     def __create_union_transcript(self, gene):
@@ -217,14 +220,19 @@ class GelCoverageRunner:
         all_exons.sort(key = lambda x: x["start"])
         union_exons = []
         first_exon = all_exons[0]
-        current_start = first_exon["padded_start"] if self.is_exon_padding else first_exon["start"]
-        current_end = first_exon["padded_end"] if self.is_exon_padding else first_exon["end"]
+        current_padded_end = first_exon["padded_end"] if self.is_exon_padding else first_exon["end"]
+        current_start = first_exon["start"]
+        current_end = first_exon["end"]
+        # TODO: consider strand when assigning exon indices
         exon_idx = 1
         for exon in all_exons[1:]:
-            start = exon["padded_start"] if self.is_exon_padding else exon["start"]
-            end = exon["padded_end"] if self.is_exon_padding else exon["end"]
-            if start <= current_end:
+            padded_start = exon["padded_start"] if self.is_exon_padding else exon["start"]
+            padded_end = exon["padded_end"] if self.is_exon_padding else exon["end"]
+            start = exon["start"]
+            end = exon["end"]
+            if padded_start <= current_padded_end:
                 # Exons overlaps, we join them
+                current_padded_end = max(current_padded_end, padded_end)
                 current_end = max(current_end, end)
             else:
                 # Exons do not overlap, they are different exons in the union transcript
@@ -236,6 +244,7 @@ class GelCoverageRunner:
                 )
                 # Saves current exon and stores the next
                 union_exons.append(current_exon)
+                current_padded_end = padded_end
                 current_start = start
                 current_end = end
                 exon_idx += 1
@@ -253,7 +262,7 @@ class GelCoverageRunner:
             "exons" : union_exons,
             "statistics": coverage_stats.compute_transcript_level_statistics(union_exons)
         }
-        logging.debug("Created union transcript for gene %s" % gene["name"])
+        logging.debug("Built union transcript for gene %s" % gene["name"])
         return union_transcript
 
     def __create_gene(self, gene_name, chromosome, transcripts):
@@ -267,7 +276,7 @@ class GelCoverageRunner:
         gene = self.__initialize_gene_dict(gene_name, chromosome, transcripts)
         # Calculate union transcript and compute stats
         gene["union_transcript"] = self.__create_union_transcript(gene)
-        logging.debug("Created gene %s" % gene_name)
+        logging.info("Processed gene %s" % gene_name)
         return gene
 
     def __process_bed_file(self, bed):
@@ -278,12 +287,14 @@ class GelCoverageRunner:
         :return: the data structure containing all statistics
         """
         # Checks that the BED file contains the expected information
+        logging.info("Processing the information in the coverage bigwig on the bed intervals...")
         if bed is None or len(bed) == 0:
             logging.error("Incorrect BED file!")
             raise RuntimeError("Incorrect BED file!")
         # Initialize results data structure
         results = {
-            "genes": []
+            "genes": [],
+            "uncovered_genes": []
         }
 
         current_exons = []
@@ -291,6 +302,7 @@ class GelCoverageRunner:
         current_transcript_id = None
         current_gene_name = None
         current_chromosome = None
+        uncovered_genes = {}
         # Process every interval in the BED file
         for interval in bed:
             # Reads data from BED entry
@@ -303,9 +315,10 @@ class GelCoverageRunner:
                     # Initialize for the first transcript
                     current_transcript_id = transcript_id
                 else:
-                    transcript = self.__create_transcript(current_transcript_id, current_exons)
-                    current_transcripts.append(transcript)
-                    logging.info("Processed transcript %s of gene %s" % (current_transcript_id, current_gene_name))
+                    if len(current_exons) > 0:
+                        transcript = self.__create_transcript(current_transcript_id, current_exons)
+                        current_transcripts.append(transcript)
+                        logging.info("Processed transcript %s of gene %s" % (current_transcript_id, current_gene_name))
                     # Create a new data structure for new gene
                     current_transcript_id = transcript_id
                     current_exons = []
@@ -316,32 +329,41 @@ class GelCoverageRunner:
                     current_gene_name = gene_name
                     current_chromosome = chromosome
                 else:
-                    gene = self.__create_gene(current_gene_name, current_chromosome, current_transcripts)
-                    # Save previous result
-                    results["genes"].append(gene)
-                    logging.info("Processed all transcripts for gene %s" % current_gene_name)
+                    if len(current_transcripts) > 0:
+                        gene = self.__create_gene(current_gene_name, current_chromosome, current_transcripts)
+                        # Save previous result
+                        results["genes"].append(gene)
                     # Sets data for next gene
                     current_transcripts = []
                     current_gene_name = gene_name
                     current_chromosome = chromosome
 
             # Store exon in data structure
-            exon = self.__create_exon(
-                chromosome,
-                start,
-                end,
-                exon_number,
-                gc_content
-            )
-            current_exons.append(exon)
+            try:
+                exon = self.__create_exon(
+                    chromosome,
+                    start,
+                    end,
+                    exon_number,
+                    gc_content
+                )
+                current_exons.append(exon)
+            except UncoveredIntervalException:
+                uncovered_genes[gene_name] = chromosome
         # Adds last ocurrences
-        transcript = self.__create_transcript(current_transcript_id, current_exons)
-        current_transcripts.append(transcript)
-        gene = self.__create_gene(gene_name, chromosome, current_transcripts)
-        results["genes"].append(gene)
+        if len(current_exons) > 0:
+            transcript = self.__create_transcript(current_transcript_id, current_exons)
+            current_transcripts.append(transcript)
+        if len(current_transcripts) >0:
+            gene = self.__create_gene(gene_name, chromosome, current_transcripts)
+            results["genes"].append(gene)
         results["statistics"] = coverage_stats.compute_panel_level_statistics(
             results["genes"]
         )
+        results["uncovered_genes"] = [
+            {"gene_name": k, "chromosome": v} for k, v in uncovered_genes.iteritems()
+            ]
+        logging.info("Coverage bigwig processed!")
         return results
 
     def __output(self, results):
@@ -352,8 +374,7 @@ class GelCoverageRunner:
         """
         return {
             "parameters": self.__get_parameters_output(),
-            "results": results,
-            "unsequenced_coding_regions": self.bigwig_reader.unsequenced_coding_regions
+            "results": results
         }
 
     def run(self):
@@ -373,4 +394,4 @@ class GelCoverageRunner:
             results["whole_genome_statistics"] = coverage_stats.compute_whole_genome_statistics(
                 self.bigwig_reader
             )
-        return self.__output(results)
+        return (self.__output(results), bed)

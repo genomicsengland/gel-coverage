@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import codecs
+import logging
 
 from gelcoverage.runner import GelCoverageRunner
 
@@ -43,6 +44,9 @@ def main():
     config_parser = ConfigParser.ConfigParser()
     config_parser.readfp(open(args.config))
 
+    # Sets logging level
+    logging.basicConfig(level=config_parser.get("logging", "level"))
+
     # Creates a data structure with all config parameters
     config = {
         # Sets parameters from CLI
@@ -66,7 +70,7 @@ def main():
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)
-    results = gel_coverage_engine.run()
+    (results, bed) = gel_coverage_engine.run()
     # Prints output to stdout
     # TODO: we may want to write it to a file. Check that
     with codecs.open(args.output, 'w', 'utf8') as output_file:
@@ -78,6 +82,8 @@ def main():
                 sort_keys=True
             )
         )
+    # Saves the analysed region as a BED file
+    bed.saveas(args.output + ".bed")
 
     # TODO: output results in different formats
     #if args.output == "json":

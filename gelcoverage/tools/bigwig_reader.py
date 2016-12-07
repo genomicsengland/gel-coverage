@@ -2,13 +2,15 @@ import pyBigWig
 import logging
 
 
+class UncoveredIntervalException(Exception):
+    pass
+
 class BigWigReader:
 
     def __init__(self, bigwig):
         # Opens the bigwig file for reading
         self.bigwig = bigwig
         self.reader = pyBigWig.open(self.bigwig)
-        self.unsequenced_coding_regions = []
 
     def read_bigwig_coverages(self, chromosome, start, end, strict = True):
         """
@@ -31,14 +33,9 @@ class BigWigReader:
             try:
                 coverages = self.reader.values(chromosome, start, end)
             except RuntimeError, e:
-                # When te queried interval is not present in the bigwig file it returns all 0s coverage and logs it
+                # When the queried interval is not present in the bigwig file it returns all 0s coverage and logs it
                 logging.warn("Unexisting interval in bigwig %s:%s-%s" % (chromosome, start, end))
-                self.unsequenced_coding_regions.append({
-                    "chromosome": chromosome,
-                    "start": start,
-                    "end": end
-                })
-                coverages = [0] * (end - start + 1)
+                raise UncoveredIntervalException()
         else:
             # By using the function intervals we make sure that we are not querying coordinates not present in the
             # bigwig file
