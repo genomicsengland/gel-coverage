@@ -45,7 +45,7 @@ def main():
     config_parser.readfp(open(args.config))
 
     # Sets logging level
-    logging.basicConfig(level=config_parser.get("logging", "level"))
+    logging.basicConfig(level=int(config_parser.get("logging", "level")))
 
     # Creates a data structure with all config parameters
     config = {
