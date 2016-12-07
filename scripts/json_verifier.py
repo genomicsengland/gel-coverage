@@ -22,6 +22,8 @@ def main():
 
     class TestWrapper(OutputVerifier):
         def run_test(self):
+            # It needs to set this config variable so it knows what the settings were
+            self.config = coverage_data["parameters"]
             self.verify_output(coverage_data, args.expected_gene_list)
 
     suite = unittest.TestSuite()
