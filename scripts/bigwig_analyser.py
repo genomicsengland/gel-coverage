@@ -34,6 +34,10 @@ def main():
                         help='The coverage threshold used to compute continuous gaps with low coverage (0 = disabled) [default:15]',
                         default = 15)
     parser.add_argument('--disable-wg-stats', dest='wg_stats_enabled', action='store_false')
+    parser.add_argument('--wg-regions', metavar='wg_regions',
+                        help='A BED file specifying the regions to be considered in the whole genome analysis. '
+                             'Typically these are the NonN regions in the genome.',
+                        default=None)
     parser.set_defaults(wg_stats_enabled=True)
     #parser.add_argument('--cnv', metavar='cnv', help='cnv vcf - so that losses can be indicated', default=0)
 
@@ -65,7 +69,8 @@ def main():
         "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
         "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
         "exon_padding": int(config_parser.get("exon", "exon_padding")),
-        "wg_stats_enabled": args.wg_stats_enabled
+        "wg_stats_enabled": args.wg_stats_enabled,
+        "wg_regions": args.wg_regions
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)

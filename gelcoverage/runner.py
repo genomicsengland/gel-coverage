@@ -1,4 +1,5 @@
 import logging
+import pybedtools
 
 import gelcoverage.stats.coverage_stats as coverage_stats
 from gelcoverage.tools.cellbase_helper import CellbaseHelper
@@ -83,6 +84,8 @@ class GelCoverageRunner:
             "cellbase_version": self.config["cellbase_version"],
             "panelapp_host": self.config["panelapp_host"],
             "panelapp_gene_confidence": self.config["panelapp_gene_confidence"],
+            "wg_stats_enabled": self.config["wg_stats_enabled"],
+            "wg_regions": self.config["wg_regions"]
         }
         if 'panel' in self.config and self.config['panel'] is not None \
                 and 'panel_version' in self.config and self.config['panel_version'] is not None:
@@ -392,6 +395,6 @@ class GelCoverageRunner:
         # Compute the whole genome statistics if enabled (this is time consuming)
         if self.is_wg_stats_enabled:
             results["whole_genome_statistics"] = coverage_stats.compute_whole_genome_statistics(
-                self.bigwig_reader
+                self.bigwig_reader, self.config["wg_regions"]
             )
         return (self.__output(results), bed)

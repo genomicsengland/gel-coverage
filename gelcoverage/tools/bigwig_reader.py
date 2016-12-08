@@ -43,12 +43,12 @@ class BigWigReader:
             coverages = [coverage for _, _, coverage in intervals]
         return coverages
 
-    def get_chromosome_lengths(self, format):
+    def get_chromosome_lengths(self):
         """
         get chromosome lengths from header of bigWig file
 
         :param bw: pyBigWig file object
         :param format: specify "dict" to return a dict instead of a bed recognisable format
-        :return: list of chromosomes and length in a bed recognisable format
+        :return: list of chromosomes and start and end positions
         """
-        return self.reader.chroms()
+        return {chromosome : [(0, length)] for (chromosome, length) in self.reader.chroms().iteritems()}

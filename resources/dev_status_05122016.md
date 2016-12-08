@@ -30,6 +30,7 @@
 	* Test GRCh38 (should be supported out-of-the-box)
 2. Make use of BED with N regions for whole genome metrics (can we retrieve this from CellBase??? Otherwise add a config parameter)
 4. % of bases in a BED region below whateverX
+5. Aggregate stats at chromosome level (including autosomes aggregation, only mean)
 
 ## Nice to have
 
