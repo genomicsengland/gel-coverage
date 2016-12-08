@@ -12,6 +12,12 @@ def main():
     parser = argparse.ArgumentParser(description = 'Coverage summary. Provide a panel name and version, a gene list '
                                                    'or none of thee previous to run whole exome coverage analysis')
     parser.add_argument('--bw', metavar='bw', help = 'This is the bigwig file [required]', required = True)
+    parser.add_argument('--output', metavar='output',
+                        help='The file to which write the results [required]',
+                        required=True)
+    parser.add_argument('--config', metavar='config',
+                        help='The configuration file [required]',
+                        required=True)
     parser.add_argument('--panel', metavar = 'panel',
                         help = 'The panel name or identifier in PanelApp /'
                              '(see https://bioinfo.extge.co.uk/crowdsourcing/WebServices/list_panels)',
@@ -27,12 +33,6 @@ def main():
     parser.add_argument('--coverage-threshold', metavar='coverage_threshold',
                         help='The coverage threshold used to compute continuous gaps with low coverage (0 = disabled) [default:15]',
                         default = 15)
-    parser.add_argument('--output', metavar='output',
-                        help='The file to which write the results [required]',
-                        required=True)
-    parser.add_argument('--config', metavar='config',
-                        help='The configuration file [required]',
-                        required=True)
     parser.add_argument('--disable-wg-stats', dest='wg_stats_enabled', action='store_false')
     parser.add_argument('--wg-regions', metavar='wg_regions',
                         help='A BED file specifying the regions to be considered in the whole genome analysis. '

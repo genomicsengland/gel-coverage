@@ -17,11 +17,12 @@ class OutputVerifier(unittest.TestCase):
         self.__verify_dict_field(json, "results", dict)
         self.__verify_dict_field(json["results"], "statistics", dict)
         self.__verify_panel_stats(json["results"]["statistics"])
+        self.__verify_wg_stats(json["results"]["whole_genome_statistics"])
         self.__verify_uncovered_genes(json["results"])
         self.__verify_genes(json["results"])
         logging.info("JSON verified!")
 
-    def __verify_dict_field(self, _dict, name, _type):
+    def __verify_dict_field(self, _dict, name, types):
         """
         Generic verification  of a field in a dictionary
         :param _dict: the dictionary
@@ -29,10 +30,11 @@ class OutputVerifier(unittest.TestCase):
         :param _type: the expected type
         :return:
         """
-        types = [_type]
-        if _type == str:
+        if type(types) != list:
+            types = [types]
+        if str in types and unicode not in types:
             types.append(unicode)
-        if _type == unicode:
+        if unicode in types and str not in types:
             types.append(str)
         self.assertTrue(name in _dict, msg="Missing field '%s'" % name)
         self.assertTrue(type(_dict[name]) in types,
@@ -53,6 +55,8 @@ class OutputVerifier(unittest.TestCase):
             self.__verify_dict_field(parameters, "cellbase_version", str)
             self.__verify_dict_field(parameters, "panelapp_host", str)
             self.__verify_dict_field(parameters, "panelapp_gene_confidence", str)
+            self.__verify_dict_field(parameters, "wg_stats_enabled", bool)
+            self.__verify_dict_field(parameters, "wg_regions", [str, type(None)])
             if self.expected_gene_list is not None:
                 self.__verify_dict_field(parameters, "gene_list", list)
                 self.assertEqual(parameters["gene_list"],
@@ -372,6 +376,47 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(statistics["weighted_pct75"] >= 0)
             self.__verify_dict_field(statistics, "weighted_pct25", float)
             self.assertTrue(statistics["weighted_pct25"] >= 0)
+        except AssertionError, e:
+            logging.error("Error panel statistics")
+            logging.error(json.dumps(statistics, indent=4))
+            raise e
+
+    def __verify_wg_stats(self, statistics):
+        try:
+            self.__verify_dict_field(statistics, "bases_gte_15x", int)
+            self.assertTrue(statistics["bases_gte_15x"] >= 0)
+            self.__verify_dict_field(statistics, "bases_gte_30x", int)
+            self.assertTrue(statistics["bases_gte_30x"] >= 0)
+            self.__verify_dict_field(statistics, "bases_gte_50x", int)
+            self.assertTrue(statistics["bases_gte_50x"] >= 0)
+            self.__verify_dict_field(statistics, "bases_lt_15x", int)
+            self.assertTrue(statistics["bases_lt_15x"] >= 0)
+            self.__verify_dict_field(statistics, "bases_lt_3x", int)
+            self.assertTrue(statistics["bases_lt_3x"] >= 0)
+            self.__verify_dict_field(statistics, "mean", float)
+            self.assertTrue(statistics["mean"] >= 0)
+            self.__verify_dict_field(statistics, "percent_gte_15x", float)
+            self.__verify_dict_field(statistics, "percent_gte_30x", float)
+            self.__verify_dict_field(statistics, "percent_gte_50x", float)
+            self.__verify_dict_field(statistics, "percent_lt_15x", float)
+            self.assertTrue(statistics["percent_gte_15x"] >= 0 and
+                            statistics["percent_gte_15x"] <= 1)
+            self.assertTrue(statistics["percent_gte_30x"] >= 0 and
+                            statistics["percent_gte_30x"] <= 1)
+            self.assertTrue(statistics["percent_gte_50x"] >= 0 and
+                            statistics["percent_gte_50x"] <= 1)
+            self.assertTrue(statistics["percent_lt_15x"] >= 0 and
+                            statistics["percent_lt_15x"] <= 1)
+            self.__verify_dict_field(statistics, "total_bases", int)
+            self.assertTrue(statistics["total_bases"] >= 0)
+            self.__verify_dict_field(statistics, "weighted_median", float)
+            self.assertTrue(statistics["weighted_median"] >= 0)
+            self.__verify_dict_field(statistics, "weighted_pct75", float)
+            self.assertTrue(statistics["weighted_pct75"] >= 0)
+            self.__verify_dict_field(statistics, "weighted_pct25", float)
+            self.assertTrue(statistics["weighted_pct25"] >= 0)
+            self.__verify_dict_field(statistics, "uneveness", float)
+            self.assertTrue(statistics["uneveness"] >= 0)
         except AssertionError, e:
             logging.error("Error panel statistics")
             logging.error(json.dumps(statistics, indent=4))

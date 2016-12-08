@@ -84,6 +84,8 @@ class GelCoverageRunner:
             "cellbase_version": self.config["cellbase_version"],
             "panelapp_host": self.config["panelapp_host"],
             "panelapp_gene_confidence": self.config["panelapp_gene_confidence"],
+            "wg_stats_enabled": self.config["wg_stats_enabled"],
+            "wg_regions": self.config["wg_regions"]
         }
         if 'panel' in self.config and self.config['panel'] is not None \
                 and 'panel_version' in self.config and self.config['panel_version'] is not None:

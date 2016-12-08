@@ -51,4 +51,4 @@ class BigWigReader:
         :param format: specify "dict" to return a dict instead of a bed recognisable format
         :return: list of chromosomes and start and end positions
         """
-        return {chromosome : [(0, length)] for chromosome, length in self.reader.chroms()}
+        return {chromosome : [(0, length)] for (chromosome, length) in self.reader.chroms().iteritems()}

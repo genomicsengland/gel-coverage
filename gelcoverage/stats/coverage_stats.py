@@ -137,8 +137,10 @@ def compute_whole_genome_statistics(bigwig_reader, bed = None):
     stats = {}
     chunk_size = 100000
     if bed is None:
+        logging.info("Running on all chromosomes defined in the bigwig.")
         analysis_regions = bigwig_reader.get_chromosome_lengths()
     else:
+        logging.info("Running on the regions provided in a bed file in --wg-region.")
         analysis_regions = bed_parser.get_regions_dictionary(bed)
     rmsds = []
     means = []
@@ -193,11 +195,11 @@ def compute_whole_genome_statistics(bigwig_reader, bed = None):
         stats["percent_gte_15x"] = round(float(stats["bases_gte_15x"]) / stats["total_bases"], 5)
         stats["percent_gte_30x"] = round(float(stats["bases_gte_30x"]) / stats["total_bases"], 5)
         stats["percent_gte_50x"] = round(float(stats["bases_gte_50x"]) / stats["total_bases"], 5)
-        stats["weighted_median"] = round(float(np.sum([median * length for median in medians for length in lengths]) /
+        stats["weighted_median"] = round(float(np.sum([median * length for median, length in zip(medians, lengths)])) /
+                                               np.sum(lengths), 3)
+        stats["weighted_pct75"] = round(float(np.sum([pct75 * length for pct75, length in zip(pct75s, lengths)]) /
                                                np.sum(lengths)), 3)
-        stats["weighted_pct75"] = round(float(np.sum([pct75 * length for pct75 in pct75s for length in lengths]) /
-                                               np.sum(lengths)), 3)
-        stats["weighted_pct25"] = round(float(np.sum([pct25 * length for pct25 in pct25s for length in lengths]) /
+        stats["weighted_pct25"] = round(float(np.sum([pct25 * length for pct25, length in zip(pct25s, lengths)]) /
                                                np.sum(lengths)), 3)
         logging.info("Whole genome statistics computed!")
         return stats
