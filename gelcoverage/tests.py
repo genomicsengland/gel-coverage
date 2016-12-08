@@ -29,7 +29,8 @@ class GelCoverageRunnerTests(OutputVerifier):
             "transcript_filtering_biotypes": "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene",
             "wg_stats_enabled": False,
             "exon_padding": 15,
-            "wg_regions": None
+            "wg_regions": None,
+            "exon_stats_enabled": True
         }
 
     def test1(self):
@@ -204,7 +205,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_15bp_padding)
         self.assertEqual(len(union_transcript["exons"]), 1)
         gene_15bp_padding["union_transcript"] = union_transcript
-        self.verify_union_transcript(gene_15bp_padding)
+        self.verify_union_transcript(gene_15bp_padding, True)
         # Runs union transcript with exon padding 0bp
         self.config["exon_padding"] = 0
         gene_0bp_padding = {
@@ -251,11 +252,11 @@ class GelCoverageRunnerTests(OutputVerifier):
         union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_0bp_padding)
         self.assertEqual(len(union_transcript["exons"]), 8)
         gene_0bp_padding["union_transcript"] = union_transcript
-        self.verify_union_transcript(gene_0bp_padding)
+        self.verify_union_transcript(gene_0bp_padding, True)
 
     def test6(self):
         """
-        Test 1: provided bed of nonN regions and whole genome metrics enabled
+        Test 6: provided bed of nonN regions and whole genome metrics enabled
         :return:
         """
         expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
@@ -282,7 +283,7 @@ class GelCoverageRunnerTests(OutputVerifier):
 
     def test7(self):
         """
-        Test 1: whole genome metrics enabled
+        Test 7: whole genome metrics enabled
         :return:
         """
         expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
@@ -302,5 +303,30 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
         bed.saveas('../resources/test/sample_output_7.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+
+    def test8(self):
+        """
+        Test 8: exon stats disabled
+        :return:
+        """
+        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "Epileptic encephalopathy"
+        self.config["panel_version"] = "0.2"
+        self.config["exon_padding"] = 0
+        self.config["exon_stats_enabled"] = False
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_8.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_8.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)

@@ -20,7 +20,7 @@ class OutputVerifier(unittest.TestCase):
         if json["parameters"]["wg_stats_enabled"]:
             self.__verify_wg_stats(json["results"]["whole_genome_statistics"])
         self.__verify_uncovered_genes(json["results"])
-        self.__verify_genes(json["results"])
+        self.__verify_genes(json["results"], json["parameters"]["exon_stats_enabled"])
         logging.info("JSON verified!")
 
     def __verify_dict_field(self, _dict, name, types):
@@ -58,6 +58,7 @@ class OutputVerifier(unittest.TestCase):
             self.__verify_dict_field(parameters, "panelapp_gene_confidence", str)
             self.__verify_dict_field(parameters, "wg_stats_enabled", bool)
             self.__verify_dict_field(parameters, "wg_regions", [str, type(None)])
+            self.__verify_dict_field(parameters, "exon_stats_enabled", bool)
             if self.expected_gene_list is not None:
                 self.__verify_dict_field(parameters, "gene_list", list)
                 self.assertEqual(parameters["gene_list"],
@@ -86,7 +87,7 @@ class OutputVerifier(unittest.TestCase):
                                 msg="Duplicated gene '%s'" % uncovered_gene["gene_name"])
             observed_genes.append(uncovered_gene["gene_name"])
 
-    def __verify_genes(self, results):
+    def __verify_genes(self, results, exon_stats_enabled):
         # Verify every gene
         self.__verify_dict_field(results, "genes", list)
         observed_genes = []
@@ -107,24 +108,27 @@ class OutputVerifier(unittest.TestCase):
                                 msg="Duplicated transcript '%s'" % transcript['id'])
                 observed_transcripts.append(transcript["id"])
                 # Verify every exon
-                observed_exons = []
-                for exon in transcript["exons"]:
-                    self.__verify_exon(exon, gene["name"], transcript["id"])
-                    self.assertTrue(exon["exon_number"] not in observed_exons,
-                                    msg="Duplicated exon '%s'" % exon['exon_number'])
-                    observed_exons.append(exon["exon_number"])
-                    # Verify gaps
-                    observed_gaps = []
-                    for gap in exon["gaps"]:
-                        self.__verify_gap(gap, exon)
-                        self.assertTrue((gap["start"], gap["end"]) not in observed_gaps,
-                                        msg="Repeated gap '%s-%s'" % (
-                                            gap["start"], gap["end"]
-                                        ))
-                        observed_gaps.append((gap["start"], gap["end"]))
+                if exon_stats_enabled:
+                    observed_exons = []
+                    for exon in transcript["exons"]:
+                        self.__verify_exon(exon, gene["name"], transcript["id"])
+                        self.assertTrue(exon["exon_number"] not in observed_exons,
+                                        msg="Duplicated exon '%s'" % exon['exon_number'])
+                        observed_exons.append(exon["exon_number"])
+                        # Verify gaps
+                        observed_gaps = []
+                        for gap in exon["gaps"]:
+                            self.__verify_gap(gap, exon)
+                            self.assertTrue((gap["start"], gap["end"]) not in observed_gaps,
+                                            msg="Repeated gap '%s-%s'" % (
+                                                gap["start"], gap["end"]
+                                            ))
+                            observed_gaps.append((gap["start"], gap["end"]))
+                else:
+                    self.assertTrue("exons" not in transcript)
             union_transcript = gene["union_transcript"]
             self.__verify_transcript_stats(union_transcript["statistics"], has_gc=False)
-            self.verify_union_transcript(gene)
+            self.verify_union_transcript(gene, exon_stats_enabled)
 
     def __verify_transcript(self, transcript):
         self.__verify_dict_field(transcript, "id", str)
@@ -132,57 +136,61 @@ class OutputVerifier(unittest.TestCase):
                         msg="Wrong transcript id '%s'" % transcript["id"])
         self.__verify_transcript_stats(transcript["statistics"])
 
-    def verify_union_transcript(self, gene):
+    def verify_union_transcript(self, gene, exon_stats_enabled):
         # Basic checks
         self.__verify_dict_field(gene, "union_transcript", dict)
         union_transcript = gene["union_transcript"]
+        self.__verify_transcript_stats(gene["union_transcript"]["statistics"], has_gc=False)
         # Verifies exons
-        for ut_exon in union_transcript["exons"]:
-            self.__verify_exon(ut_exon, gene["name"], "union_transcript", has_gc=False)
-            # Verify gaps
-            for gap in ut_exon["gaps"]:
-                self.__verify_gap(gap, ut_exon)
-        # Verifies union transcript build up
-        all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
-        ut_exon_coordinates = [self.__get_exon_coordinates(x) for x in all_exons]
-        ut_start = min([start for (start, _) in ut_exon_coordinates])
-        ut_end = max([end for (_, end) in ut_exon_coordinates])
-        #ut_positions = [True if (
-        #    self.__is_position_overlapped(x, ut_exon)
-        #    for ut_exon in union_transcript["exons"]
-        #) else False for x in range(ut_start, ut_end)]
-        ut_positions = []
-        for x in range(ut_start, ut_end):
-            found = False
+        if exon_stats_enabled:
             for ut_exon in union_transcript["exons"]:
-                if self.__is_position_overlapped(x, ut_exon):
-                    found = True
-                    break
-            ut_positions.append(found)
-        # Checks if exons in the union transcript are coherent with other exons
+                self.__verify_exon(ut_exon, gene["name"], "union_transcript", has_gc=False)
+                # Verify gaps
+                for gap in ut_exon["gaps"]:
+                    self.__verify_gap(gap, ut_exon)
+            # Verifies union transcript build up
+            all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
+            ut_exon_coordinates = [self.__get_exon_coordinates(x) for x in all_exons]
+            ut_start = min([start for (start, _) in ut_exon_coordinates])
+            ut_end = max([end for (_, end) in ut_exon_coordinates])
+            #ut_positions = [True if (
+            #    self.__is_position_overlapped(x, ut_exon)
+            #    for ut_exon in union_transcript["exons"]
+            #) else False for x in range(ut_start, ut_end)]
+            ut_positions = []
+            for x in range(ut_start, ut_end):
+                found = False
+                for ut_exon in union_transcript["exons"]:
+                    if self.__is_position_overlapped(x, ut_exon):
+                        found = True
+                        break
+                ut_positions.append(found)
+            # Checks if exons in the union transcript are coherent with other exons
 
-        for idx, ut_position in enumerate(ut_positions):
-            real_position = ut_start + idx
-            found = False
-            for exon in all_exons:
-                start, end = self.__get_exon_coordinates(exon)
-                if real_position >= start and real_position <= end:
-                    found = True
-                    break
-            if ut_position:
-                # Verify position included in the union transcript
-                self.assertTrue(found,
-                                msg="Position '%s' belonging to union transcript "
-                                "is not supported by any exon at gene %s" %
-                                (real_position, gene["name"])
-                                )
-            else:
-                # Verify position not included in the union transcript
-                self.assertFalse(found,
-                                 "Position '%s' not belonging to union transcript "
-                                 "is present in at least one exon at gene %s" %
-                                 (real_position, gene["name"])
-                                 )
+            for idx, ut_position in enumerate(ut_positions):
+                real_position = ut_start + idx
+                found = False
+                for exon in all_exons:
+                    start, end = self.__get_exon_coordinates(exon)
+                    if real_position >= start and real_position <= end:
+                        found = True
+                        break
+                if ut_position:
+                    # Verify position included in the union transcript
+                    self.assertTrue(found,
+                                    msg="Position '%s' belonging to union transcript "
+                                    "is not supported by any exon at gene %s" %
+                                    (real_position, gene["name"])
+                                    )
+                else:
+                    # Verify position not included in the union transcript
+                    self.assertFalse(found,
+                                     "Position '%s' not belonging to union transcript "
+                                     "is present in at least one exon at gene %s" %
+                                     (real_position, gene["name"])
+                                     )
+        else:
+            self.assertTrue("exons" not in union_transcript)
 
     def __is_position_overlapped(self, position, exon):
         """

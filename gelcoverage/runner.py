@@ -34,6 +34,7 @@ class GelCoverageRunner:
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
+        self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
 
     def get_gene_list(self):
         """
@@ -85,7 +86,8 @@ class GelCoverageRunner:
             "panelapp_host": self.config["panelapp_host"],
             "panelapp_gene_confidence": self.config["panelapp_gene_confidence"],
             "wg_stats_enabled": self.config["wg_stats_enabled"],
-            "wg_regions": self.config["wg_regions"]
+            "wg_regions": self.config["wg_regions"],
+            "exon_stats_enabled": self.config["exon_stats_enabled"]
         }
         if 'panel' in self.config and self.config['panel'] is not None \
                 and 'panel_version' in self.config and self.config['panel_version'] is not None:
@@ -392,6 +394,12 @@ class GelCoverageRunner:
         bed = self.cellbase_helper.make_exons_bed(self.gene_list)
         # Process the intervals in the BED file
         results = self.__process_bed_file(bed)
+        # Remove the exon statistics to save space
+        if not self.is_exon_stats_enabled:
+            for gene in results["genes"]:
+                for transcript in gene["transcripts"]:
+                    del transcript["exons"]
+                del gene["union_transcript"]["exons"]
         # Compute the whole genome statistics if enabled (this is time consuming)
         if self.is_wg_stats_enabled:
             results["whole_genome_statistics"] = coverage_stats.compute_whole_genome_statistics(

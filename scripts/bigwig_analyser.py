@@ -3,7 +3,6 @@ import argparse
 import ujson
 import codecs
 import logging
-
 from gelcoverage.runner import GelCoverageRunner
 
 
@@ -11,7 +10,7 @@ def main():
 
     parser = argparse.ArgumentParser(description = 'Coverage summary. Provide a panel name and version, a gene list '
                                                    'or none of thee previous to run whole exome coverage analysis')
-    parser.add_argument('--bw', metavar='bw', help = 'This is the bigwig file [required]', required = True)
+    parser.add_argument('--bw', metavar='bw', help = 'This coverage bigwig file [required]', required = True)
     parser.add_argument('--output', metavar='output',
                         help='The file to which write the results [required]',
                         required=True)
@@ -19,26 +18,32 @@ def main():
                         help='The configuration file [required]',
                         required=True)
     parser.add_argument('--panel', metavar = 'panel',
-                        help = 'The panel name or identifier in PanelApp /'
+                        help = 'The PanelApp panel name or identifier /'
                              '(see https://bioinfo.extge.co.uk/crowdsourcing/WebServices/list_panels)',
                         default = None)
     parser.add_argument('--panel-version', metavar = 'panel_version',
-                        help='The panel version',
+                        help='The PanelApp panel version',
                         default = None)
     parser.add_argument('--gene-list', metavar = 'gene_list',
                         default = None,
                         help = 'Comma separated list of genes (HGNC gene symbols) to analyse. Will be masked by a panel')
-    #parser.add_argument('--transcripts', metavar='transcripts',
-    #                    help='Comma separated list of transcripts to analyse. Will be masked by a panel or a list of genes')
     parser.add_argument('--coverage-threshold', metavar='coverage_threshold',
-                        help='The coverage threshold used to compute continuous gaps with low coverage (0 = disabled) [default:15]',
+                        help='The coverage threshold used to compute continuous gaps with low coverage '
+                             '(0 = disabled) [default:15]',
                         default = 15)
-    parser.add_argument('--disable-wg-stats', dest='wg_stats_enabled', action='store_false')
+    parser.add_argument('--disable-wg-stats', dest='wg_stats_enabled', action='store_false',
+                        help='Disable the calculation of whole genome statistics. Use this flag to improve performance')
+    parser.set_defaults(wg_stats_enabled=True)
     parser.add_argument('--wg-regions', metavar='wg_regions',
-                        help='A BED file specifying the regions to be considered in the whole genome analysis. '
+                        help='A BED file specifying the regions to be analysed in the whole genome analysis. '
                              'Typically these are the NonN regions in the genome.',
                         default=None)
-    parser.set_defaults(wg_stats_enabled=True)
+    parser.add_argument('--disable-exon-stats', dest='exon_stats_enabled', action='store_false',
+                        help='Disable the calculation of exon statistics. Use this flag when running a coverage '
+                             'analysis on whole exome to minimise the space taken by the output JSON.')
+    parser.set_defaults(exon_stats_enabled=True)
+    # parser.add_argument('--transcripts', metavar='transcripts',
+    #                    help='Comma separated list of transcripts to analyse. Will be masked by a panel or a list of genes')
     #parser.add_argument('--cnv', metavar='cnv', help='cnv vcf - so that losses can be indicated', default=0)
 
     args = parser.parse_args()
@@ -70,7 +75,8 @@ def main():
         "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
         "exon_padding": int(config_parser.get("exon", "exon_padding")),
         "wg_stats_enabled": args.wg_stats_enabled,
-        "wg_regions": args.wg_regions
+        "wg_regions": args.wg_regions,
+        "exon_stats_enabled": args.exon_stats_enabled
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)
