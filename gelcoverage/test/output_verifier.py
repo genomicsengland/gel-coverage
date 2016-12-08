@@ -17,7 +17,8 @@ class OutputVerifier(unittest.TestCase):
         self.__verify_dict_field(json, "results", dict)
         self.__verify_dict_field(json["results"], "statistics", dict)
         self.__verify_panel_stats(json["results"]["statistics"])
-        self.__verify_wg_stats(json["results"]["whole_genome_statistics"])
+        if json["parameters"]["wg_stats_enabled"]:
+            self.__verify_wg_stats(json["results"]["whole_genome_statistics"])
         self.__verify_uncovered_genes(json["results"])
         self.__verify_genes(json["results"])
         logging.info("JSON verified!")
