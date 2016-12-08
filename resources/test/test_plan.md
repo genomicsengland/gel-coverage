@@ -13,15 +13,19 @@ TBD
 Test cases 1 and 2 are not time consuming and they are used for unit testing.
 Test cases 3,4,5,6,7 and 8 are using whole genome datasets and they are not intended for unit testing.
 
+Reduced datasets:
 * **Test case 1**: Coverage analysis of PanelApp panel in a reduced dataset (no whole genome stats)
 * **Test case 2**: Coverage analysis of a gene list in a reduced dataset (no whole genome stats)
+
+Whole genome datasets:
 * **Test case 3**: Coverage analysis of whole exome in a cancer whole genome dataset
 * **Test case 4**: Coverage analysis of PanelApp panel in a cancer whole genome dataset
 * **Test case 5**: Coverage analysis of a gene list in a cancer whole genome dataset
 * **Test case 6**: Coverage analysis of whole exome in a rare disease whole genome dataset
 * **Test case 7**: Coverage analysis of PanelApp panel in a rare disease whole genome dataset
 * **Test case 8**: Coverage analysis of a gene list in a rare disease whole genome dataset
-* **Test case 9**: Coverage analysis of a whole genome aligned to GRCh38
+* **Test case 9**: Coverage analysis of whole exome with a BED of NonN regions
+* **Test case 10**: Coverage analysis of whole genome aligned to GRCh38
 
 Parameters are tested on unit tests.
 
@@ -174,6 +178,11 @@ Run the whole exome coverage analysis on a cancer whole genome sample.
 
 * Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
 
+Beware that the __output JSON is 23 GB__.
+
+Status: **running verification**
+Execution time: 328m
+
 Run the following job:
 ```
 qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.sh
@@ -210,7 +219,8 @@ Run a panel coverage analysis  on a cancer whole genome sample.
 * Panel name: Familial colon cancer
 * Panel version: 1.3
 
-Status: PASSED
+Status: **PASSED**
+Execution time: 62m
 
 Run the following job:
 ```
@@ -247,6 +257,9 @@ Run a gene list coverage analysis  on a cancer whole genome sample.
 * Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166465/CancerLP3000079-DNA_H03_NormalLP3000067-DNA_E05/coverage/LP3000079-DNA_H03.bw
 * Gene list: ABL1,EVI1,MYC,APC,IL2,TNFAIP3,ABL2,EWSR1,MYCL1,ARHGEF12,JAK2,TP53,AKT1,FEV,MYCN,ATM,MAP2K4,TSC1,AKT2,FGFR1 
 
+Status: **PASSED**
+Execution time: 71m
+
 Run the following job:
 ```
 qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.sh
@@ -280,6 +293,11 @@ Run the automated verifications on the output JSON as follows:
 Run the whole exome coverage analysis on a rare disease whole genome sample.
 
 * Bigwig: /genomes/analysis/by_date/2016-02-15/CH00349553/LP2000873-DNA_B02/coverage/LP2000873-DNA_B02.bw
+
+Beware that the __output JSON is 24 GB__.
+
+Status: **running verification**
+Execution time: 318m
 
 Run the following job:
 ```
@@ -317,6 +335,9 @@ Run a panel coverage analysis  on a rare disease whole genome sample.
 * Panel name: "Charcot-Marie-Tooth disease"
 * Panel version: 1.1
 
+Status: **PASSED**
+Execution time: 64m
+
 Run the following job:
 ```
 qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.sh
@@ -353,7 +374,8 @@ Run a gene list coverage analysis on a rare disease whole genome sample.
 * Gene list: DIAPH1,KCNQ4,GJB3,GJB2,MYH14,DFNA5,WFS1,TECTA,COCH,EYA4,MYO7A,COL11A2,POU4F3,MYH9,ACTG1,MYO6,SIX1,SLC17A8,GRHL2,TMC1,DSPP,P2RX2,CCDC50,MYO1A,MIR96,TJP2
 (Clinical Manifestations and Molecular Genetics of Known Genes Causing Autosomal Dominant Nonsyndromic Hearing Impairment from GeneReviews)
 
-
+Status: **PASSED**
+Execution time: 64m 
 
 Run the following job:
 ```
