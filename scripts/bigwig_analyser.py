@@ -88,8 +88,7 @@ def main():
             ujson.dumps(
                 results,
                 indent=4,
-                ensure_ascii=False,
-                sort_keys=True
+                ensure_ascii=False
             )
         )
     # Saves the analysed region as a BED file
