@@ -342,7 +342,6 @@ class GelCoverageRunner:
                     current_transcripts = []
                     current_gene_name = gene_name
                     current_chromosome = chromosome
-
             # Store exon in data structure
             try:
                 exon = self.__create_exon(
@@ -362,9 +361,23 @@ class GelCoverageRunner:
         if len(current_transcripts) >0:
             gene = self.__create_gene(gene_name, chromosome, current_transcripts)
             results["genes"].append(gene)
-        results["statistics"] = coverage_stats.compute_panel_level_statistics(
+        # Remove the exon statistics to save space if enabled
+        if not self.is_exon_stats_enabled:
+            for gene in results["genes"]:
+                for transcript in gene["transcripts"]:
+                    del transcript["exons"]
+                del gene["union_transcript"]["exons"]
+        # Add coding region statistics
+        results["coding_region"] = coverage_stats.compute_coding_region_statistics(
             results["genes"]
         )
+        # Compute the whole genome statistics if enabled (this is time consuming)
+        if self.is_wg_stats_enabled:
+            results["whole_genome"] = coverage_stats.compute_whole_genome_statistics(
+                self.bigwig_reader,
+                self.config["wg_regions"]
+            )
+        # Add uncovered genes
         results["uncovered_genes"] = [
             {"gene_name": k, "chromosome": v} for k, v in uncovered_genes.iteritems()
             ]
@@ -394,15 +407,4 @@ class GelCoverageRunner:
         bed = self.cellbase_helper.make_exons_bed(self.gene_list)
         # Process the intervals in the BED file
         results = self.__process_bed_file(bed)
-        # Remove the exon statistics to save space
-        if not self.is_exon_stats_enabled:
-            for gene in results["genes"]:
-                for transcript in gene["transcripts"]:
-                    del transcript["exons"]
-                del gene["union_transcript"]["exons"]
-        # Compute the whole genome statistics if enabled (this is time consuming)
-        if self.is_wg_stats_enabled:
-            results["whole_genome_statistics"] = coverage_stats.compute_whole_genome_statistics(
-                self.bigwig_reader, self.config["wg_regions"]
-            )
         return (self.__output(results), bed)

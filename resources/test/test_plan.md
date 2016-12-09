@@ -24,8 +24,9 @@ Whole genome datasets:
 * **Test case 6**: Coverage analysis of whole exome in a rare disease whole genome dataset
 * **Test case 7**: Coverage analysis of PanelApp panel in a rare disease whole genome dataset
 * **Test case 8**: Coverage analysis of a gene list in a rare disease whole genome dataset
-* **Test case 9**: Coverage analysis of whole exome with a BED of NonN regions and exon stats disabled
-* **Test case 10**: Coverage analysis of whole genome aligned to GRCh38
+* **Test case 9**: Coverage analysis of panel with a BED of NonN regions 
+* **Test case 10**: Coverage analysis of whole exome with exon stats disabled
+* **Test case 11**: Coverage analysis of whole genome aligned to GRCh38
 
 Parameters are tested on unit tests.
 
@@ -180,7 +181,7 @@ Run the whole exome coverage analysis on a cancer whole genome sample.
 
 Beware that the __output JSON is 23 GB__.
 
-Status: **running verification**
+Status: **PASSED** without automated verification
 Execution time: 328m
 
 Run the following job:
@@ -204,11 +205,6 @@ After the job has finished you should find the following files:
 /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.log
 /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.json
 /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.json.bed
-```
-
-Run the automated verifications on the output JSON as follows (you may want to enqueue this in SGE):
-```
-/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test3.json
 ```
 
 ### Test 4
@@ -296,7 +292,7 @@ Run the whole exome coverage analysis on a rare disease whole genome sample.
 
 Beware that the __output JSON is 24 GB__.
 
-Status: **running verification**
+Status: **PASSED** without automated verification
 Execution time: 318m
 
 Run the following job:
@@ -320,11 +316,6 @@ After the job has finished you should find the following files:
 /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.log
 /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.json
 /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.json.bed
-```
-
-Run the automated verifications on the output JSON as follows (you may want to enqueue this in SGE):
-```
-/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test6.json
 ```
 
 ### Test 7
@@ -407,15 +398,16 @@ Run the automated verifications on the output JSON as follows:
 
 ### Test 9
 
-Run the whole exome coverage analysis providing a bed file with the nonN regions for the whole genome statistics and disabling the exon level statatistics to have a smaller JSON.
+Run the whole exome coverage analysis providing a bed file with the nonN regions for the whole genome statistics.
 
 * Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
 * Whole genome region: /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
-* Exon stats disabled
+* Panel name: Familial colon cancer
+* Panel version: 1.3
 
 Beware that the __output JSON is ?????? GB__.
 
-Status: **???**
+Status: **RUNNING**
 Execution time: ???
 
 Run the following job:
@@ -431,7 +423,7 @@ where gel-coverage.test9.sh:
 #$ -S /bin/bash
 #$ -o /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test9.log
 #$ -j y
-time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config  --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test9.json --wg-regions /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed --disable-exon-stats
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config  --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test9.json --wg-regions /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed --panel "Familial colon cancer" --panel-version 1.3
 ```
 
 After the job has finished you should find the following files:
@@ -444,5 +436,46 @@ After the job has finished you should find the following files:
 Run the automated verifications on the output JSON as follows (you may want to enqueue this in SGE):
 ```
 /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test9.json
+```
+
+### Test 10
+
+Run the whole exome coverage analysis providing a bed file with the nonN regions for the whole genome statistics and disabling the exon level statatistics to have a smaller JSON.
+
+* Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
+* Whole genome region: /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
+* Exon stats disabled
+
+Beware that the __output JSON is ?????? GB__.
+
+Status: **RUNNING**
+Execution time: ???
+
+Run the following job:
+```
+qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test10.sh
+```
+
+where gel-coverage.test10.sh:
+```
+#!/bin/bash
+#$ -N gel-coverage.test10
+#$ -q all.q
+#$ -S /bin/bash
+#$ -o /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test10.log
+#$ -j y
+time /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/bigwig_analyser.py --bw /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw --config /home/pferreiro/src/gel-coverage/resources/exon_coverage_summary.config  --output /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test9.json --wg-regions /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed --disable-exon-stats
+```
+
+After the job has finished you should find the following files:
+```
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test10.log
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test10.json
+/home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test10.json.bed
+```
+
+Run the automated verifications on the output JSON as follows (you may want to enqueue this in SGE):
+```
+/genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test10.json
 ```
 
