@@ -274,10 +274,10 @@ def compute_whole_genome_statistics(bigwig_reader, bed = None, chunk_size = 1000
     def aggregate_chromosomes(dictionary, field):
         return sum([dictionary[chromosome][field] for chromosome in dictionary.keys()], [])
     total_bases = int(np.sum(aggregate_chromosomes(chr_stats, "bases")))
-    bases_lt_15x = int(np.sum(aggregate_chromosomes(chr_stats, "%<15x")))
-    bases_gte_15x = int(np.sum(aggregate_chromosomes(chr_stats, "%>=15x")))
-    bases_gte_30x = int(np.sum(aggregate_chromosomes(chr_stats, "%>=30x")))
-    bases_gte_50x = int(np.sum(aggregate_chromosomes(chr_stats, "%>=50x")))
+    bases_lt_15x = int(np.sum(aggregate_chromosomes(chr_stats, "bases_lt_15x")))
+    bases_gte_15x = int(np.sum(aggregate_chromosomes(chr_stats, "bases_gte_15x")))
+    bases_gte_30x = int(np.sum(aggregate_chromosomes(chr_stats, "bases_gte_30x")))
+    bases_gte_50x = int(np.sum(aggregate_chromosomes(chr_stats, "bases_gte_50x")))
     results["stats"] = {
         "uneveness" : round(float(np.median(aggregate_chromosomes(chr_stats, "rmsd"))), 3),
         "avg" : round(float(np.mean(aggregate_chromosomes(chr_stats, "avg"))), 3),
