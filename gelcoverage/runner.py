@@ -35,6 +35,7 @@ class GelCoverageRunner:
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
+        self.uncovered_genes = {}
 
     def get_gene_list(self):
         """
@@ -307,7 +308,6 @@ class GelCoverageRunner:
         current_transcript_id = None
         current_gene_name = None
         current_chromosome = None
-        uncovered_genes = {}
         # Process every interval in the BED file
         for interval in bed:
             # Reads data from BED entry
@@ -353,7 +353,7 @@ class GelCoverageRunner:
                 )
                 current_exons.append(exon)
             except UncoveredIntervalException:
-                uncovered_genes[gene_name] = chromosome
+                self.uncovered_genes[gene_name] = chromosome
         # Adds last ocurrences
         if len(current_exons) > 0:
             transcript = self.__create_transcript(current_transcript_id, current_exons)
@@ -361,27 +361,7 @@ class GelCoverageRunner:
         if len(current_transcripts) >0:
             gene = self.__create_gene(gene_name, chromosome, current_transcripts)
             results["genes"].append(gene)
-        # Remove the exon statistics to save space if enabled
-        if not self.is_exon_stats_enabled:
-            for gene in results["genes"]:
-                for transcript in gene["trs"]:
-                    del transcript["exons"]
-                del gene["union_tr"]["exons"]
-        # Add coding region statistics
-        results["coding_region"] = coverage_stats.compute_coding_region_statistics(
-            results["genes"]
-        )
-        # Compute the whole genome statistics if enabled (this is time consuming)
-        if self.is_wg_stats_enabled:
-            results["whole_genome"] = coverage_stats.compute_whole_genome_statistics(
-                self.bigwig_reader,
-                self.config["wg_regions"]
-            )
-        # Add uncovered genes
-        results["uncovered_genes"] = [
-            {"name": k, "chromosome": v} for k, v in uncovered_genes.iteritems()
-            ]
-        logging.info("Coverage bigwig processed!")
+        logging.info("Coverage bigwig coding region processed!")
         return results
 
     def __output(self, results):
@@ -405,6 +385,48 @@ class GelCoverageRunner:
         logging.info("Starting coverage analysis")
         # Get genes annotations in BED format
         bed = self.cellbase_helper.make_exons_bed(self.gene_list)
-        # Process the intervals in the BED file
+        # Process the intervals for the coding region in the BED file
         results = self.__process_bed_file(bed)
+        # Aggregate coding region statistics
+        results["coding_region"] = coverage_stats.compute_coding_region_statistics(
+            results["genes"]
+        )
+        # Compute the whole genome statistics if enabled (this is time consuming)
+        if self.is_wg_stats_enabled:
+            results["whole_genome"] = coverage_stats.compute_whole_genome_statistics(
+                self.bigwig_reader,
+                self.config["wg_regions"]
+            )
+        # Add uncovered genes
+        results["uncovered_genes"] = [
+            {"name": k, "chromosome": v} for k, v in self.uncovered_genes.iteritems()
+            ]
+        # Removes unnecessary statistics of count bases at given coverage thresholds
+        # NOTE: the clean way would be not to store them and infer them dynamically from the percentage value...
+        for gene in results["genes"]:
+            del gene["union_tr"]["stats"]["bases_lt_15x"]
+            del gene["union_tr"]["stats"]["bases_gte_15x"]
+            del gene["union_tr"]["stats"]["bases_gte_30x"]
+            del gene["union_tr"]["stats"]["bases_gte_50x"]
+            for exon in gene["union_tr"]["exons"]:
+                del exon["stats"]["bases_lt_15x"]
+                del exon["stats"]["bases_gte_15x"]
+                del exon["stats"]["bases_gte_30x"]
+                del exon["stats"]["bases_gte_50x"]
+            for transcript in gene["trs"]:
+                del transcript["stats"]["bases_lt_15x"]
+                del transcript["stats"]["bases_gte_15x"]
+                del transcript["stats"]["bases_gte_30x"]
+                del transcript["stats"]["bases_gte_50x"]
+                for exon in transcript["exons"]:
+                    del exon["stats"]["bases_lt_15x"]
+                    del exon["stats"]["bases_gte_15x"]
+                    del exon["stats"]["bases_gte_30x"]
+                    del exon["stats"]["bases_gte_50x"]
+        # Remove the exon statistics to save space if enabled
+        if not self.is_exon_stats_enabled:
+            for gene in results["genes"]:
+                for transcript in gene["trs"]:
+                    del transcript["exons"]
+                del gene["union_tr"]["exons"]
         return (self.__output(results), bed)
