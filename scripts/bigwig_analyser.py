@@ -87,7 +87,6 @@ def main():
         output_file.write(
             ujson.dumps(
                 results,
-                indent=4,
                 ensure_ascii=False
             )
         )
