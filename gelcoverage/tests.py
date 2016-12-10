@@ -148,11 +148,11 @@ class GelCoverageRunnerTests(OutputVerifier):
         """
         def create_test_exon(start, end, exon_number):
             return {
-                "start": start,
-                "end": end,
-                "padded_start": start - self.config["exon_padding"],
-                "padded_end": end + self.config["exon_padding"],
-                "exon_number": exon_number
+                "s": start,
+                "e": end,
+                "padded_s": start - self.config["exon_padding"],
+                "padded_e": end + self.config["exon_padding"],
+                "exon": exon_number
             }
         # Interval covered in the input file SCN2A: 2: 165,995,882-166,349,242
         offset = 165995882
@@ -162,9 +162,9 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Runs union transcript with exon padding 15bp
         self.config["exon_padding"] = 15
         gene_15bp_padding = {
-            "chromosome": "2",
+            "chr": "2",
             "name": "TEST",
-            "transcripts": [
+            "trs": [
                 {
                     "id": "1",
                     "exons": [
@@ -204,14 +204,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         }
         union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_15bp_padding)
         self.assertEqual(len(union_transcript["exons"]), 1)
-        gene_15bp_padding["union_transcript"] = union_transcript
+        gene_15bp_padding["union_tr"] = union_transcript
         self.verify_union_transcript(gene_15bp_padding, True)
         # Runs union transcript with exon padding 0bp
         self.config["exon_padding"] = 0
         gene_0bp_padding = {
-            "chromosome": "2",
+            "chr": "2",
             "name": "TEST",
-            "transcripts": [
+            "trs": [
                 {
                     "id": "1",
                     "exons": [
@@ -251,7 +251,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         }
         union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_0bp_padding)
         self.assertEqual(len(union_transcript["exons"]), 8)
-        gene_0bp_padding["union_transcript"] = union_transcript
+        gene_0bp_padding["union_tr"] = union_transcript
         self.verify_union_transcript(gene_0bp_padding, True)
 
     def test6(self):

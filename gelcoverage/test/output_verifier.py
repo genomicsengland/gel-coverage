@@ -17,16 +17,16 @@ class OutputVerifier(unittest.TestCase):
         self.__verify_dict_field(json, "results", dict)
         if json["parameters"]["wg_stats_enabled"]:
             self.__verify_dict_field(json["results"], "whole_genome", dict)
-            self.__verify_dict_field(json["results"]["whole_genome"], "statistics", dict)
-            self.__verify_dict_field(json["results"]["whole_genome"], "chromosomes", list)
-            self.__verify_wg_stats(json["results"]["whole_genome"]["statistics"])
-            for chr_stats in json["results"]["whole_genome"]["chromosomes"]:
+            self.__verify_dict_field(json["results"]["whole_genome"], "stats", dict)
+            self.__verify_dict_field(json["results"]["whole_genome"], "chrs", list)
+            self.__verify_wg_stats(json["results"]["whole_genome"]["stats"])
+            for chr_stats in json["results"]["whole_genome"]["chrs"]:
                 self.__verify_wg_stats(chr_stats)
         self.__verify_dict_field(json["results"], "coding_region", dict)
-        self.__verify_dict_field(json["results"]["coding_region"], "statistics", dict)
-        self.__verify_dict_field(json["results"]["coding_region"], "chromosomes", list)
-        self.__verify_panel_stats(json["results"]["coding_region"]["statistics"])
-        for chr_stats in json["results"]["coding_region"]["chromosomes"]:
+        self.__verify_dict_field(json["results"]["coding_region"], "stats", dict)
+        self.__verify_dict_field(json["results"]["coding_region"], "chrs", list)
+        self.__verify_panel_stats(json["results"]["coding_region"]["stats"])
+        for chr_stats in json["results"]["coding_region"]["chrs"]:
             self.__verify_panel_stats(chr_stats)
         self.__verify_uncovered_genes(json["results"])
         self.__verify_genes(json["results"], json["parameters"]["exon_stats_enabled"])
@@ -90,11 +90,11 @@ class OutputVerifier(unittest.TestCase):
         self.__verify_dict_field(results, "uncovered_genes", list)
         observed_genes = []
         for uncovered_gene in results["uncovered_genes"]:
-            self.__verify_dict_field(uncovered_gene, "chromosome", str)
-            self.__verify_dict_field(uncovered_gene, "gene_name", str)
-            self.assertTrue(uncovered_gene["gene_name"] not in observed_genes,
-                                msg="Duplicated gene '%s'" % uncovered_gene["gene_name"])
-            observed_genes.append(uncovered_gene["gene_name"])
+            self.__verify_dict_field(uncovered_gene, "chr", str)
+            self.__verify_dict_field(uncovered_gene, "name", str)
+            self.assertTrue(uncovered_gene["name"] not in observed_genes,
+                                msg="Duplicated gene '%s'" % uncovered_gene["name"])
+            observed_genes.append(uncovered_gene["name"])
 
     def __verify_genes(self, results, exon_stats_enabled):
         # Verify every gene
@@ -104,14 +104,14 @@ class OutputVerifier(unittest.TestCase):
             if self.expected_gene_list is not None:
                 self.assertTrue(gene["name"] in self.expected_gene_list,
                                 msg="Unexpected gene found in results '%s'" % gene["name"])
-            self.__verify_dict_field(gene, "chromosome", str)
+            self.__verify_dict_field(gene, "chr", str)
             # Checks that genes are not repeated
             self.assertTrue(gene["name"] not in observed_genes,
                             msg="Duplicated gene '%s'" % gene['name'])
             observed_genes.append(gene["name"])
             # Verify every transcript
             observed_transcripts = []
-            for transcript in gene["transcripts"]:
+            for transcript in gene["trs"]:
                 self.__verify_transcript(transcript)
                 self.assertTrue(transcript["id"] not in observed_transcripts,
                                 msg="Duplicated transcript '%s'" % transcript['id'])
@@ -121,44 +121,44 @@ class OutputVerifier(unittest.TestCase):
                     observed_exons = []
                     for exon in transcript["exons"]:
                         self.__verify_exon(exon, gene["name"], transcript["id"])
-                        self.assertTrue(exon["exon_number"] not in observed_exons,
-                                        msg="Duplicated exon '%s'" % exon['exon_number'])
-                        observed_exons.append(exon["exon_number"])
+                        self.assertTrue(exon["exon"] not in observed_exons,
+                                        msg="Duplicated exon '%s'" % exon['exon'])
+                        observed_exons.append(exon["exon"])
                         # Verify gaps
                         observed_gaps = []
                         for gap in exon["gaps"]:
                             self.__verify_gap(gap, exon)
-                            self.assertTrue((gap["start"], gap["end"]) not in observed_gaps,
+                            self.assertTrue((gap["s"], gap["e"]) not in observed_gaps,
                                             msg="Repeated gap '%s-%s'" % (
-                                                gap["start"], gap["end"]
+                                                gap["s"], gap["e"]
                                             ))
-                            observed_gaps.append((gap["start"], gap["end"]))
+                            observed_gaps.append((gap["s"], gap["e"]))
                 else:
                     self.assertTrue("exons" not in transcript)
-            union_transcript = gene["union_transcript"]
-            self.__verify_transcript_stats(union_transcript["statistics"], has_gc=False)
+            union_transcript = gene["union_tr"]
+            self.__verify_transcript_stats(union_transcript["stats"], has_gc=False)
             self.verify_union_transcript(gene, exon_stats_enabled)
 
     def __verify_transcript(self, transcript):
         self.__verify_dict_field(transcript, "id", str)
         self.assertTrue(str(transcript["id"]).startswith("ENS"),
                         msg="Wrong transcript id '%s'" % transcript["id"])
-        self.__verify_transcript_stats(transcript["statistics"])
+        self.__verify_transcript_stats(transcript["stats"])
 
     def verify_union_transcript(self, gene, exon_stats_enabled):
         # Basic checks
-        self.__verify_dict_field(gene, "union_transcript", dict)
-        union_transcript = gene["union_transcript"]
-        self.__verify_transcript_stats(gene["union_transcript"]["statistics"], has_gc=False)
+        self.__verify_dict_field(gene, "union_tr", dict)
+        union_transcript = gene["union_tr"]
+        self.__verify_transcript_stats(gene["union_tr"]["stats"], has_gc=False)
         # Verifies exons
         if exon_stats_enabled:
             for ut_exon in union_transcript["exons"]:
-                self.__verify_exon(ut_exon, gene["name"], "union_transcript", has_gc=False)
+                self.__verify_exon(ut_exon, gene["name"], "union_tr", has_gc=False)
                 # Verify gaps
                 for gap in ut_exon["gaps"]:
                     self.__verify_gap(gap, ut_exon)
             # Verifies union transcript build up
-            all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
+            all_exons = sum([transcript["exons"] for transcript in gene["trs"]], [])
             ut_exon_coordinates = [self.__get_exon_coordinates(x) for x in all_exons]
             ut_start = min([start for (start, _) in ut_exon_coordinates])
             ut_end = max([end for (_, end) in ut_exon_coordinates])
@@ -220,11 +220,11 @@ class OutputVerifier(unittest.TestCase):
         start = None
         end = None
         if self.__is_padding_enabled():
-            start = exon["padded_start"]
-            end = exon["padded_end"]
+            start = exon["padded_s"]
+            end = exon["padded_e"]
         else:
-            start = exon["start"]
-            end = exon["end"]
+            start = exon["s"]
+            end = exon["e"]
         return (start, end)
 
     def __is_padding_enabled(self):
@@ -242,27 +242,27 @@ class OutputVerifier(unittest.TestCase):
             self.__verify_dict_field(stats, "bases_lt_15x", int)
             self.assertTrue(stats["bases_lt_15x"] >= 0)
             if has_gc:
-                self.__verify_dict_field(stats, "gc_content", float)
-                self.assertTrue(stats["gc_content"] >= 0 and
-                                stats["gc_content"] <= 1)
-            self.__verify_dict_field(stats, "mean", float)
-            self.assertTrue(stats["mean"] >= 0)
-            self.__verify_dict_field(stats, "percent_gte_15x", float)
-            self.assertTrue(stats["percent_gte_15x"] >= 0 and
-                            stats["percent_gte_15x"] <= 1)
-            self.__verify_dict_field(stats, "percent_gte_30x", float)
-            self.assertTrue(stats["percent_gte_30x"] >= 0 and
-                            stats["percent_gte_30x"] <= 1)
-            self.__verify_dict_field(stats, "percent_gte_50x", float)
-            self.assertTrue(stats["percent_gte_50x"] >= 0 and
-                            stats["percent_gte_50x"] <= 1)
-            self.__verify_dict_field(stats, "percent_lt_15x", float)
-            self.assertTrue(stats["percent_lt_15x"] >= 0 and
-                            stats["percent_lt_15x"] <= 1)
-            self.__verify_dict_field(stats, "total_bases", int)
-            self.assertTrue(stats["total_bases"] >= 0)
-            self.__verify_dict_field(stats, "median", float)
-            self.assertTrue(stats["median"] >= 0)
+                self.__verify_dict_field(stats, "gc", float)
+                self.assertTrue(stats["gc"] >= 0 and
+                                stats["gc"] <= 1)
+            self.__verify_dict_field(stats, "avg", float)
+            self.assertTrue(stats["avg"] >= 0)
+            self.__verify_dict_field(stats, "%>=15x", float)
+            self.assertTrue(stats["%>=15x"] >= 0 and
+                            stats["%>=15x"] <= 1)
+            self.__verify_dict_field(stats, "%>=30x", float)
+            self.assertTrue(stats["%>=30x"] >= 0 and
+                            stats["%>=30x"] <= 1)
+            self.__verify_dict_field(stats, "%>=50x", float)
+            self.assertTrue(stats["%>=50x"] >= 0 and
+                            stats["%>=50x"] <= 1)
+            self.__verify_dict_field(stats, "%<15x", float)
+            self.assertTrue(stats["%<15x"] >= 0 and
+                            stats["%<15x"] <= 1)
+            self.__verify_dict_field(stats, "bases", int)
+            self.assertTrue(stats["bases"] >= 0)
+            self.__verify_dict_field(stats, "med", float)
+            self.assertTrue(stats["med"] >= 0)
             self.__verify_dict_field(stats, "pct75", float)
             self.assertTrue(stats["pct75"] >= 0)
             self.__verify_dict_field(stats, "pct25", float)
@@ -275,24 +275,24 @@ class OutputVerifier(unittest.TestCase):
     def __verify_exon(self, exon, gene_name, transcript_id, has_gc = True):
         try:
             self.assertEqual(type(exon), dict)
-            self.__verify_dict_field(exon, "start", int)
-            self.assertTrue(exon["start"] >= 0)
-            self.__verify_dict_field(exon, "end", int)
-            self.assertTrue(exon["end"] >= 0)
-            self.assertTrue(exon["end"] >= exon["start"], msg="End < start")
+            self.__verify_dict_field(exon, "s", int)
+            self.assertTrue(exon["s"] >= 0)
+            self.__verify_dict_field(exon, "e", int)
+            self.assertTrue(exon["e"] >= 0)
+            self.assertTrue(exon["e"] >= exon["s"], msg="End < start")
             if self.__is_padding_enabled():
-                self.__verify_dict_field(exon, "padded_start", int)
-                self.assertTrue(exon["padded_start"] >= 0)
-                self.__verify_dict_field(exon, "padded_end", int)
-                self.assertTrue(exon["padded_end"] >= 0)
-                self.assertTrue(exon["padded_end"] > exon["padded_start"],
+                self.__verify_dict_field(exon, "padded_s", int)
+                self.assertTrue(exon["padded_s"] >= 0)
+                self.__verify_dict_field(exon, "padded_e", int)
+                self.assertTrue(exon["padded_e"] >= 0)
+                self.assertTrue(exon["padded_e"] > exon["padded_s"],
                                 msg="Padded end <= padded start")
-                self.assertTrue(exon["start"] - exon["padded_start"] == self.config["exon_padding"],
+                self.assertTrue(exon["s"] - exon["padded_s"] == self.config["exon_padding"],
                                 msg="Incorrect start coordinate padding")
-                self.assertTrue(exon["padded_end"] - exon["end"] == self.config["exon_padding"],
+                self.assertTrue(exon["padded_e"] - exon["e"] == self.config["exon_padding"],
                                 msg="Incorrect end coordinate padding")
-            self.__verify_dict_field(exon, "exon_number", str)
-            self.assertTrue(str(exon["exon_number"]).startswith("exon"),
+            self.__verify_dict_field(exon, "exon", str)
+            self.assertTrue(str(exon["exon"]).startswith("exon"),
                             msg="Exon number is not well formed")
             self.__verify_exon_statistics(exon, has_gc)
         except AssertionError, e:
@@ -301,8 +301,8 @@ class OutputVerifier(unittest.TestCase):
             raise e
 
     def __verify_exon_statistics(self, exon, has_gc=True):
-        self.__verify_dict_field(exon, "statistics", dict)
-        statistics = exon["statistics"]
+        self.__verify_dict_field(exon, "stats", dict)
+        statistics = exon["stats"]
         try:
             self.__verify_dict_field(statistics, "bases_gte_15x", int)
             self.assertTrue(statistics["bases_gte_15x"] >= 0)
@@ -313,24 +313,24 @@ class OutputVerifier(unittest.TestCase):
             self.__verify_dict_field(statistics, "bases_lt_15x", int)
             self.assertTrue(statistics["bases_lt_15x"] >= 0)
             if has_gc:
-                self.__verify_dict_field(statistics, "gc_content", float)
-                self.assertTrue(statistics["gc_content"] >= 0 and
-                                statistics["gc_content"] <= 1)
-            self.__verify_dict_field(statistics, "mean", float)
-            self.assertTrue(statistics["mean"] >= 0)
-            self.__verify_dict_field(statistics, "percent_gte_15x", float)
-            self.assertTrue(statistics["percent_gte_15x"] >= 0 and
-                            statistics["percent_gte_15x"] <= 1)
-            self.assertTrue(statistics["percent_gte_30x"] >= 0 and
-                            statistics["percent_gte_30x"] <= 1)
-            self.assertTrue(statistics["percent_gte_50x"] >= 0 and
-                            statistics["percent_gte_50x"] <= 1)
-            self.assertTrue(statistics["percent_lt_15x"] >= 0 and
-                            statistics["percent_lt_15x"] <= 1)
-            self.__verify_dict_field(statistics, "total_bases", int)
-            self.assertTrue(statistics["total_bases"] >= 0)
-            self.__verify_dict_field(statistics, "median", float)
-            self.assertTrue(statistics["median"] >= 0)
+                self.__verify_dict_field(statistics, "gc", float)
+                self.assertTrue(statistics["gc"] >= 0 and
+                                statistics["gc"] <= 1)
+            self.__verify_dict_field(statistics, "avg", float)
+            self.assertTrue(statistics["avg"] >= 0)
+            self.__verify_dict_field(statistics, "%>=15x", float)
+            self.assertTrue(statistics["%>=15x"] >= 0 and
+                            statistics["%>=15x"] <= 1)
+            self.assertTrue(statistics["%>=30x"] >= 0 and
+                            statistics["%>=30x"] <= 1)
+            self.assertTrue(statistics["%>=50x"] >= 0 and
+                            statistics["%>=50x"] <= 1)
+            self.assertTrue(statistics["%<15x"] >= 0 and
+                            statistics["%<15x"] <= 1)
+            self.__verify_dict_field(statistics, "bases", int)
+            self.assertTrue(statistics["bases"] >= 0)
+            self.__verify_dict_field(statistics, "med", float)
+            self.assertTrue(statistics["med"] >= 0)
             self.__verify_dict_field(statistics, "pct75", float)
             self.assertTrue(statistics["pct75"] >= 0)
             self.__verify_dict_field(statistics, "pct25", float)
@@ -343,14 +343,14 @@ class OutputVerifier(unittest.TestCase):
     def __verify_gap(self, gap, exon):
         try:
             self.assertEqual(type(gap), dict)
-            self.__verify_dict_field(gap, "start", int)
+            self.__verify_dict_field(gap, "s", int)
             (start, end) = self.__get_exon_coordinates(exon)
-            self.assertTrue(gap["start"] >= start and gap["start"] <= end)
-            self.__verify_dict_field(gap, "end", int)
-            self.assertTrue(gap["end"] >= start and gap["start"] <= end and
-                            gap["end"] >= gap["start"])
-            self.__verify_dict_field(gap, "length", int)
-            self.assertTrue(gap["length"] >= 1 and gap["length"] <= gap["end"] - gap["start"] + 1)
+            self.assertTrue(gap["s"] >= start and gap["s"] <= end)
+            self.__verify_dict_field(gap, "e", int)
+            self.assertTrue(gap["e"] >= start and gap["s"] <= end and
+                            gap["e"] >= gap["s"])
+            self.__verify_dict_field(gap, "l", int)
+            self.assertTrue(gap["l"] >= 1 and gap["l"] <= gap["e"] - gap["s"] + 1)
         except AssertionError, e:
             logging.error("Error verifying gap")
             logging.error(json.dumps(gap, indent=4))
@@ -366,24 +366,24 @@ class OutputVerifier(unittest.TestCase):
             #self.assertTrue(statistics["bases_gte_50x"] >= 0)
             #self.__verify_dict_field(statistics, "bases_lt_15x", int)
             #self.assertTrue(statistics["bases_lt_15x"] >= 0)
-            self.__verify_dict_field(statistics, "mean", float)
-            self.assertTrue(statistics["mean"] >= 0)
-            self.__verify_dict_field(statistics, "percent_gte_15x", float)
-            self.__verify_dict_field(statistics, "percent_gte_30x", float)
-            self.__verify_dict_field(statistics, "percent_gte_50x", float)
-            self.__verify_dict_field(statistics, "percent_lt_15x", float)
-            self.assertTrue(statistics["percent_gte_15x"] >= 0 and
-                            statistics["percent_gte_15x"] <= 1)
-            self.assertTrue(statistics["percent_gte_30x"] >= 0 and
-                            statistics["percent_gte_30x"] <= 1)
-            self.assertTrue(statistics["percent_gte_50x"] >= 0 and
-                            statistics["percent_gte_50x"] <= 1)
-            self.assertTrue(statistics["percent_lt_15x"] >= 0 and
-                            statistics["percent_lt_15x"] <= 1)
-            self.__verify_dict_field(statistics, "total_bases", int)
-            self.assertTrue(statistics["total_bases"] >= 0)
-            self.__verify_dict_field(statistics, "median", float)
-            self.assertTrue(statistics["median"] >= 0)
+            self.__verify_dict_field(statistics, "avg", float)
+            self.assertTrue(statistics["avg"] >= 0)
+            self.__verify_dict_field(statistics, "%>=15x", float)
+            self.__verify_dict_field(statistics, "%>=30x", float)
+            self.__verify_dict_field(statistics, "%>=50x", float)
+            self.__verify_dict_field(statistics, "%<15x", float)
+            self.assertTrue(statistics["%>=15x"] >= 0 and
+                            statistics["%>=15x"] <= 1)
+            self.assertTrue(statistics["%>=30x"] >= 0 and
+                            statistics["%>=30x"] <= 1)
+            self.assertTrue(statistics["%>=50x"] >= 0 and
+                            statistics["%>=50x"] <= 1)
+            self.assertTrue(statistics["%>=15x"] >= 0 and
+                            statistics["%>=15x"] <= 1)
+            self.__verify_dict_field(statistics, "bases", int)
+            self.assertTrue(statistics["bases"] >= 0)
+            self.__verify_dict_field(statistics, "med", float)
+            self.assertTrue(statistics["med"] >= 0)
             self.__verify_dict_field(statistics, "pct75", float)
             self.assertTrue(statistics["pct75"] >= 0)
             self.__verify_dict_field(statistics, "pct25", float)
@@ -403,24 +403,24 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(statistics["bases_gte_50x"] >= 0)
             self.__verify_dict_field(statistics, "bases_lt_15x", int)
             self.assertTrue(statistics["bases_lt_15x"] >= 0)
-            self.__verify_dict_field(statistics, "mean", float)
-            self.assertTrue(statistics["mean"] >= 0)
-            self.__verify_dict_field(statistics, "percent_gte_15x", float)
-            self.__verify_dict_field(statistics, "percent_gte_30x", float)
-            self.__verify_dict_field(statistics, "percent_gte_50x", float)
-            self.__verify_dict_field(statistics, "percent_lt_15x", float)
-            self.assertTrue(statistics["percent_gte_15x"] >= 0 and
-                            statistics["percent_gte_15x"] <= 1)
-            self.assertTrue(statistics["percent_gte_30x"] >= 0 and
-                            statistics["percent_gte_30x"] <= 1)
-            self.assertTrue(statistics["percent_gte_50x"] >= 0 and
-                            statistics["percent_gte_50x"] <= 1)
-            self.assertTrue(statistics["percent_lt_15x"] >= 0 and
-                            statistics["percent_lt_15x"] <= 1)
-            self.__verify_dict_field(statistics, "total_bases", int)
-            self.assertTrue(statistics["total_bases"] >= 0)
-            self.__verify_dict_field(statistics, "median", float)
-            self.assertTrue(statistics["median"] >= 0)
+            self.__verify_dict_field(statistics, "avg", float)
+            self.assertTrue(statistics["avg"] >= 0)
+            self.__verify_dict_field(statistics, "%>=15x", float)
+            self.__verify_dict_field(statistics, "%>=30x", float)
+            self.__verify_dict_field(statistics, "%>=50x", float)
+            self.__verify_dict_field(statistics, "%<15x", float)
+            self.assertTrue(statistics["%>=15x"] >= 0 and
+                            statistics["%>=15x"] <= 1)
+            self.assertTrue(statistics["%>=30x"] >= 0 and
+                            statistics["%>=30x"] <= 1)
+            self.assertTrue(statistics["%>=50x"] >= 0 and
+                            statistics["%>=50x"] <= 1)
+            self.assertTrue(statistics["%<15x"] >= 0 and
+                            statistics["%<15x"] <= 1)
+            self.__verify_dict_field(statistics, "bases", int)
+            self.assertTrue(statistics["bases"] >= 0)
+            self.__verify_dict_field(statistics, "med", float)
+            self.assertTrue(statistics["med"] >= 0)
             self.__verify_dict_field(statistics, "pct75", float)
             self.assertTrue(statistics["pct75"] >= 0)
             self.__verify_dict_field(statistics, "pct25", float)

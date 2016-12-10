@@ -1,24 +1,20 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "title": "Output bw_exon_summary_v2.py script (we may need to change this name...)",
+    "title": "Output bigwig_analyser.py script",
     "definitions": {
         "aggregated_stats": {
             "type": "object",
             "properties": {
-                "total_bases":      { "type": "integer"},
-                "mean":             { "type": "real"},
-                "median":  { "type": "real" },
+                "bases":      { "type": "integer"},
+                "avg":             { "type": "real"},
+                "med":  { "type": "real" },
                 "pct75":   { "type": "real" },
                 "pct25":   { "type": "real" },
-                "bases_lt_3x":      { "type": "integer" },
-                "bases_lt_15x":     { "type": "integer" },
-                "bases_gte_15x":    { "type": "integer" },
-                "bases_gte_30x":    { "type": "integer" },
-                "bases_gte_50x":    { "type": "integer" },
-                "percent_lt_15x":   { "type": "real" },
-                "percent_gte_15x":  { "type": "real" },
-                "percent_gte_30x":  { "type": "real" },
-                "percent_gte_50x":  { "type": "real"}
+                "%<15x":   { "type": "real" },
+                "%>=15x":  { "type": "real" },
+                "%>=30x":  { "type": "real" },
+                "%>=50x":  { "type": "real"},
+                "gc":  { "type": "real"}
             }
         }
     },
@@ -82,7 +78,7 @@
                     "description": "The list of genes not covered",
                     "type": "object",
                     "properties": {
-                        "gene_name": {
+                        "name": {
                             "description": "The gene name",
                             "type": "string"
                         },
@@ -95,8 +91,8 @@
                 "whole_genome": {
                     "type": "object",
                     "properties": {
-                        "statistics": "#/definitions/aggregated_stats",
-                        "chromosomes": {
+                        "stats": "#/definitions/aggregated_stats",
+                        "chrs": {
                             "type": "array",
                             "items": "#/definitions/aggregated_stats"
                             }
@@ -106,8 +102,8 @@
                 "coding_region": {
                     "type": "object",
                     "properties": {
-                        "statistics": "#/definitions/aggregated_stats",
-                        "chromosomes": {
+                        "stats": "#/definitions/aggregated_stats",
+                        "chrs": {
                             "type": "array",
                             "items": "#/definitions/aggregated_stats"
                             }
@@ -125,11 +121,11 @@
                                 "description": "The HGNC Symbol",
                                 "type": "string"
                             },
-                            "chromosome": {
+                            "chr": {
                                 "description": "The chromosome identifer (format TBD: chr1 or 1?)",
                                 "type": "string"
                             },
-                            "union_transcript":
+                            "union_tr":
                             {
                                 "description": "The union transcript for the gene",
                                 "type": "object",
@@ -141,31 +137,31 @@
                                             "title": "Exon",
                                             "type": "object",
                                             "properties": {
-                                                "exon_number": {
+                                                "exon": {
                                                     "description": "The exon index in the gene",
                                                     "type": "integer"
                                                 },
-                                                "start": {
+                                                "s": {
                                                     "description": "The exon start position",
                                                     "type": "integer"
                                                 },
-                                                "end": {
+                                                "e": {
                                                     "description": "The exon end position",
                                                     "type": "integer"
                                                 },
-                                                "padded_start": {
+                                                "padded_s": {
                                                     "description": "The exon padded start position",
                                                     "type": "integer"
                                                 },
-                                                "padded_end": {
+                                                "padded_e": {
                                                     "description": "The exon padded end position",
                                                     "type": "integer"
                                                 },
-                                                "length": {
+                                                "l": {
                                                     "description": "The exon's length",
                                                     "type": "integer"
                                                 },
-                                                "statistics": "#/definitions/aggregated_stats",
+                                                "stats": "#/definitions/aggregated_stats",
                                                 "gaps": {
                                                     "description": "The contiguous sequences of bases under a certain coverage",
                                                     "type": "array",
@@ -173,15 +169,15 @@
                                                         "title": "Gap",
                                                         "type": "object",
                                                         "properties": {
-                                                            "start": {
+                                                            "s": {
                                                                 "description": "Gap starting position",
                                                                 "type": "integer"
                                                             },
-                                                            "end": {
+                                                            "e": {
                                                                 "description": "Gap ending position",
                                                                 "type": "integer"
                                                             },
-                                                            "length": {
+                                                            "l": {
                                                                 "description": "Gap length",
                                                                 "type": "integer"
                                                             }
@@ -191,10 +187,10 @@
                                             }
                                         }
                                     },
-                                    "statistics": "#/definitions/aggregated_stats"
+                                    "stats": "#/definitions/aggregated_stats"
                                 }
                             },
-                            "transcripts": {
+                            "trs": {
                                 "description": "The list of transcripts for this gene",
                                 "type": "array",
                                 "items": {
@@ -205,7 +201,7 @@
                                             "description": "The Ensembl transcript identifier",
                                             "type": "string"
                                         },
-                                        "statistics": "#/definitions/aggregated_stats",
+                                        "stats": "#/definitions/aggregated_stats",
                                         "exons": {
                                             "description": "The list of exons for this transcript",
                                             "type": "array",
@@ -213,31 +209,31 @@
                                                 "title": "Exon",
                                                 "type": "object",
                                                 "properties": {
-                                                    "exon_number": {
+                                                    "exon": {
                                                         "description": "The exon index in the gene",
                                                         "type": "integer"
                                                     },
-                                                    "start": {
+                                                    "s": {
                                                         "description": "The exon start position",
                                                         "type": "integer"
                                                     },
-                                                    "end": {
+                                                    "e": {
                                                         "description": "The exon end position",
                                                         "type": "integer"
                                                     },
-                                                    "padded_start": {
+                                                    "padded_s": {
                                                         "description": "The exon padded start position",
                                                         "type": "integer"
                                                     },
-                                                    "padded_end": {
+                                                    "padded_e": {
                                                         "description": "The exon padded end position",
                                                         "type": "integer"
                                                     },
-                                                    "length": {
+                                                    "l": {
                                                         "description": "The exon's length",
                                                         "type": "integer"
                                                     },
-                                                    "statistics": "#/definitions/aggregated_stats",
+                                                    "stats": "#/definitions/aggregated_stats",
                                                     "gaps": {
                                                         "description": "The contiguous sequences of bases under a certain coverage",
                                                         "type": "array",
@@ -245,15 +241,15 @@
                                                             "title": "Gap",
                                                             "type": "object",
                                                             "properties": {
-                                                                "start": {
+                                                                "s": {
                                                                     "description": "Gap starting position",
                                                                     "type": "integer"
                                                                 },
-                                                                "end": {
+                                                                "e": {
                                                                     "description": "Gap ending position",
                                                                     "type": "integer"
                                                                 },
-                                                                "length": {
+                                                                "l": {
                                                                     "description": "Gap length",
                                                                     "type": "integer"
                                                                 }

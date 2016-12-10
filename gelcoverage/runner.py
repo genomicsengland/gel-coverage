@@ -127,8 +127,8 @@ class GelCoverageRunner:
         """
         return {
             "name": gene_name,
-            "chromosome": chromosome,
-            "transcripts": transcripts
+            "chr": chromosome,
+            "trs": transcripts
         }
 
     @staticmethod
@@ -153,14 +153,14 @@ class GelCoverageRunner:
         :return: the basic exon data structure
         """
         exon = {
-                "exon_number": exon_number,
-                "start": start,
-                "end": end,
-                "length": end - start + 1
+                "exon": exon_number,
+                "s": start,
+                "e": end,
+                "l": end - start + 1
             }
         if padded_start is not None and padded_start != start:
-            exon["padded_start"] = padded_start
-            exon["padded_end"] = padded_end
+            exon["padded_s"] = padded_start
+            exon["padded_e"] = padded_end
         return exon
 
     def __create_exon(self, chromosome, start, end, exon_idx, gc_content = None):
@@ -182,14 +182,14 @@ class GelCoverageRunner:
             padded_end = end + self.config["exon_padding"] if self.is_exon_padding else None
         )
         # Update length
-        exon["length"] = end - start + 1
+        exon["l"] = end - start + 1
         # Read from the bigwig file
         coverages = self.bigwig_reader.read_bigwig_coverages(
             chromosome,
             start,
             end)
         # Compute statistics at exon level (no GC content information)
-        exon["statistics"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
+        exon["stats"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
         # Compute gaps
         if self.is_find_gaps_enabled:
             exon["gaps"] = coverage_stats.find_gaps(
@@ -209,7 +209,7 @@ class GelCoverageRunner:
         """
         transcript = self.__initialize_transcript_dict(id, exons)
         # Compute transcript level statistics by aggregating stats on every exon
-        transcript["statistics"] = coverage_stats.compute_transcript_level_statistics(
+        transcript["stats"] = coverage_stats.compute_transcript_level_statistics(
             transcript["exons"]
         )
         return transcript
@@ -221,20 +221,20 @@ class GelCoverageRunner:
         :return: the data structure for the union transcript
         """
         logging.debug("Creating union transcript for gene %s" % gene["name"])
-        all_exons = sum([transcript["exons"] for transcript in gene["transcripts"]], [])
-        all_exons.sort(key = lambda x: x["start"])
+        all_exons = sum([transcript["exons"] for transcript in gene["trs"]], [])
+        all_exons.sort(key = lambda x: x["s"])
         union_exons = []
         first_exon = all_exons[0]
-        current_padded_end = first_exon["padded_end"] if self.is_exon_padding else first_exon["end"]
-        current_start = first_exon["start"]
-        current_end = first_exon["end"]
+        current_padded_end = first_exon["padded_e"] if self.is_exon_padding else first_exon["e"]
+        current_start = first_exon["s"]
+        current_end = first_exon["e"]
         # TODO: consider strand when assigning exon indices
         exon_idx = 1
         for exon in all_exons[1:]:
-            padded_start = exon["padded_start"] if self.is_exon_padding else exon["start"]
-            padded_end = exon["padded_end"] if self.is_exon_padding else exon["end"]
-            start = exon["start"]
-            end = exon["end"]
+            padded_start = exon["padded_s"] if self.is_exon_padding else exon["s"]
+            padded_end = exon["padded_e"] if self.is_exon_padding else exon["e"]
+            start = exon["s"]
+            end = exon["e"]
             if padded_start <= current_padded_end:
                 # Exons overlaps, we join them
                 current_padded_end = max(current_padded_end, padded_end)
@@ -242,7 +242,7 @@ class GelCoverageRunner:
             else:
                 # Exons do not overlap, they are different exons in the union transcript
                 current_exon = self.__create_exon(
-                    gene["chromosome"],
+                    gene["chr"],
                     current_start,
                     current_end,
                     exon_idx
@@ -255,7 +255,7 @@ class GelCoverageRunner:
                 exon_idx += 1
         # Stores the last exon
         last_exon = self.__create_exon(
-            gene["chromosome"],
+            gene["chr"],
             current_start,
             current_end,
             exon_idx
@@ -265,7 +265,7 @@ class GelCoverageRunner:
         # Create union transcript dict
         union_transcript = {
             "exons" : union_exons,
-            "statistics": coverage_stats.compute_transcript_level_statistics(union_exons)
+            "stats": coverage_stats.compute_transcript_level_statistics(union_exons)
         }
         logging.debug("Built union transcript for gene %s" % gene["name"])
         return union_transcript
@@ -280,7 +280,7 @@ class GelCoverageRunner:
         """
         gene = self.__initialize_gene_dict(gene_name, chromosome, transcripts)
         # Calculate union transcript and compute stats
-        gene["union_transcript"] = self.__create_union_transcript(gene)
+        gene["union_tr"] = self.__create_union_transcript(gene)
         logging.info("Processed gene %s" % gene_name)
         return gene
 
@@ -364,9 +364,9 @@ class GelCoverageRunner:
         # Remove the exon statistics to save space if enabled
         if not self.is_exon_stats_enabled:
             for gene in results["genes"]:
-                for transcript in gene["transcripts"]:
+                for transcript in gene["trs"]:
                     del transcript["exons"]
-                del gene["union_transcript"]["exons"]
+                del gene["union_tr"]["exons"]
         # Add coding region statistics
         results["coding_region"] = coverage_stats.compute_coding_region_statistics(
             results["genes"]
@@ -379,7 +379,7 @@ class GelCoverageRunner:
             )
         # Add uncovered genes
         results["uncovered_genes"] = [
-            {"gene_name": k, "chromosome": v} for k, v in uncovered_genes.iteritems()
+            {"name": k, "chromosome": v} for k, v in uncovered_genes.iteritems()
             ]
         logging.info("Coverage bigwig processed!")
         return results
