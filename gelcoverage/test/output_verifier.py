@@ -233,14 +233,6 @@ class OutputVerifier(unittest.TestCase):
     def __verify_transcript_stats(self, stats, has_gc = True):
         try:
             self.assertEqual(type(stats), dict)
-            self.__verify_dict_field(stats, "bases_gte_15x", int)
-            self.assertTrue(stats["bases_gte_15x"] >= 0)
-            self.__verify_dict_field(stats, "bases_gte_30x", int)
-            self.assertTrue(stats["bases_gte_30x"] >= 0)
-            self.__verify_dict_field(stats, "bases_gte_50x", int)
-            self.assertTrue(stats["bases_gte_50x"] >= 0)
-            self.__verify_dict_field(stats, "bases_lt_15x", int)
-            self.assertTrue(stats["bases_lt_15x"] >= 0)
             if has_gc:
                 self.__verify_dict_field(stats, "gc", float)
                 self.assertTrue(stats["gc"] >= 0 and
@@ -304,14 +296,6 @@ class OutputVerifier(unittest.TestCase):
         self.__verify_dict_field(exon, "stats", dict)
         statistics = exon["stats"]
         try:
-            self.__verify_dict_field(statistics, "bases_gte_15x", int)
-            self.assertTrue(statistics["bases_gte_15x"] >= 0)
-            self.__verify_dict_field(statistics, "bases_gte_30x", int)
-            self.assertTrue(statistics["bases_gte_30x"] >= 0)
-            self.__verify_dict_field(statistics, "bases_gte_50x", int)
-            self.assertTrue(statistics["bases_gte_50x"] >= 0)
-            self.__verify_dict_field(statistics, "bases_lt_15x", int)
-            self.assertTrue(statistics["bases_lt_15x"] >= 0)
             if has_gc:
                 self.__verify_dict_field(statistics, "gc", float)
                 self.assertTrue(statistics["gc"] >= 0 and
@@ -358,14 +342,6 @@ class OutputVerifier(unittest.TestCase):
 
     def __verify_panel_stats(self, statistics):
         try:
-            #self.__verify_dict_field(statistics, "bases_gte_15x", int)
-            #self.assertTrue(statistics["bases_gte_15x"] >= 0)
-            #self.__verify_dict_field(statistics, "bases_gte_30x", int)
-            #self.assertTrue(statistics["bases_gte_30x"] >= 0)
-            #self.__verify_dict_field(statistics, "bases_gte_50x", int)
-            #self.assertTrue(statistics["bases_gte_50x"] >= 0)
-            #self.__verify_dict_field(statistics, "bases_lt_15x", int)
-            #self.assertTrue(statistics["bases_lt_15x"] >= 0)
             self.__verify_dict_field(statistics, "avg", float)
             self.assertTrue(statistics["avg"] >= 0)
             self.__verify_dict_field(statistics, "%>=15x", float)
@@ -395,14 +371,6 @@ class OutputVerifier(unittest.TestCase):
 
     def __verify_wg_stats(self, statistics):
         try:
-            self.__verify_dict_field(statistics, "bases_gte_15x", int)
-            self.assertTrue(statistics["bases_gte_15x"] >= 0)
-            self.__verify_dict_field(statistics, "bases_gte_30x", int)
-            self.assertTrue(statistics["bases_gte_30x"] >= 0)
-            self.__verify_dict_field(statistics, "bases_gte_50x", int)
-            self.assertTrue(statistics["bases_gte_50x"] >= 0)
-            self.__verify_dict_field(statistics, "bases_lt_15x", int)
-            self.assertTrue(statistics["bases_lt_15x"] >= 0)
             self.__verify_dict_field(statistics, "avg", float)
             self.assertTrue(statistics["avg"] >= 0)
             self.__verify_dict_field(statistics, "%>=15x", float)
