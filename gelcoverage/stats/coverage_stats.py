@@ -208,7 +208,7 @@ def compute_whole_genome_statistics(bigwig_reader, bed = None, chunk_size = 1000
             logging.debug("Analysing region %s:%s-%s" % (chromosome, start, end))
             current_start = start
             current_end = min(current_start + chunk_size - 1, end)
-            while current_end < end:
+            while current_start <= current_end:
                 logging.debug("Analysing chunk %s:%s-%s" % (chromosome,
                                                             current_start,
                                                             current_end))
