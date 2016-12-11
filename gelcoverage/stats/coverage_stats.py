@@ -205,9 +205,13 @@ def compute_whole_genome_statistics(bigwig_reader, bed = None, chunk_size = 1000
         }
         # Iterates intervals in chunks of fixed size and stores the stats for each chunk
         for (start, end) in regions:
+            logging.debug("Analysing region %s:%s-%s" % (chromosome, start, end))
             current_start = start
             current_end = min(current_start + chunk_size - 1, end)
             while current_end < end:
+                logging.debug("Analysing chunk %s:%s-%s" % (chromosome,
+                                                            current_start,
+                                                            current_end))
                 coverages = bigwig_reader.read_bigwig_coverages(chromosome, current_start, current_end, strict=False)
                 length = len(coverages)
                 chunk_mean = np.mean(coverages)

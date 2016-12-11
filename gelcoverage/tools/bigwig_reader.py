@@ -22,6 +22,8 @@ class BigWigReader:
         :strict: when true if a position not present in the bigwig is queried it will raise an error
         :return: the sequence of coverages (one integer per position)
         """
+        logging.debug("Queries bigwig for %s:%s-%s in %s mode" %
+                      (chromosome, str(start), str(end), "strict" if strict else "non strict"))
         # Queries the bigwig for a specific interval
         if start == end:  # do we really need this?
             end += 1
@@ -29,13 +31,14 @@ class BigWigReader:
         if type(chromosome) == int or not chromosome.startswith("chr"):
             chromosome = "chr" + str(chromosome)
         # Read from the bigwig file
-        # TODO: why our bigwig has "chr" prefix? BAMs don't
+        # TODO: why our bigwig has "chr" prefix? BAMs don't.
+        # ANSWER: this is the bigwig generation pipeline that is adding the chr prefix
         if strict:
             try:
                 coverages = self.reader.values(chromosome, start, end)
             except RuntimeError, e:
                 # When the queried interval is not present in the bigwig file it returns all 0s coverage and logs it
-                logging.warn("Unexisting interval in bigwig %s:%s-%s" % (chromosome, start, end))
+                logging.warn("Missing interval in bigwig %s:%s-%s" % (chromosome, start, end))
                 raise UncoveredIntervalException()
         else:
             # By using the function intervals we make sure that we are not querying coordinates not present in the
@@ -44,11 +47,11 @@ class BigWigReader:
                 intervals = self.reader.intervals(chromosome, start, end)
                 coverages = [coverage for _, _, coverage in intervals]
                 if len(coverages) == 0:
-                    logging.warn("No data in bigwig for %s:%s-%s" % (chromosome, start, end))
+                    logging.warn("Missing data in bigwig for %s:%s-%s" % (chromosome, start, end))
                     coverages = [0] * (end - start + 1)
             except RuntimeError, e:
                 if chromosome not in self.reported_unexisting_chr:
-                    logging.warn("Unexisting chromosome in bigwig %s" % (chromosome))
+                    logging.warn("Missing chromosome in bigwig %s" % (chromosome))
                     self.reported_unexisting_chr.append(chromosome)
                 coverages = [0] * (end- start + 1)
                 #raise UncoveredIntervalException()  # keeps going
