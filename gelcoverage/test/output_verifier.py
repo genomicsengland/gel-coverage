@@ -251,7 +251,7 @@ class OutputVerifier(unittest.TestCase):
             self.__verify_dict_field(stats, "%<15x", float)
             self.assertTrue(stats["%<15x"] >= 0 and
                             stats["%<15x"] <= 1)
-            self.__verify_dict_field(stats, "bases", int)
+            self.__verify_dict_field(stats, "bases", [int, long])
             self.assertTrue(stats["bases"] >= 0)
             self.__verify_dict_field(stats, "med", float)
             self.assertTrue(stats["med"] >= 0)
@@ -311,7 +311,7 @@ class OutputVerifier(unittest.TestCase):
                             statistics["%>=50x"] <= 1)
             self.assertTrue(statistics["%<15x"] >= 0 and
                             statistics["%<15x"] <= 1)
-            self.__verify_dict_field(statistics, "bases", int)
+            self.__verify_dict_field(statistics, "bases", [int, long])
             self.assertTrue(statistics["bases"] >= 0)
             self.__verify_dict_field(statistics, "med", float)
             self.assertTrue(statistics["med"] >= 0)
@@ -356,7 +356,7 @@ class OutputVerifier(unittest.TestCase):
                             statistics["%>=50x"] <= 1)
             self.assertTrue(statistics["%>=15x"] >= 0 and
                             statistics["%>=15x"] <= 1)
-            self.__verify_dict_field(statistics, "bases", int)
+            self.__verify_dict_field(statistics, "bases", [int, long])
             self.assertTrue(statistics["bases"] >= 0)
             self.__verify_dict_field(statistics, "med", float)
             self.assertTrue(statistics["med"] >= 0)
@@ -385,7 +385,7 @@ class OutputVerifier(unittest.TestCase):
                             statistics["%>=50x"] <= 1)
             self.assertTrue(statistics["%<15x"] >= 0 and
                             statistics["%<15x"] <= 1)
-            self.__verify_dict_field(statistics, "bases", int)
+            self.__verify_dict_field(statistics, "bases", [int, long])
             self.assertTrue(statistics["bases"] >= 0)
             self.__verify_dict_field(statistics, "med", float)
             self.assertTrue(statistics["med"] >= 0)
