@@ -399,7 +399,7 @@ class GelCoverageRunner:
             )
         # Add uncovered genes
         results["uncovered_genes"] = [
-            {"name": k, "chromosome": v} for k, v in self.uncovered_genes.iteritems()
+            {"name": k, "chr": v} for k, v in self.uncovered_genes.iteritems()
             ]
         # Removes unnecessary statistics of count bases at given coverage thresholds
         # NOTE: the clean way would be not to store them and infer them dynamically from the percentage value...

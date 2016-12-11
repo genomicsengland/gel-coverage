@@ -82,7 +82,7 @@
                             "description": "The gene name",
                             "type": "string"
                         },
-                        "chromosome": {
+                        "chr": {
                             "description": "The chromosome",
                             "type": "string"
                         }
