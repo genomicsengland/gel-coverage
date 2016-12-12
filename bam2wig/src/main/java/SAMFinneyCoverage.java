@@ -14,10 +14,7 @@ public class SAMFinneyCoverage {
     private static boolean VERBOSE_MODE = false;
     private static boolean SKIP_DUPLICATE_READS = true;
     private static boolean STDOUT = false;
-    public static int CHR_I_START = 0;
-    public static int CHR_I_END = 24;
-
-    private List<Integer> chr_sizes = new ArrayList();
+    private Map<String, Integer> chr_sizes = new HashMap<String, Integer>();
 
     private String outfile;
     private File bam_file = null;
@@ -85,7 +82,6 @@ public class SAMFinneyCoverage {
         PrintStream ps = new PrintStream(os);
 
         List<String> chr_labels = new ArrayList<String>();
-        List<Chromosome> chroms = new ArrayList<Chromosome>();
 
         //
         //  find .bam names for each chr and verify sizes (genome version):
@@ -97,15 +93,11 @@ public class SAMFinneyCoverage {
         PrintStream chr_os = new PrintStream(new BufferedOutputStream(new FileOutputStream(chr_wf)));
 
         for (SAMSequenceRecord ssr : dict.getSequences()) {
-            String ref_name = ssr.getSequenceName();
-            Chromosome c = Chromosome.valueOfString(ref_name);
-            if (c != null) {
-                int ref_len = ssr.getSequenceLength();
-                chr_labels.add(ref_name);
-                chroms.add(c);
-                chr_sizes.add(ref_len);
-                chr_os.println(c.toString() + "\t" + ref_len);
-            }
+            String chromosome = ssr.getSequenceName();
+            chr_labels.add(chromosome);
+            Integer ref_len = new Integer(ssr.getSequenceLength());
+            chr_sizes.put(chromosome, ref_len);
+            chr_os.println(chromosome + "\t" + ref_len);
         }
         chr_os.close();
         chr_wf.finish();
@@ -119,23 +111,22 @@ public class SAMFinneyCoverage {
         int qual_length_problem = 0;
         int qual_bounds_problem = 0;
 
-        for (int chr_i = CHR_I_START; chr_i <= CHR_I_END; chr_i++) {
+        for (String chromosome: chr_labels) {
             long startTime = System.currentTimeMillis();
 
-            int coverage_len = chr_sizes.get(chr_i);
+            int coverage_len = chr_sizes.get(chromosome).intValue();
             int[] coverage = new int[coverage_len];
 
             //
             //  generate coverage:
             //
-            String ref_name = chr_labels.get(chr_i);
             boolean has_coverage = false;
             long record_count = 0;
-            if (ref_name == null) {
-                System.err.println("WTF: no .bam mappings vs. chr index " + chr_i);  // debug
+            if (chromosome == null) {
+                System.err.println("WTF: no .bam mappings vs. chr index " + chromosome);  // debug
             } else {
-                if (VERBOSE_MODE) System.err.println("query=" + ref_name + " size=" + coverage_len);
-                CloseableIterator<SAMRecord> iterator = sfr.queryOverlapping(ref_name, 1, coverage_len);
+                if (VERBOSE_MODE) System.err.println("query=" + chromosome + " size=" + coverage_len);
+                CloseableIterator<SAMRecord> iterator = sfr.queryOverlapping(chromosome, 1, coverage_len);
                 SAMRecord sr;
                 while (iterator.hasNext()) {
                     sr = iterator.next();
@@ -208,8 +199,9 @@ public class SAMFinneyCoverage {
             //  write results:
             //
             // .wig format
+            // TODO: modify how the chromosome is written
             if (has_coverage) {
-                ps.println("fixedStep chrom=" + chroms.get(chr_i).toString() + " start=1 step=1");
+                ps.println("fixedStep chrom=" + chromosome + " start=1 step=1");
                 for (i = 0; i < coverage_len; i++) {
                     ps.println(Integer.toString(coverage[i]));
                 }
@@ -217,7 +209,7 @@ public class SAMFinneyCoverage {
 
             // Run some code;
             long stopTime = System.currentTimeMillis();
-            System.err.println("CHR " + ref_name + " in " + (stopTime - startTime)/1000 + " seconds.");
+            System.err.println("CHR " + chromosome + " in " + (stopTime - startTime)/1000 + " seconds.");
         }
 
         if (null_qual > 0) {
@@ -260,10 +252,6 @@ public class SAMFinneyCoverage {
                 sc.set_output(argv[++i]);
             } else if (argv[i].equals("-stdout")) {
                 sc.set_stdout(true);
-            } else if (argv[i].equals("-chr-i-start")) {
-                SAMFinneyCoverage.CHR_I_START = Integer.parseInt(argv[++i]);
-            } else if (argv[i].equals("-chr-i-end")) {
-                SAMFinneyCoverage.CHR_I_END = Integer.parseInt(argv[++i]);
             } else {
                 System.err.println("error: unknown switch " + argv[i]);  // debug
                 System.exit(1);
