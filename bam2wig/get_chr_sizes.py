@@ -4,9 +4,10 @@ import argparse
 
 __author__ = 'mparker'
 
+
 def lt_helper(a):
     """
-    helper to sort chromosmes properly
+    helper to sort chromosomes properly
 
     :param a: sort object
     :return:
@@ -43,14 +44,12 @@ def get_chr_sizes(path_to_bam):
     :return: dict of chromosomes and their reference length
     """
     samfile = pysam.AlignmentFile(path_to_bam, "rb")
-
     chromosomes = defaultdict()
     for chr_details in samfile.header["SQ"]:
         reference_name = chr_details["SN"]
         reference_length = chr_details["LN"]
         chromosomes[reference_name] = {}
         chromosomes[reference_name]["reference_length"] = reference_length
-
     return chromosomes
 
 
@@ -61,20 +60,14 @@ def main():
                         help='bam file')
     parser.add_argument('--output', metavar='output', default=False,
                         help='output file')
-
     args = parser.parse_args()
-
     sizes = get_chr_sizes(args.bam)
     output = open(args.output,"w")
-
     for chr in sorted(sizes,cmp=__lt__):
         length = sizes[chr]["reference_length"]
-        line = "chr" + str(chr) + "\t" + str(length) + "\n"
-        line = line.replace("chrMT","chrM")
+        line =  "%s\t%s\n" % (str(chr), str(length))
         output.write(line)
-
     output.close()
-
 
 if __name__ == '__main__':
     main()
