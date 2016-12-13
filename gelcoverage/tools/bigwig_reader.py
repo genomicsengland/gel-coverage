@@ -27,12 +27,7 @@ class BigWigReader:
         # Queries the bigwig for a specific interval
         if start == end:  # do we really need this?
             end += 1
-        # Converts chromosome identifiers to the expected format with "chr" prefix
-        if type(chromosome) == int or not chromosome.startswith("chr"):
-            chromosome = "chr" + str(chromosome)
         # Read from the bigwig file
-        # TODO: why our bigwig has "chr" prefix? BAMs don't.
-        # ANSWER: this is the bigwig generation pipeline that is adding the chr prefix
         if strict:
             try:
                 coverages = self.reader.values(chromosome, start, end)
