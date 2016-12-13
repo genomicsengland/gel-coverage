@@ -9,11 +9,11 @@ from gelcoverage.test.output_verifier import OutputVerifier
 class GelCoverageRunnerTests(OutputVerifier):
 
     def setUp(self):
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.INFO)
         self.config = {
             # Sets parameters from CLI
             "bw": "../resources/test/test1.bw",
-            "configuration_file": "../resources/exon_coverage_summary.config",
+            "configuration_file": "../resources/bigwig_analyser.config",
             "panel": "Epileptic encephalopathy",
             "panel_version": "0.2",
             #"gene_list": args.gene_list,
@@ -330,3 +330,64 @@ class GelCoverageRunnerTests(OutputVerifier):
         bed.saveas('../resources/test/sample_output_8.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
+
+    def test9(self):
+        """
+        Test 9: gene list containing a gene not covered by the BAM
+        :return:
+        """
+        self.config["panel"] = None
+        self.config["panel_version"] = None
+        self.config["bw"] = "../resources/test/test2.bw"
+        self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE,PTEN"
+        self.config["exon_padding"] = 0
+        expected_gene_list = map(
+            lambda x: unicode(x),
+            self.config["gene_list"].split(",")
+        )
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_9.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_9.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+        self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
+                         msg="Uncovered genes should be of length 1")
+        self.assertEqual(output["results"]["uncovered_genes"][0]["name"], "PTEN")
+
+    def test10(self):
+        """
+        Test 10: gene list containing only a gene not covered by the BAM
+        :return:
+        """
+        self.config["panel"] = None
+        self.config["panel_version"] = None
+        self.config["bw"] = "../resources/test/test2.bw"
+        self.config["gene_list"] = "PTEN"
+        self.config["exon_padding"] = 0
+        expected_gene_list = map(
+            lambda x: unicode(x),
+            self.config["gene_list"].split(",")
+        )
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_10.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_10.bed')
+        # Runs verifications on output JSON
+        self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
+                         msg="Uncovered genes should be of length 1")
+        self.assertEqual(output["results"]["uncovered_genes"][0]["name"], "PTEN")

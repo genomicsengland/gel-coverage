@@ -116,6 +116,9 @@ def compute_coding_region_statistics(genes):
         "stats": None,
         "chrs": []
     }
+    # Avoids failing when no genes have been reported (might be related with wrong BAM and/or gene list)
+    if len(genes) == 0:
+        return results
     # Compute the stats aggregated for union transcript
     genes_stats = [x["union_tr"]["stats"] for x in genes]
     total_bases = int(np.sum([x["bases"] for x in genes_stats]))
