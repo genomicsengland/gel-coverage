@@ -2,7 +2,7 @@ bam=$1
 bigwig=$2
 
 
-java \
+/genomes/software/apps/jdk1.8.0_45/bin/java \
   -jar /home/pferreiro/src/gel-coverage//bam2wig/gel-coverage-jar-with-dependencies.jar \
   --bam ${bam} \
   --output - \
