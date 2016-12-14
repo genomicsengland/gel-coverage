@@ -2,7 +2,6 @@ import numpy as np
 import logging
 import itertools
 import operator
-import gelcoverage.tools.bed_parser as bed_parser
 
 
 def find_gaps(coverages, start_position, coverage_threshold):
@@ -174,7 +173,7 @@ def compute_coding_region_statistics(genes):
     logging.info("Coding region statistics computed!")
     return results
 
-def compute_whole_genome_statistics(bigwig_reader, bed = None, chunk_size = 100000):
+def compute_whole_genome_statistics(bigwig_reader, bed_reader = None, chunk_size = 100000):
     """
     Iterates through the whole genome in a sliding window to obtain some metrics
     :param bigwig_reader:
@@ -185,12 +184,12 @@ def compute_whole_genome_statistics(bigwig_reader, bed = None, chunk_size = 1000
         "stats" : None,
         "chrs" : []
     }
-    if bed is None:
+    if bed_reader.is_null_bed:
         logging.info("Running on all chromosomes defined in the bigwig.")
         analysis_regions = bigwig_reader.get_chromosome_lengths()
     else:
         logging.info("Running on the regions provided in a bed file in --wg-region.")
-        analysis_regions = bed_parser.get_regions_dictionary(bed)
+        analysis_regions = bed_reader.get_regions_dictionary()
     # Iterates each chromosome
     chr_stats = {}
     for chromosome, regions in analysis_regions.iteritems():

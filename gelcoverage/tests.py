@@ -2,7 +2,7 @@ import unittest
 import json
 import logging
 import pybedtools
-from gelcoverage.runner import GelCoverageRunner
+from gelcoverage.runner import GelCoverageRunner, GelCoverageInputError
 from gelcoverage.test.output_verifier import OutputVerifier
 
 
@@ -266,7 +266,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
+            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
         runner = GelCoverageRunner(
             config=self.config
         )
@@ -280,6 +280,30 @@ class GelCoverageRunnerTests(OutputVerifier):
         bed.saveas('../resources/test/sample_output_6.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
+
+    def test6_1(self):
+        """
+        Test 6.1: provided bed of nonN regions and whole genome metrics enabled.
+        Different chromosome notations, should fail.
+        :return:
+        """
+        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "Epileptic encephalopathy"
+        self.config["panel_version"] = "0.2"
+        self.config["exon_padding"] = 0
+        self.config["wg_stats_enabled"] = True
+        self.config["wg_regions"] = \
+            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
+        try:
+            runner = GelCoverageRunner(
+                config=self.config
+            )
+            caught_exception = False
+        except GelCoverageInputError:
+            caught_exception = True
+        self.assertTrue(caught_exception, msg="It should have raised an exception as bed and bigwig are using"
+                                              "different chromosome notations")
 
     def test7(self):
         """

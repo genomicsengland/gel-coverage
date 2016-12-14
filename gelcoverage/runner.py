@@ -1,11 +1,14 @@
 import logging
-import pybedtools
 
 import gelcoverage.stats.coverage_stats as coverage_stats
 from gelcoverage.tools.cellbase_helper import CellbaseHelper
 from gelcoverage.tools.panelapp_helper import PanelappHelper
 from gelcoverage.tools.bigwig_reader import BigWigReader, UncoveredIntervalException
+from gelcoverage.tools.bed_reader import BedReader
 
+
+class GelCoverageInputError(Exception):
+    pass
 
 class GelCoverageRunner:
 
@@ -35,7 +38,19 @@ class GelCoverageRunner:
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
+        self.wg_regions = self.config["wg_regions"]
+        self.bed_reader = BedReader(self.wg_regions)
         self.uncovered_genes = {}
+        self.__sanity_checks()
+
+    def __sanity_checks(self):
+        """
+        Checks on the configuration data to raise errors before starting long computations.
+        :return:
+        """
+        if not self.bed_reader.is_null_bed and self.bed_reader.has_chr_prefix != self.bigwig_reader.has_chr_prefix:
+            raise GelCoverageInputError("Bed file defining whole genome analysis region and bigwig use different "
+                                        "chromosome notations (i.e.: chr prefix).")
 
     def get_gene_list(self):
         """
@@ -395,7 +410,7 @@ class GelCoverageRunner:
         if self.is_wg_stats_enabled:
             results["whole_genome"] = coverage_stats.compute_whole_genome_statistics(
                 self.bigwig_reader,
-                self.config["wg_regions"]
+                self.bed_reader
             )
         # Add uncovered genes
         results["uncovered_genes"] = [
