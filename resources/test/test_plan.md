@@ -114,6 +114,15 @@ Reference GRCh38:
 # we don't have bigwigs for this... generating them...
 /genomes/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11
 /genomes/by_date/2016-11-23/RAREP40046/LP2000861-DNA_G06
+
+# change chromosome idetifiers to non-prefixed
+samtools view -H /genomes/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/Assembly/LP2000274-DNA_B11.bam | sed  -e 's/SN:chrM/SN:MT/' -e 's/SN:chr/SN:/'  | samtools reheader - /genomes/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/Assembly/LP2000274-DNA_B11.bam > /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bam
+
+# Extract chromosomes and their lengths from BAM header (adds chr prefix...)
+/genomes/software/apps/python2.7/bin/python /genomes/software/apps/gel-coverage/bam2wig/get_chr_sizes.py --bam /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bam --output /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.chr
+
+# Creates the bigwig
+/genomes/software/apps/jdk1.8.0_45/bin/java -jar ~/src/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bam -stdout | /genomes/software/src/ucsc/wigToBigWig stdin /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.chr /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bw
 ```
 
 Expected results for percentage of bases >= 15x for the previous samples on GRCh38:
@@ -179,10 +188,10 @@ Run the whole exome coverage analysis on a cancer whole genome sample.
 
 * Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
 
-Beware that the __output JSON is 23 GB__.
+Beware that the __output JSON is 4 GB__.
 
-Status: **PASSED** without automated verification
-Execution time: 328m
+Status: **FAILED** (invalid chromosome tag in JSON)
+Execution time: 4h28m
 
 Run the following job:
 ```
@@ -216,7 +225,7 @@ Run a panel coverage analysis  on a cancer whole genome sample.
 * Panel version: 1.3
 
 Status: **PASSED**
-Execution time: 62m
+Execution time: 57m
 
 Run the following job:
 ```
@@ -254,7 +263,7 @@ Run a gene list coverage analysis  on a cancer whole genome sample.
 * Gene list: ABL1,EVI1,MYC,APC,IL2,TNFAIP3,ABL2,EWSR1,MYCL1,ARHGEF12,JAK2,TP53,AKT1,FEV,MYCN,ATM,MAP2K4,TSC1,AKT2,FGFR1 
 
 Status: **PASSED**
-Execution time: 71m
+Execution time: 58m
 
 Run the following job:
 ```
@@ -290,10 +299,10 @@ Run the whole exome coverage analysis on a rare disease whole genome sample.
 
 * Bigwig: /genomes/analysis/by_date/2016-02-15/CH00349553/LP2000873-DNA_B02/coverage/LP2000873-DNA_B02.bw
 
-Beware that the __output JSON is 24 GB__.
+Beware that the __output JSON is 4.2 GB__.
 
-Status: **PASSED** without automated verification
-Execution time: 318m
+Status: **FAILED** (invalid chromosome tag in JSON)
+Execution time: 4h24m
 
 Run the following job:
 ```
@@ -326,8 +335,8 @@ Run a panel coverage analysis  on a rare disease whole genome sample.
 * Panel name: "Charcot-Marie-Tooth disease"
 * Panel version: 1.1
 
-Status: **PASSED**
-Execution time: 64m
+Status: **FAILED (%>=15x needs further verification)** (uncovered genes chromosome tag)
+Execution time: 56m
 
 Run the following job:
 ```
@@ -357,6 +366,8 @@ Run the automated verifications on the output JSON as follows:
 /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test7.json
 ```
 
+Check that the percentage of bases >=15x at whole genome is of 95.96680. **It is of 89.534%**
+
 ### Test 8
 
 Run a gene list coverage analysis on a rare disease whole genome sample.
@@ -365,8 +376,8 @@ Run a gene list coverage analysis on a rare disease whole genome sample.
 * Gene list: DIAPH1,KCNQ4,GJB3,GJB2,MYH14,DFNA5,WFS1,TECTA,COCH,EYA4,MYO7A,COL11A2,POU4F3,MYH9,ACTG1,MYO6,SIX1,SLC17A8,GRHL2,TMC1,DSPP,P2RX2,CCDC50,MYO1A,MIR96,TJP2
 (Clinical Manifestations and Molecular Genetics of Known Genes Causing Autosomal Dominant Nonsyndromic Hearing Impairment from GeneReviews)
 
-Status: **PASSED**
-Execution time: 64m 
+Status: **%>=15x needs further verification**
+Execution time: 56m 
 
 Run the following job:
 ```
@@ -396,19 +407,60 @@ Run the automated verifications on the output JSON as follows:
 /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test5.json
 ```
 
+Check that the percentage of bases >=15x at whole genome is of 98.25317. **It is of 89.504%**
+
+### Test 8.1
+
+Same as 8 but computing the whole genome statistics only on non N regions.
+
+* Bigwig: /genomes/analysis/by_date/2014-12-18/RAREP01384/LP2000274-DNA_D01/coverage/LP2000274-DNA_D01.bw
+* Whole genome region: /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
+
+**Observed %>=15x**: 96.924%
+**Expected %>=15x**: 98.25317%
+
+### Test 8.2
+
+Same as 8.1
+
+* Bigwig: /genomes/analysis/by_date/2016-02-15/CH00349553/LP2000873-DNA_B02/coverage/LP2000873-DNA_B02.bw
+* Whole genome region: /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
+
+**Observed percentage >= 15x**: 91.027%
+**Expected percentage >= 15x**: 93.20164%
+
+### Test 8.3
+
+Same as 8.1
+
+* Bigwig: /genomes/analysis/by_date/2015-01-08/RAREP01497/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.bw
+* Whole genome region: /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
+
+**Observed percentage >= 15x**: 92.528%
+**Expected percentage >= 15x**: 95.96680
+
+### Test 8.4
+
+Same as 8.1 
+
+* Bigwig: /genomes/analysis/by_date/2015-03-20/RAREP01974/LP2000731-DNA_H10/coverage/LP2000731-DNA_H10.bw
+* Whole genome region: /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
+
+**Observed percentage >= 15x**: 94.75%
+**Expected percentage >= 15x**: 99.27863
+
+
 ### Test 9
 
-Run the whole exome coverage analysis providing a bed file with the nonN regions for the whole genome statistics.
+Run a panel coverage analysis providing a bed file with the nonN regions for the whole genome statistics.
 
 * Bigwig: /genomes/analysis/by_date/2016-09-27/HX01166477/CancerLP3000079-DNA_F03_NormalLP3000067-DNA_C12/coverage/LP3000079-DNA_F03.bw
 * Whole genome region: /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
 * Panel name: Familial colon cancer
 * Panel version: 1.3
 
-Beware that the __output JSON is ?????? GB__.
-
-Status: **RUNNING**
-Execution time: ???
+Status: **PASSED**
+Execution time: 51m
 
 Run the following job:
 ```
@@ -446,10 +498,10 @@ Run the whole exome coverage analysis providing a bed file with the nonN regions
 * Whole genome region: /home/pferreiro/src/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
 * Exon stats disabled
 
-Beware that the __output JSON is ?????? GB__.
+Beware that the __output JSON is 262 MB__.
 
-Status: **RUNNING**
-Execution time: ???
+Status: **FAILED** (invalid chromosome tag in JSON)
+Execution time: 4h28m
 
 Run the following job:
 ```
@@ -477,5 +529,21 @@ After the job has finished you should find the following files:
 Run the automated verifications on the output JSON as follows (you may want to enqueue this in SGE):
 ```
 /genomes/software/apps/python2.7-coverage_tests/bin/python /home/pferreiro/src/gel-coverage/scripts/json_verifier.py --json /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test10.json
+```
+
+### Test 11
+
+Run a panel coverage analysis  on a rare disease whole genome sample aligned to the GRCh38.
+
+* Bigwig: /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bw
+* Panel name: "Charcot-Marie-Tooth disease"
+* Panel version: 1.1
+
+Status: **PASSED**
+Execution time: 52 m
+
+Run the following job:
+```
+qsub /home/pferreiro/src/gel-coverage/resources/test/gel-coverage.test11.sh
 ```
 
