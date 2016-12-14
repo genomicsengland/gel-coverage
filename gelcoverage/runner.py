@@ -384,7 +384,7 @@ class GelCoverageRunner:
         """
         logging.info("Starting coverage analysis")
         # Get genes annotations in BED format
-        bed = self.cellbase_helper.make_exons_bed(self.gene_list)
+        bed = self.cellbase_helper.make_exons_bed(self.gene_list, has_chr_prefix=self.bigwig_reader.has_chr_prefix)
         # Process the intervals for the coding region in the BED file
         results = self.__process_bed_file(bed)
         # Aggregate coding region statistics

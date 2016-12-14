@@ -6,6 +6,66 @@ import logging
 import gelcoverage.stats.sequence_stats as sequence_stats
 
 
+chromosome_mapping = {
+    "hsapiens" : {
+        "grch38": {
+            "1":"chr1",
+            "2":"chr2",
+            "3": "chr3",
+            "4": "chr4",
+            "5": "chr5",
+            "6": "chr6",
+            "7": "chr7",
+            "8": "chr8",
+            "9": "chr9",
+            "10": "chr10",
+            "11": "chr11",
+            "12": "chr12",
+            "13": "chr13",
+            "14": "chr14",
+            "15": "chr15",
+            "16": "chr16",
+            "17": "chr17",
+            "18": "chr18",
+            "19": "chr19",
+            "20": "chr20",
+            "21": "chr21",
+            "22": "chr22",
+            "X": "chrX",
+            "Y": "chrY",
+            "MT": "chrM"
+        },
+        "grch37": {
+            "1":"chr1",
+            "2":"chr2",
+            "3": "chr3",
+            "4": "chr4",
+            "5": "chr5",
+            "6": "chr6",
+            "7": "chr7",
+            "8": "chr8",
+            "9": "chr9",
+            "10": "chr10",
+            "11": "chr11",
+            "12": "chr12",
+            "13": "chr13",
+            "14": "chr14",
+            "15": "chr15",
+            "16": "chr16",
+            "17": "chr17",
+            "18": "chr18",
+            "19": "chr19",
+            "20": "chr20",
+            "21": "chr21",
+            "22": "chr22",
+            "X": "chrX",
+            "Y": "chrY",
+            "MT": "chrM"
+        }
+    }
+}
+
+
 class CellbaseHelper:
 
     def __init__(self, species, version, assembly, host, filter_flags, filter_biotypes):
@@ -22,6 +82,7 @@ class CellbaseHelper:
         self.filter_flags = filter_flags
         self.filter_biotypes = filter_biotypes
         self.assembly = assembly
+        self.species = species
         # Builds JSON configuration
         json_config = {
             "species": species,
@@ -36,6 +97,8 @@ class CellbaseHelper:
         config = ConfigClient(json_config)
         self.cellbase_client = CellBaseClient(config)
         self.cellbase_gene_client = self.cellbase_client.get_gene_client()
+        # Loads chromosome mapping for this specific reference
+        self.chromosome_mapping = chromosome_mapping[self.species.lower()][self.assembly.lower()]
 
     def __is_any_flag_included(self, flags):
         """
@@ -92,7 +155,7 @@ class CellbaseHelper:
         # TODO: unit test
         return cellbase_genes
 
-    def make_exons_bed(self, gene_list, filter=True):
+    def make_exons_bed(self, gene_list, filter=True, has_chr_prefix=False):
         """
         Gets all exons from cellbase and makes a bed - also calculates gc content, returns a valid bed with gc in the
         score column
@@ -128,12 +191,17 @@ class CellbaseHelper:
                         continue
                     txid = transcript["id"]
                     strand = transcript["strand"]
+                    chromosome = gene["chromosome"]
+                    if has_chr_prefix:
+                        if chromosome not in self.chromosome_mapping:
+                            continue  # skips genes not in canonical chromosomes when requires transformation
+                        chromosome = self.chromosome_mapping[chromosome]  # transforms chromosome
                     for exon in transcript["exons"]:
                         gc = sequence_stats.compute_gc_content(exon["sequence"]) if "sequence" in exon else None
                         exon_number = exon["exonNumber"]
                         row_id = gene_name + "|" + txid + "|exon" + str(exon_number)
                         all_exons.append(
-                            (gene["chromosome"], exon["start"], exon["end"], row_id, str(gc), strand))
+                            (chromosome, exon["start"], exon["end"], row_id, str(gc), strand))
         # Build BED file
         bed = pybedtools.BedTool(all_exons)
         logging.info("Gene annotations bed file built!")

@@ -162,7 +162,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Runs union transcript with exon padding 15bp
         self.config["exon_padding"] = 15
         gene_15bp_padding = {
-            "chr": "2",
+            "chr": "chr2",
             "name": "TEST",
             "trs": [
                 {
@@ -209,7 +209,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Runs union transcript with exon padding 0bp
         self.config["exon_padding"] = 0
         gene_0bp_padding = {
-            "chr": "2",
+            "chr": "chr2",
             "name": "TEST",
             "trs": [
                 {

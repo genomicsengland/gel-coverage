@@ -11,6 +11,8 @@ class BigWigReader:
         # Opens the bigwig file for reading
         self.bigwig = bigwig
         self.reader = pyBigWig.open(self.bigwig)
+        self.chromosomes = self.reader.chroms().keys()
+        self.has_chr_prefix = any([chromosome.startswith("chr") for chromosome in self.chromosomes])
         self.reported_unexisting_chr = []
 
     def read_bigwig_coverages(self, chromosome, start, end, strict = True):
@@ -24,7 +26,6 @@ class BigWigReader:
         """
         logging.debug("Queries bigwig for %s:%s-%s in %s mode" %
                       (chromosome, str(start), str(end), "strict" if strict else "non strict"))
-        # Queries the bigwig for a specific interval
         if start == end:  # do we really need this?
             end += 1
         # Read from the bigwig file
@@ -45,8 +46,7 @@ class BigWigReader:
                 if chromosome not in self.reported_unexisting_chr:
                     logging.warn("Missing chromosome in bigwig %s" % (chromosome))
                     self.reported_unexisting_chr.append(chromosome)
-                coverages = [0] * (end- start + 1)
-                #raise UncoveredIntervalException()  # keeps going
+                coverages = [0] * (end - start + 1)
         return coverages
 
     def get_chromosome_lengths(self):
