@@ -1,10 +1,12 @@
 bam=$1
 bigwig=$2
+jar=$3
+config=$4
 
-
-/genomes/software/apps/jdk1.8.0_45/bin/java \
-  -jar /genomes/software/apps/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar \
+module load java/jdk1.8.0_45
+java \
+  -jar ${jar} \
   --bam ${bam} \
   --wig - \
-  --config /genomes/software/apps/gel-coverage/resources/bigwig_analyser.config | \
-/genomes/software/src/ucsc/wigToBigWig stdin $bam.chr $bigwig
+  --config ${config} | \
+/genomes/software/src/ucsc/wigToBigWig stdin ${bam}.chr ${bigwig}
