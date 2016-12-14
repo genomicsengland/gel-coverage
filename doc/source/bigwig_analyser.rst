@@ -1,10 +1,13 @@
 bigwig_analyser
 ===============
 
-This is script calculate coverage for coding regions, using a bigwig as input. It has different execution modes.
+This script calculates coverage statistics, using a bigwig as input. It has different execution modes.
    * `--panel`: This mode will calculate the coverage metrics for one panel.
    * `--gene-list`: This mode will calculate the coverage metrics for a list of genes.
    * `none of above`: This version will calculate the coverage metrics for all genes.
+
+It will output statistics at exon, transcript, gene (by creating a union transcript), chromosome, analysis coding region
+(this is panel, gene list or whole coding region) and whole genome. The output format is JSON.
 
 How to use it from commandline
 ------------------------------
@@ -13,7 +16,7 @@ This script is executed in the following way:
 
 .. code-block:: bash
 
-    bigwig_analyser --bw <bigwig.bw> --output <otuput.json> --config <configuration.config> --wg-regions <non_n_region.bed> --disable-exon-stats
+    bigwig_analyser --bw <bigwig.bw> --output <output.json> --config <configuration.config> --wg-regions <non_n_region.bed> --disable-exon-stats
 
 .. note::
 
@@ -66,6 +69,21 @@ How to use it from python
 .. note::
 
     Please note that this process is highly dependent on the reference genome, use a different assembly o version assembly
-    will produce wrong results
+    will produce wrong results.
+
+.. note::
+
+    When running an analysis over all genes the resulting JSON will be around 4GB, unless you add the flag --disable-exon-stats,
+    but in this case you will be missing the exon level statistics and the coverage gaps.
+
+.. note::
+
+    When running an analysis in panel or gene list mode it might be useful to disable the whole genome statistics to improve performance,
+    by using the flag --disable-wg-stats.
+
+.. note::
+
+    Beware that the reference genome and chromosome notation (i.e.: chr prefix or not) should be the same in the input bigwig file and the bed file in wg-regions.
+
 
 
