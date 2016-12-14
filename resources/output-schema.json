@@ -1,0 +1,271 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Output bigwig_analyser.py script",
+    "definitions": {
+        "aggregated_stats": {
+            "type": "object",
+            "properties": {
+                "bases":      { "type": "integer"},
+                "avg":             { "type": "real"},
+                "med":  { "type": "real" },
+                "pct75":   { "type": "real" },
+                "pct25":   { "type": "real" },
+                "%<15x":   { "type": "real" },
+                "%>=15x":  { "type": "real" },
+                "%>=30x":  { "type": "real" },
+                "%>=50x":  { "type": "real"},
+                "gc":  { "type": "real"}
+            }
+        }
+    },
+    "type": "object",
+    "properties": {
+        "parameters": {
+            "description": "The input parameters used to generate this report in order to assure reproducibility and traceability",
+            "type": "object",
+            "properties": {
+                "gap_coverage_threshold": {
+                    "description": "The coverage threshold used to determine coverage gaps",
+                    "type": "integer"
+                },
+                "input_file": {
+                    "description": "The bigwig input file used to calculate coverage statistics",
+                    "type": "string"
+                },
+                "species": {
+                    "description": "The species (required for CellBase)",
+                    "type": "string"
+                },
+                "assembly": {
+                    "description": "The reference genome assembly (required for CellBase)",
+                    "type": "string"
+                },
+                "panel": {
+                    "description": "The panel name as registered in PanelApp (only present when a panel is requested from PanelApp)",
+                    "type": "string"
+                },
+                "panel_version": {
+                    "description": "The panel version in PanelApp (only present when a panel is requested from PanelApp)",
+                    "type": "string"
+                },
+                "panel_gene_confidence": {
+                    "description": "The gene confidence for genes in the panel to be considered (only present when a panel is requested from PanelApp)",
+                    "type": "string"
+                },
+                "gene_list": {
+                    "description": "The list of genes to be analysed (not present when performing whole exome analysis)",
+                    "type": "string"
+                },
+                "wg_stats_enabled": {
+                    "description": "Flag indicatingg to compute the statistics at whole genome level",
+                    "type": "bool"
+                },
+                "exon_stats_enabled": {
+                    "description": "Flag indicatingg to compute the statistics at exon level",
+                    "type": "bool"
+                },
+                "wg_regions": {
+                    "description": "Path to a bed file with the desired whole genome regions.",
+                    "type": "str"
+                }
+            }
+        },
+        "results": {
+            "description": "The coverage results as hierarchy of panel-genes-transcripts-exons",
+            "type": "object",
+            "properties": {
+                "uncovered_genes": {
+                    "description": "The list of genes not covered",
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "description": "The gene name",
+                            "type": "string"
+                        },
+                        "chr": {
+                            "description": "The chromosome",
+                            "type": "string"
+                        }
+                    }
+                },
+                "whole_genome": {
+                    "type": "object",
+                    "properties": {
+                        "stats": "#/definitions/aggregated_stats",
+                        "chrs": {
+                            "type": "array",
+                            "items": "#/definitions/aggregated_stats"
+                            }
+                        }
+                    }
+                },
+                "coding_region": {
+                    "type": "object",
+                    "properties": {
+                        "stats": "#/definitions/aggregated_stats",
+                        "chrs": {
+                            "type": "array",
+                            "items": "#/definitions/aggregated_stats"
+                            }
+                        }
+                    }
+                },
+                "genes": {
+                    "description": "The list of genes in the panel",
+                    "type": "array",
+                    "items": {
+                        "title": "Gene",
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "description": "The HGNC Symbol",
+                                "type": "string"
+                            },
+                            "chr": {
+                                "description": "The chromosome identifer (format TBD: chr1 or 1?)",
+                                "type": "string"
+                            },
+                            "union_tr":
+                            {
+                                "description": "The union transcript for the gene",
+                                "type": "object",
+                                "properties":{
+                                    "exons":{
+                                        "description": "The list of exons in the union transcript without overlaps",
+                                        "type": "array",
+                                        "items": {
+                                            "title": "Exon",
+                                            "type": "object",
+                                            "properties": {
+                                                "exon": {
+                                                    "description": "The exon index in the gene",
+                                                    "type": "integer"
+                                                },
+                                                "s": {
+                                                    "description": "The exon start position",
+                                                    "type": "integer"
+                                                },
+                                                "e": {
+                                                    "description": "The exon end position",
+                                                    "type": "integer"
+                                                },
+                                                "padded_s": {
+                                                    "description": "The exon padded start position",
+                                                    "type": "integer"
+                                                },
+                                                "padded_e": {
+                                                    "description": "The exon padded end position",
+                                                    "type": "integer"
+                                                },
+                                                "l": {
+                                                    "description": "The exon's length",
+                                                    "type": "integer"
+                                                },
+                                                "stats": "#/definitions/aggregated_stats",
+                                                "gaps": {
+                                                    "description": "The contiguous sequences of bases under a certain coverage",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "title": "Gap",
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "s": {
+                                                                "description": "Gap starting position",
+                                                                "type": "integer"
+                                                            },
+                                                            "e": {
+                                                                "description": "Gap ending position",
+                                                                "type": "integer"
+                                                            },
+                                                            "l": {
+                                                                "description": "Gap length",
+                                                                "type": "integer"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "stats": "#/definitions/aggregated_stats"
+                                }
+                            },
+                            "trs": {
+                                "description": "The list of transcripts for this gene",
+                                "type": "array",
+                                "items": {
+                                    "title": "Transcript",
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "description": "The Ensembl transcript identifier",
+                                            "type": "string"
+                                        },
+                                        "stats": "#/definitions/aggregated_stats",
+                                        "exons": {
+                                            "description": "The list of exons for this transcript",
+                                            "type": "array",
+                                            "items": {
+                                                "title": "Exon",
+                                                "type": "object",
+                                                "properties": {
+                                                    "exon": {
+                                                        "description": "The exon index in the gene",
+                                                        "type": "integer"
+                                                    },
+                                                    "s": {
+                                                        "description": "The exon start position",
+                                                        "type": "integer"
+                                                    },
+                                                    "e": {
+                                                        "description": "The exon end position",
+                                                        "type": "integer"
+                                                    },
+                                                    "padded_s": {
+                                                        "description": "The exon padded start position",
+                                                        "type": "integer"
+                                                    },
+                                                    "padded_e": {
+                                                        "description": "The exon padded end position",
+                                                        "type": "integer"
+                                                    },
+                                                    "l": {
+                                                        "description": "The exon's length",
+                                                        "type": "integer"
+                                                    },
+                                                    "stats": "#/definitions/aggregated_stats",
+                                                    "gaps": {
+                                                        "description": "The contiguous sequences of bases under a certain coverage",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "title": "Gap",
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "s": {
+                                                                    "description": "Gap starting position",
+                                                                    "type": "integer"
+                                                                },
+                                                                "e": {
+                                                                    "description": "Gap ending position",
+                                                                    "type": "integer"
+                                                                },
+                                                                "l": {
+                                                                    "description": "Gap length",
+                                                                    "type": "integer"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

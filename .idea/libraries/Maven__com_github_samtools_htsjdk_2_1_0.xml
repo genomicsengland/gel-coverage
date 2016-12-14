@@ -3,6 +3,7 @@
     <CLASSES>
       <root url="jar://$MAVEN_REPOSITORY$/com/github/samtools/htsjdk/2.1.0/htsjdk-2.1.0.jar!/" />
     </CLASSES>
+    <JAVADOC />
     <SOURCES>
       <root url="jar://$MAVEN_REPOSITORY$/com/github/samtools/htsjdk/2.1.0/htsjdk-2.1.0-sources.jar!/" />
     </SOURCES>

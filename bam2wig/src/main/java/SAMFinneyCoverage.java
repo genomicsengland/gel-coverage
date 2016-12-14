@@ -1,5 +1,7 @@
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.CloseableIterator;
+import org.apache.commons.cli.*;
+import org.ini4j.Wini;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -8,31 +10,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
+
 public class SAMFinneyCoverage {
     private int BASE_MIN_QUALITY = 30;
     private int MAPPING_MIN_QUALITY = 10;
+    private boolean SKIP_DUPLICATE_READS = true;
     private static boolean VERBOSE_MODE = false;
-    private static boolean SKIP_DUPLICATE_READS = true;
     private static boolean STDOUT = false;
-    public static int CHR_I_START = 0;
-    public static int CHR_I_END = 24;
-
-    private List<Integer> chr_sizes = new ArrayList();
+    private Map<String, Integer> chr_sizes = new HashMap<String, Integer>();
 
     private String outfile;
     private File bam_file = null;
 
     public void set_output(String outfile) {
-        this.outfile = outfile + ".wig";
+        this.outfile = outfile;
     }
 
     public void set_base_quality(int quality) {
         this.BASE_MIN_QUALITY = quality;
     }
 
-    public void set_mapping_quality(int quality) {
-        this.MAPPING_MIN_QUALITY = quality;
-    }
+    public void set_mapping_quality(int quality) { this.MAPPING_MIN_QUALITY = quality; }
+
+    public void set_skip_duplicate_reads(boolean skip) { this.SKIP_DUPLICATE_READS = skip; }
 
     public void set_bam_file(File f) {
         bam_file = f;
@@ -42,100 +42,66 @@ public class SAMFinneyCoverage {
         VERBOSE_MODE = v;
     }
 
-    public void set_skip_duplicates(boolean v) {
-        SKIP_DUPLICATE_READS = v;
-    }
-
     public void set_stdout(boolean v) {
-        this.STDOUT = v;
+        SAMFinneyCoverage.STDOUT = v;
     }
 
     public void print_thresholds() {
         System.err.println("Minimum base quality: " + BASE_MIN_QUALITY);
         System.err.println("Minimum mapping quality: " + MAPPING_MIN_QUALITY);
-        if (SKIP_DUPLICATE_READS) {
-            System.err.println("Skipping duplicated reads.\n");
-        } else {
-            System.err.println("Considering duplicated reads.\n");
-        }
     }
 
     public void find_coverage() throws IOException {
-        SAMFileReader sfr = new SAMFileReader(bam_file);
 
+        // Open the input BAM/SAM file
+        SAMFileReader sfr = new SAMFileReader(bam_file);
+        // Open the output WIG file
         if (outfile == null) outfile = bam_file.getName() + ".wig";
         WorkingFile wf = null;
         FileOutputStream fos;
-
-        if (STDOUT) {
+        if (SAMFinneyCoverage.STDOUT) {
             fos = new FileOutputStream(FileDescriptor.out);
         } else {
             wf = new WorkingFile(outfile);
             fos = new FileOutputStream(wf);
         }
-
         OutputStream os = new BufferedOutputStream(fos);
-
-
-        /*if (outfile.indexOf(".gz") == outfile.length() - 3) {
-            System.err.println("Generating GZ wig file: " + outfile);
-            os = new GZIPOutputStream(os);
-        }*/
-
         PrintStream ps = new PrintStream(os);
-
+        // Read chromosomes and their length from BAM header
         List<String> chr_labels = new ArrayList<String>();
-        List<Chromosome> chroms = new ArrayList<Chromosome>();
-
-        //
-        //  find .bam names for each chr and verify sizes (genome version):
-        //
         SAMFileHeader h = sfr.getFileHeader();
         SAMSequenceDictionary dict = h.getSequenceDictionary();
-
         WorkingFile chr_wf = new WorkingFile(outfile.replace(".wig", ".chr"));
         PrintStream chr_os = new PrintStream(new BufferedOutputStream(new FileOutputStream(chr_wf)));
-
         for (SAMSequenceRecord ssr : dict.getSequences()) {
-            String ref_name = ssr.getSequenceName();
-            Chromosome c = Chromosome.valueOfString(ref_name);
-            if (c != null) {
-                int ref_len = ssr.getSequenceLength();
-                chr_labels.add(ref_name);
-                chroms.add(c);
-                chr_sizes.add(ref_len);
-                chr_os.println(c.toString() + "\t" + ref_len);
-            }
+            String chromosome = ssr.getSequenceName();
+            chr_labels.add(chromosome);
+            Integer ref_len = new Integer(ssr.getSequenceLength());
+            chr_sizes.put(chromosome, ref_len);
+            chr_os.println(chromosome + "\t" + ref_len);
         }
         chr_os.close();
         chr_wf.finish();
-
-        //
-        //  generate coverage
-        //
+        // Create WIG coverages file
         byte[] read, baseQuals;
         int read_i, ref_i, i, end;
         int null_qual = 0;
         int qual_length_problem = 0;
         int qual_bounds_problem = 0;
-
-        for (int chr_i = CHR_I_START; chr_i <= CHR_I_END; chr_i++) {
+        for (String chromosome: chr_labels) {
             long startTime = System.currentTimeMillis();
-
-            int coverage_len = chr_sizes.get(chr_i);
+            int coverage_len = chr_sizes.get(chromosome).intValue();
             int[] coverage = new int[coverage_len];
-
             //
             //  generate coverage:
             //
-            String ref_name = chr_labels.get(chr_i);
             boolean has_coverage = false;
             long record_count = 0;
-            if (ref_name == null) {
-                System.err.println("WTF: no .bam mappings vs. chr index " + chr_i);  // debug
+            if (chromosome == null) {
+                System.err.println("WTF: no .bam mappings vs. chr index " + chromosome);  // debug
             } else {
-                if (VERBOSE_MODE) System.err.println("query=" + ref_name + " size=" + coverage_len);
-                CloseableIterator<SAMRecord> iterator = sfr.queryOverlapping(ref_name, 1, coverage_len);
+                if (VERBOSE_MODE) System.err.println("query=" + chromosome + " size=" + coverage_len);
+                CloseableIterator<SAMRecord> iterator = sfr.queryOverlapping(chromosome, 1, coverage_len);
                 SAMRecord sr;
                 while (iterator.hasNext()) {
                     sr = iterator.next();
@@ -157,12 +123,9 @@ public class SAMFinneyCoverage {
                     if (sr.getReadUnmappedFlag()) continue;
                     if (SKIP_DUPLICATE_READS && sr.getDuplicateReadFlag()) continue;
                     if (sr.getMappingQuality() < MAPPING_MIN_QUALITY) continue;
-
                     has_coverage = true;
-
                     read = sr.getReadBases();
                     baseQuals = sr.getBaseQualities();
-
                     if (baseQuals.length == 0) {
                         if (null_qual++ == 0)
                             System.err.println("ERROR: 0-length qual array for " + sr.getReadName() + " (only warning, counts at end of run)");  // debug
@@ -174,7 +137,6 @@ public class SAMFinneyCoverage {
                         // complain only once
                         continue;
                     }
-
                     for (AlignmentBlock ab : sr.getAlignmentBlocks()) {
                         read_i = ab.getReadStart() - 1;
                         ref_i = ab.getReferenceStart() - 1;
@@ -190,7 +152,6 @@ public class SAMFinneyCoverage {
                                     for (int q = 0; q < baseQuals.length; q++) {
                                         System.err.println(q + "=" + baseQuals[q]);  // debug
                                     }
-
                                 }
                             } else {
                                 if (baseQuals[i] >= BASE_MIN_QUALITY && ref_i >= 0 && ref_i < coverage_len) {
@@ -203,21 +164,18 @@ public class SAMFinneyCoverage {
                 iterator.close();
             }
             if (VERBOSE_MODE) System.err.println("records returned: " + record_count);
-
             //
             //  write results:
             //
             // .wig format
             if (has_coverage) {
-                ps.println("fixedStep chrom=" + chroms.get(chr_i).toString() + " start=1 step=1");
+                ps.println("fixedStep chrom=" + chromosome + " start=1 step=1");
                 for (i = 0; i < coverage_len; i++) {
                     ps.println(Integer.toString(coverage[i]));
                 }
             }
-
-            // Run some code;
             long stopTime = System.currentTimeMillis();
-            System.err.println("CHR " + ref_name + " in " + (stopTime - startTime)/1000 + " seconds.");
+            System.err.println("CHR " + chromosome + " in " + (stopTime - startTime)/1000 + " seconds.");
         }
 
         if (null_qual > 0) {
@@ -239,56 +197,81 @@ public class SAMFinneyCoverage {
 
     }
 
-    public static void main(String[] argv) {
+    public static void main(String[] argv) throws IOException {
         SAMFileReader.setDefaultValidationStringency(SAMFileReader.getDefaultValidationStringency().SILENT);
-
         File bam_file = null;
         SAMFinneyCoverage sc = new SAMFinneyCoverage();
-
-        for (int i = 0; i < argv.length; i++) {
-            if (argv[i].equals("-bam")) {
-                bam_file = new File(argv[++i]);
-            } else if (argv[i].equals("-verbose")) {
+        // Defines command line
+        String usage = "bam2wig -bam <BAM> -wig <WIG>";
+        Options options = new Options();
+        options.addOption("b", "bam", true, "The input BAM file");
+        options.addOption("w", "wig", true, "The output WIG file");
+        options.addOption("c", "config", true, "The configuration file");
+        options.addOption("h", "help", false, "This help menu");
+        options.addOption("v", "verbose", false, "Outputs lengthy logs");
+        HelpFormatter formatter = new HelpFormatter();
+        try {
+            // Parses the command line
+            CommandLineParser parser = new BasicParser();
+            CommandLine cmd = parser.parse(options, argv);
+            // Shows help message
+            if (cmd.hasOption("h")) {
+                formatter.printHelp(usage, options);
+                System.exit(1);
+            }
+            // Sets verbose mode
+            if (cmd.hasOption("v")) {
                 sc.set_verbose(true);
-            } else if (argv[i].equals("-count-duplicates")) {
-                sc.set_skip_duplicates(false);
-            } else if (argv[i].equals("-base-quality")) {
-                sc.set_base_quality(Integer.parseInt(argv[++i]));
-            } else if (argv[i].equals("-mapping-quality")) {
-                sc.set_mapping_quality(Integer.parseInt(argv[++i]));
-            } else if (argv[i].equals("-output")) {
-                sc.set_output(argv[++i]);
-            } else if (argv[i].equals("-stdout")) {
-                sc.set_stdout(true);
-            } else if (argv[i].equals("-chr-i-start")) {
-                SAMFinneyCoverage.CHR_I_START = Integer.parseInt(argv[++i]);
-            } else if (argv[i].equals("-chr-i-end")) {
-                SAMFinneyCoverage.CHR_I_END = Integer.parseInt(argv[++i]);
+            }
+            // Reads input BAM
+            if (cmd.hasOption("b")) {
+                String bam_input = cmd.getOptionValue("b");
+                sc.set_bam_file(new File(bam_input));
             } else {
-                System.err.println("error: unknown switch " + argv[i]);  // debug
+                // why is it so difficult to implement a required parameter in Java libs!?
+                System.out.println("Missing argument -bam");
+                formatter.printHelp(usage, options);
+                System.exit(1);
+            }
+            // Opens output WIG
+            if (cmd.hasOption("w")) {
+                String wig_output = cmd.getOptionValue("w");
+                if (wig_output.equals("-")) {
+                    sc.set_stdout(true);
+                } else {
+                    sc.set_output(wig_output);
+                }
+            } else {
+                System.out.println("Missing argument -wig");
+                formatter.printHelp(usage, options);
+                System.exit(1);
+            }
+            // Opens configuration file
+            if (cmd.hasOption("c")) {
+                String config_file = cmd.getOptionValue("c");
+                Wini ini = new Wini(new File(config_file));
+                sc.set_base_quality(ini.get("bam2wig", "base_quality", int.class));
+                sc.set_mapping_quality(ini.get("bam2wig", "mapping_quality", int.class));
+                sc.set_skip_duplicate_reads(ini.get("bam2wig", "filter_duplicates", boolean.class));
+            } else {
+                System.out.println("Missing argument -config");
+                formatter.printHelp(usage, options);
                 System.exit(1);
             }
         }
-
-        String error = null;
-        if (bam_file == null) {
-            error = "specify -bam [file]";
+        catch (ParseException e) {
+            System.out.println( "Incorrect call:" + e.getMessage() );
+            formatter.printHelp(usage, options);
         }
-
-        if (error != null) {
-            System.err.println("ERROR: " + error);  // debug
-        } else if (bam_file != null) {
-            try {
-                sc.set_bam_file(bam_file);
-                sc.print_thresholds();
-                sc.find_coverage();
-            } catch (Exception e) {
-                System.err.println("ERROR: " + e);  // debug
-                e.printStackTrace();
-                System.exit(1);
-            }
+        // Runs the creation of the wig file
+        try {
+            sc.print_thresholds();
+            sc.find_coverage();
+        } catch (Exception e) {
+            System.err.println("ERROR: " + e);  // debug
+            e.printStackTrace();
+            System.exit(1);
         }
-
     }
 }
 
