@@ -62,7 +62,7 @@ This file will be found in `/genomes/resources/genomeref/...`.
 #### How to use it from python
 
 
-'''
+```
 #Create a dictionary with the configuration
 config = {
     "bw" : '/path/to/bigwig.bw',
@@ -97,7 +97,7 @@ with codecs.open(args.output, 'w', 'utf8') as output_file:
     )
 # Saves the analysed region as a BED file
 bed.saveas(args.output + ".bed")
-'''
+```
 
 
 
