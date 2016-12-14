@@ -4,7 +4,7 @@ setup(
     name='gelcoverage',
     version='1.1.0',
     packages=['gelcoverage'],
-    scripts=['scripts/bigwig_analyser.py'],
+    scripts=['scripts/bigwig_analyser'],
     url='',
     license='',
     author='priesgo',
