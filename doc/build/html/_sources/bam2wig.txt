@@ -16,7 +16,7 @@ Mode of use:
 .. code-block:: bash
 
    module load java/jdk1.8.0_45
-   java -jar /genomes/software/apps/gel-coverage/target/bam2wig-jar-with-dependencies.jar --bam <BAM_FILE> --wig <WIG_FILE> --config <CONFIG>
+   java -jar /genomes/software/apps/gel-coverage/target/bam2wig-jar-with-dependencies.jar --bam <BAM_FILE> --output-prefix <OUTPUT_PREFIX> --config <CONFIG>
 
 
 Where the config file has the following content:
@@ -30,7 +30,7 @@ Where the config file has the following content:
 
 .. note::
 
-   You will get a wig file and a file with *.chr extension.
+   You will get the following files: $OUTPUT_PREFIX.wig and $OUTPUT_PREFIX.chr
 
 Due to the size of the output it is quite convenient produce a bigWig. In our pipeline should be run in the following way:
 
@@ -38,8 +38,7 @@ Due to the size of the output it is quite convenient produce a bigWig. In our pi
 
    module load java/jdk1.8.0_45
    module load python
-   java -jar /genomes/software/apps/gel-coverage/bam2wig-jar-with-dependencies.jar --bam <BAM_FILE> --wig <WIG_FILE>
-   wigToBigWig <WIG_FILE> <CHR_FILE> <BIGWIG_FILE>
+   java -jar /genomes/software/apps/gel-coverage/bam2wig-jar-with-dependencies.jar --bam <BAM_FILE> --output-prefix <OUTPUT_PREFIX> --config <CONFIG> --stdout | wigToBigWig stdin <OUTPUT_PREFIX>.chr <BIGWIG_FILE>
 
 
 

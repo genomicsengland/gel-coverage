@@ -140,7 +140,7 @@ mvn package
 </div>
 <p>Mode of use:</p>
 <div class="highlight-bash"><div class="highlight"><pre>module load java/jdk1.8.0_45
-java -jar /genomes/software/apps/gel-coverage/target/bam2wig-jar-with-dependencies.jar --bam &lt;BAM_FILE&gt; --wig &lt;WIG_FILE&gt; --config &lt;CONFIG&gt;
+java -jar /genomes/software/apps/gel-coverage/target/bam2wig-jar-with-dependencies.jar --bam &lt;BAM_FILE&gt; --output-prefix &lt;OUTPUT_PREFIX&gt; --config &lt;CONFIG&gt;
 </pre></div>
 </div>
 <p>Where the config file has the following content:</p>
@@ -152,13 +152,12 @@ filter_duplicates : <span class="nb">true</span>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">You will get a wig file and a file with <a href="#id1"><span class="problematic" id="id2">*</span></a>.chr extension.</p>
+<p class="last">You will get the following files: $OUTPUT_PREFIX.wig and $OUTPUT_PREFIX.chr</p>
 </div>
 <p>Due to the size of the output it is quite convenient produce a bigWig. In our pipeline should be run in the following way:</p>
 <div class="highlight-bash"><div class="highlight"><pre>module load java/jdk1.8.0_45
 module load python
-java -jar /genomes/software/apps/gel-coverage/bam2wig-jar-with-dependencies.jar --bam &lt;BAM_FILE&gt; --wig &lt;WIG_FILE&gt;
-wigToBigWig &lt;WIG_FILE&gt; &lt;CHR_FILE&gt; &lt;BIGWIG_FILE&gt;
+java -jar /genomes/software/apps/gel-coverage/bam2wig-jar-with-dependencies.jar --bam &lt;BAM_FILE&gt; --output-prefix &lt;OUTPUT_PREFIX&gt; --config &lt;CONFIG&gt; --stdout <span class="p">|</span> wigToBigWig stdin &lt;OUTPUT_PREFIX&gt;.chr &lt;BIGWIG_FILE&gt;
 </pre></div>
 </div>
 </div>

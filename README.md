@@ -1,43 +1,6 @@
-## Gel Coverage Pipeline
+# GEL Coverage Pipeline
 
-### .wig File Generation
-
-Build and compile:
-
-```
-mvn compile
-mvn package
-```
-
-On Skyscape:
-
-```bash
-module load java/jdk1.8.0_45
-java -jar /genomes/software/apps/gel-coverage/target/bam2wig-jar-with-dependencies.jar --bam <BAM_FILE> --wig <WIG_FILE> --config <CONFIG_FILE>
-```
-
-Two files will be produced <WIG_FILE> with extension .wig and a chromosomes file replacing the extension by .chr (this is the chromosome size file required for bigwig generation)
-
-You can also write to stdout for piping purposes.
-
-```bash
-java -jar /genomes/software/apps/gel-coverage/bam2wig-jar-with-dependencies.jar --bam <BAM_FILE> --wig - --config <CONFIG_FILE>
-```
-
-#### Run Time
-
-It will take roughly 1hr for a 30x rare disease/cancer germline bam, for a 75x cancer bam it'll be about 2hrs. (To be validated...)
-
-#### Piping to generate bigWig
-
-You can pipe the wig to generate a bigWig without having to generate the wig 1st
-
-```bash
-module load java/jdk1.8.0_45
-java -jar /genomes/software/apps/gel-coverage/target/bam2wig-jar-with-dependencies.jar --bam /genomes/by_date/2014-11-17/RAREP00885/LP2000275-DNA_D09/Assembly/LP2000275-DNA_D09.bam --wig - --config <CONFIG_FILE> | /accelrys/apps/gel/toolkit/bin/linux64/ucsc/wigToBigWig stdin /genomes/analysis/rare_disease/coverage/LP2000275-DNA_D09.chr /genomes/analysis/rare_disease/coverage/LP2000275-DNA_D09.bw
-```
-
-### BigWig coverage analyser
+## BigWig coverage analyser
 
 This script calculates coverage statistics, using a bigwig as input. It has different execution modes.
    * `--panel`: This mode will calculate the coverage metrics for one panel.
@@ -47,7 +10,7 @@ This script calculates coverage statistics, using a bigwig as input. It has diff
 It will output statistics at exon, transcript, gene (by creating a union transcript), chromosome, analysis coding region
 (this is panel, gene list or whole coding region) and whole genome. The output format is JSON.
 
-#### How to use it from commandline
+### How to use it from commandline
 
 This script is executed in the following way:
 
@@ -59,7 +22,7 @@ bigwig_analyser --bw <bigwig.bw> --output <output.json> --config <configuration.
 This file will be found in `/genomes/resources/genomeref/...`.
 
 
-#### How to use it from python
+### How to use it from python
 
 
 ```
@@ -82,7 +45,8 @@ config = {
     "exon_padding": 15,
     "wg_stats_enabled": True,
     "wg_regions": '/path/to/non_n_regions.bed',
-    "exon_stats_enabled": False
+    "exon_stats_enabled": False,
+    "coding_region_stats_enabled": True
 }
 
 gel_coverage_engine = GelCoverageRunner(config)
@@ -103,7 +67,7 @@ bed.saveas(args.output + ".bed")
 
 **NOTE:** Please note that this process is highly dependent on the reference genome, use a different assembly o version assembly will produce wrong results.
 
-**NOTE:** When running an analysis over all genes the resulting JSON will be around 4GB, unless you add the flag --disable-exon-stats,
+**NOTE:** When running an analysis over all genes the resulting JSON will be around 1.5GB, unless you add the flag --disable-exon-stats,
 but in this case you will be missing the exon level statistics and the coverage gaps.
 
 **NOTE:** When running an analysis in panel or gene list mode it might be useful to disable the whole genome statistics to improve performance, by using the flag --disable-wg-stats.
@@ -111,3 +75,24 @@ but in this case you will be missing the exon level statistics and the coverage 
 **NOTE:** Beware that the reference genome and chromosome notation (i.e.: chr prefix or not) should be the same in the input bigwig file and the bed file in wg-regions.
 
 
+### Different configurations
+
+To program iterates through the bigwig file twice: the first for the analysis of the coding region (panel, gene list or
+full) and the second for the analysis of the whole genome.
+
+* To **run statistics only for a panel** from exon level up to panel level, provide a panel (`panel`) and panel
+version (`panel_version`) and disable the whole genome statistics (`"wg_stats_enabled": False`), while making sure that
+the coding region and the exon level statistics are enabled (`"coding_region_stats_enabled": True` and `"exon_stats_enabled": True`).
+* To **run statistics only for a gene list** from exon level up to gene list level, provide a gene list (`gene_list`) instead
+of panel and panel version and use the same configuration as above.
+* To **run statistics only for all genes in the coding region** do not provide panel (`panel`) or gene list (`gene_list`),
+disable the whole genome statistics (`"wg_stats_enabled": False`) and the exon level statistics (`"exon_stats_enabled": False`)
+(the output JSON will be over 1 GB if exon stats are enabled for all genes),
+while making sure that the coding region is enabled (`"coding_region_stats_enabled": True`).
+* To **run only whole genome statistics** enable `"wg_stats_enabled": True` and disable the coding region statistics
+(`"coding_region_stats_enabled": False`). The whole genome analysis might be used in combination with a bed file defining
+the region to analyse (e.g.: non N regions) that is to be passed in parameter `"wg_regions": '/path/to/non_n_regions.bed'`.
+This `wg_regions` can be used to calculate coverage over very specific regions, for instance Cosmic variants if they are set in
+a BED file.
+
+Any combination, of the previous should generate a single JSON with all the information.

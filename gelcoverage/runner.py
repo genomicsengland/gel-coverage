@@ -37,6 +37,7 @@ class GelCoverageRunner:
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
+        self.is_coding_region_stats_enabled = self.config["coding_region_stats_enabled"]
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
         self.wg_regions = self.config["wg_regions"]
         self.bed_reader = BedReader(self.wg_regions)
@@ -103,7 +104,8 @@ class GelCoverageRunner:
             "panelapp_gene_confidence": self.config["panelapp_gene_confidence"],
             "wg_stats_enabled": self.config["wg_stats_enabled"],
             "wg_regions": self.config["wg_regions"],
-            "exon_stats_enabled": self.config["exon_stats_enabled"]
+            "exon_stats_enabled": self.config["exon_stats_enabled"],
+            "coding_region_stats_enabled": self.config["coding_region_stats_enabled"]
         }
         if 'panel' in self.config and self.config['panel'] is not None \
                 and 'panel_version' in self.config and self.config['panel_version'] is not None:
@@ -300,7 +302,7 @@ class GelCoverageRunner:
         logging.info("Processed gene %s" % gene_name)
         return gene
 
-    def __process_bed_file(self, bed):
+    def __process_coding_region(self, bed):
         """
         Reads every interval defined in the BED file, gets the coverage information from the BigWig data, computes
         coverage statistics and formats the information in a JSON-friendly data structure.
@@ -313,11 +315,7 @@ class GelCoverageRunner:
             logging.error("Incorrect BED file!")
             raise RuntimeError("Incorrect BED file!")
         # Initialize results data structure
-        results = {
-            "genes": [],
-            "uncovered_genes": []
-        }
-
+        genes = []
         current_exons = []
         current_transcripts = []
         current_transcript_id = None
@@ -352,7 +350,7 @@ class GelCoverageRunner:
                     if len(current_transcripts) > 0:
                         gene = self.__create_gene(current_gene_name, current_chromosome, current_transcripts)
                         # Save previous result
-                        results["genes"].append(gene)
+                        genes.append(gene)
                     # Sets data for next gene
                     current_transcripts = []
                     current_gene_name = gene_name
@@ -375,9 +373,9 @@ class GelCoverageRunner:
             current_transcripts.append(transcript)
         if len(current_transcripts) >0:
             gene = self.__create_gene(gene_name, chromosome, current_transcripts)
-            results["genes"].append(gene)
+            genes.append(gene)
         logging.info("Coverage bigwig coding region processed!")
-        return results
+        return genes
 
     def __output(self, results):
         """
@@ -398,50 +396,59 @@ class GelCoverageRunner:
         :return: the output data structure
         """
         logging.info("Starting coverage analysis")
-        # Get genes annotations in BED format
-        bed = self.cellbase_helper.make_exons_bed(self.gene_list, has_chr_prefix=self.bigwig_reader.has_chr_prefix)
-        # Process the intervals for the coding region in the BED file
-        results = self.__process_bed_file(bed)
-        # Aggregate coding region statistics
-        results["coding_region"] = coverage_stats.compute_coding_region_statistics(
-            results["genes"]
-        )
+        results = {}
+        bed = None
+        if self.is_coding_region_stats_enabled:
+            # Get genes annotations in BED format
+            bed = self.cellbase_helper.make_exons_bed(self.gene_list, has_chr_prefix=self.bigwig_reader.has_chr_prefix)
+            # Process the intervals for the coding region in the BED file
+            results["genes"] = self.__process_coding_region(bed)
+            # Aggregate coding region statistics
+            results["coding_region"] = coverage_stats.compute_coding_region_statistics(
+                results["genes"]
+            )
+            # Add uncovered genes
+            results["uncovered_genes"] = [
+                {"name": k, "chr": v} for k, v in self.uncovered_genes.iteritems()
+                ]
+            # Removes unnecessary statistics of count bases at given coverage thresholds
+            # NOTE: the clean way would be not to store them and infer them dynamically from the percentage value...
+            for gene in results["genes"]:
+                del gene["union_tr"]["stats"]["bases_lt_15x"]
+                del gene["union_tr"]["stats"]["bases_gte_15x"]
+                del gene["union_tr"]["stats"]["bases_gte_30x"]
+                del gene["union_tr"]["stats"]["bases_gte_50x"]
+                for exon in gene["union_tr"]["exons"]:
+                    del exon["stats"]["bases_lt_15x"]
+                    del exon["stats"]["bases_gte_15x"]
+                    del exon["stats"]["bases_gte_30x"]
+                    del exon["stats"]["bases_gte_50x"]
+                for transcript in gene["trs"]:
+                    del transcript["stats"]["bases_lt_15x"]
+                    del transcript["stats"]["bases_gte_15x"]
+                    del transcript["stats"]["bases_gte_30x"]
+                    del transcript["stats"]["bases_gte_50x"]
+                    for exon in transcript["exons"]:
+                        del exon["stats"]["bases_lt_15x"]
+                        del exon["stats"]["bases_gte_15x"]
+                        del exon["stats"]["bases_gte_30x"]
+                        del exon["stats"]["bases_gte_50x"]
+            # Remove the exon statistics to save space if enabled
+            if not self.is_exon_stats_enabled:
+                for gene in results["genes"]:
+                    for transcript in gene["trs"]:
+                        del transcript["exons"]
+                    del gene["union_tr"]["exons"]
+        else:
+            logging.info("Coding region analysis disabled")
         # Compute the whole genome statistics if enabled (this is time consuming)
         if self.is_wg_stats_enabled:
             results["whole_genome"] = coverage_stats.compute_whole_genome_statistics(
                 self.bigwig_reader,
                 self.bed_reader
             )
-        # Add uncovered genes
-        results["uncovered_genes"] = [
-            {"name": k, "chr": v} for k, v in self.uncovered_genes.iteritems()
-            ]
-        # Removes unnecessary statistics of count bases at given coverage thresholds
-        # NOTE: the clean way would be not to store them and infer them dynamically from the percentage value...
-        for gene in results["genes"]:
-            del gene["union_tr"]["stats"]["bases_lt_15x"]
-            del gene["union_tr"]["stats"]["bases_gte_15x"]
-            del gene["union_tr"]["stats"]["bases_gte_30x"]
-            del gene["union_tr"]["stats"]["bases_gte_50x"]
-            for exon in gene["union_tr"]["exons"]:
-                del exon["stats"]["bases_lt_15x"]
-                del exon["stats"]["bases_gte_15x"]
-                del exon["stats"]["bases_gte_30x"]
-                del exon["stats"]["bases_gte_50x"]
-            for transcript in gene["trs"]:
-                del transcript["stats"]["bases_lt_15x"]
-                del transcript["stats"]["bases_gte_15x"]
-                del transcript["stats"]["bases_gte_30x"]
-                del transcript["stats"]["bases_gte_50x"]
-                for exon in transcript["exons"]:
-                    del exon["stats"]["bases_lt_15x"]
-                    del exon["stats"]["bases_gte_15x"]
-                    del exon["stats"]["bases_gte_30x"]
-                    del exon["stats"]["bases_gte_50x"]
-        # Remove the exon statistics to save space if enabled
-        if not self.is_exon_stats_enabled:
-            for gene in results["genes"]:
-                for transcript in gene["trs"]:
-                    del transcript["exons"]
-                del gene["union_tr"]["exons"]
+        else:
+            logging.info("Whole genome analysis disabled")
+
+
         return (self.__output(results), bed)
