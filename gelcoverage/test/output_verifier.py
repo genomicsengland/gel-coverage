@@ -22,14 +22,15 @@ class OutputVerifier(unittest.TestCase):
             self.__verify_wg_stats(json["results"]["whole_genome"]["stats"])
             for chr_stats in json["results"]["whole_genome"]["chrs"]:
                 self.__verify_wg_stats(chr_stats)
-        self.__verify_dict_field(json["results"], "coding_region", dict)
-        self.__verify_dict_field(json["results"]["coding_region"], "stats", dict)
-        self.__verify_dict_field(json["results"]["coding_region"], "chrs", list)
-        self.__verify_panel_stats(json["results"]["coding_region"]["stats"])
-        for chr_stats in json["results"]["coding_region"]["chrs"]:
-            self.__verify_panel_stats(chr_stats)
-        self.__verify_uncovered_genes(json["results"])
-        self.__verify_genes(json["results"], json["parameters"]["exon_stats_enabled"])
+        if json["parameters"]["coding_region_stats_enabled"]:
+            self.__verify_dict_field(json["results"], "coding_region", dict)
+            self.__verify_dict_field(json["results"]["coding_region"], "stats", dict)
+            self.__verify_dict_field(json["results"]["coding_region"], "chrs", list)
+            self.__verify_panel_stats(json["results"]["coding_region"]["stats"])
+            for chr_stats in json["results"]["coding_region"]["chrs"]:
+                self.__verify_panel_stats(chr_stats)
+            self.__verify_uncovered_genes(json["results"])
+            self.__verify_genes(json["results"], json["parameters"]["exon_stats_enabled"])
         logging.info("JSON verified!")
 
     def __verify_dict_field(self, _dict, name, types):

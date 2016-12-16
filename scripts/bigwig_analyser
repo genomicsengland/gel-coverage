@@ -33,8 +33,11 @@ def main():
                              '(0 = disabled) [default:15]',
                         default = 15)
     parser.add_argument('--disable-wg-stats', dest='wg_stats_enabled', action='store_false',
-                        help='Disable the calculation of whole genome statistics. Use this flag to improve performance')
+                        help='Disable the calculation of whole genome statistics.')
     parser.set_defaults(wg_stats_enabled=True)
+    parser.add_argument('--disable-coding-region-stats', dest='coding_region_stats_enabled', action='store_false',
+                        help='Disable the calculation of coding region statistics.')
+    parser.set_defaults(coding_region_stats_enabled=True)
     parser.add_argument('--wg-regions', metavar='wg_regions',
                         help='A BED file specifying the regions to be analysed in the whole genome analysis. '
                              'Typically these are the NonN regions in the genome.',
@@ -77,7 +80,8 @@ def main():
         "exon_padding": int(config_parser.get("exon", "exon_padding")),
         "wg_stats_enabled": args.wg_stats_enabled,
         "wg_regions": args.wg_regions,
-        "exon_stats_enabled": args.exon_stats_enabled
+        "exon_stats_enabled": args.exon_stats_enabled,
+        "coding_region_stats_enabled": args.coding_region_stats_enabled
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)

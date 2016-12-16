@@ -30,7 +30,8 @@ class GelCoverageRunnerTests(OutputVerifier):
             "wg_stats_enabled": False,
             "exon_padding": 15,
             "wg_regions": None,
-            "exon_stats_enabled": True
+            "exon_stats_enabled": True,
+            "coding_region_stats_enabled": True
         }
 
     def test1(self):
@@ -415,3 +416,55 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
                          msg="Uncovered genes should be of length 1")
         self.assertEqual(output["results"]["uncovered_genes"][0]["name"], "PTEN")
+
+    def test11(self):
+        """
+        Test 11: coding region analysis disabled
+        :return:
+        """
+        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "Epileptic encephalopathy"
+        self.config["panel_version"] = "0.2"
+        self.config["exon_padding"] = 0
+        self.config["wg_stats_enabled"] = True
+        self.config["wg_regions"] = \
+            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
+        self.config["coding_region_stats_enabled"] = False
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_11.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(bed, None)
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+
+    def test12(self):
+        """
+        Test 12: coding region and whole genome analysis disabled
+        :return:
+        """
+        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "Epileptic encephalopathy"
+        self.config["panel_version"] = "0.2"
+        self.config["exon_padding"] = 0
+        self.config["wg_stats_enabled"] = False
+        self.config["wg_regions"] = \
+            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
+        self.config["coding_region_stats_enabled"] = False
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_11.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(bed, None)
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)

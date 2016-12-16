@@ -48,7 +48,8 @@ How to use it from python
         "exon_padding": 15,
         "wg_stats_enabled": True,
         "wg_regions": '/path/to/non_n_regions.bed',
-        "exon_stats_enabled": False
+        "exon_stats_enabled": False,
+        "coding_region_stats_enabled": True
     }
 
     gel_coverage_engine = GelCoverageRunner(config)
@@ -73,7 +74,7 @@ How to use it from python
 
 .. note::
 
-    When running an analysis over all genes the resulting JSON will be around 4GB, unless you add the flag --disable-exon-stats,
+    When running an analysis over all genes the resulting JSON will be around 1.5GB, unless you add the flag --disable-exon-stats,
     but in this case you will be missing the exon level statistics and the coverage gaps.
 
 .. note::
@@ -84,6 +85,37 @@ How to use it from python
 .. note::
 
     Beware that the reference genome and chromosome notation (i.e.: chr prefix or not) should be the same in the input bigwig file and the bed file in wg-regions.
+
+
+Different configurations
+------------------------
+
+To program iterates through the bigwig file twice: the first for the analysis of the coding region (panel, gene list or
+full) and the second for the analysis of the whole genome.
+
+To run statistics only for a panel from exon level up to panel level, provide a panel (`panel`) and panel
+version (`panel_version`) and disable the whole genome statistics (`"wg_stats_enabled": False`), while making sure that
+the coding region and the exon level statistics are enabled (`"coding_region_stats_enabled": True` and `"exon_stats_enabled": True`).
+
+To run statistics only for a gene list from exon level up to gene list level, provide a gene list (`gene_list`) instead
+of panel and panel version and use the same configuration as above.
+
+To run statistics only for all genes in the coding region do not provide panel (`panel`) or gene list (`gene_list`),
+disable the whole genome statistics (`"wg_stats_enabled": False`) and the exon level statistics (`"exon_stats_enabled": False`)
+(the output JSON will be over 1 GB if exon stats are enabled for all genes),
+while making sure that the coding region is enabled (`"coding_region_stats_enabled": True`).
+
+To run only whole genome statistics enable `"wg_stats_enabled": True` and disable the coding region statistics
+(`"coding_region_stats_enabled": False`). The whole genome analysis might be used in combination with a bed file defining
+the region to analyse (e.g.: non N regions) that is to be passed in parameter `"wg_regions": '/path/to/non_n_regions.bed'`.
+This `wg_regions` can be used to calculate coverage over very specific regions, for instance Cosmic variants if they are set in
+a BED file.
+
+Any combination, of the previous should generate a single JSON with all the information.
+
+
+
+
 
 
 
