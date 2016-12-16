@@ -46,7 +46,7 @@ class BigWigReader:
                 if chromosome not in self.reported_unexisting_chr:
                     logging.warn("Missing chromosome in bigwig %s" % (chromosome))
                     self.reported_unexisting_chr.append(chromosome)
-                coverages = [0] * (end - start + 1)
+                coverages = [0] * (end - start)
         return coverages
 
     def get_chromosome_lengths(self):
