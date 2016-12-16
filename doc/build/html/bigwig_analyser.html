@@ -220,22 +220,26 @@ by using the flag &#8211;disable-wg-stats.</p>
 </div>
 <div class="section" id="different-configurations">
 <h2>Different configurations<a class="headerlink" href="#different-configurations" title="Permalink to this headline">¶</a></h2>
-<p>To program iterates through the bigwig file twice: the first for the analysis of the coding region (panel, gene list or
+<p>The program iterates through the bigwig file twice: the first for the analysis of the coding region (panel, gene list or
 full) and the second for the analysis of the whole genome.</p>
 <p>To run statistics only for a panel from exon level up to panel level, provide a panel (<cite>panel</cite>) and panel
 version (<cite>panel_version</cite>) and disable the whole genome statistics (<cite>&#8220;wg_stats_enabled&#8221;: False</cite>), while making sure that
-the coding region and the exon level statistics are enabled (<cite>&#8220;coding_region_stats_enabled&#8221;: True</cite> and <cite>&#8220;exon_stats_enabled&#8221;: True</cite>).</p>
+the coding region and the exon level statistics are enabled (<cite>&#8220;coding_region_stats_enabled&#8221;: True</cite> and <cite>&#8220;exon_stats_enabled&#8221;: True</cite>).
+Execution time is of some seconds or under a second for small panels. The panel of intellectual disability v1.23 having 1232 genes took 46s.</p>
 <p>To run statistics only for a gene list from exon level up to gene list level, provide a gene list (<cite>gene_list</cite>) instead
-of panel and panel version and use the same configuration as above.</p>
+of panel and panel version and use the same configuration as above.
+Execution time similar as the previous</p>
 <p>To run statistics only for all genes in the coding region do not provide panel (<cite>panel</cite>) or gene list (<cite>gene_list</cite>),
 disable the whole genome statistics (<cite>&#8220;wg_stats_enabled&#8221;: False</cite>) and the exon level statistics (<cite>&#8220;exon_stats_enabled&#8221;: False</cite>)
 (the output JSON will be over 1 GB if exon stats are enabled for all genes),
-while making sure that the coding region is enabled (<cite>&#8220;coding_region_stats_enabled&#8221;: True</cite>).</p>
+while making sure that the coding region is enabled (<cite>&#8220;coding_region_stats_enabled&#8221;: True</cite>).
+Execution time is over 3 hours</p>
 <p>To run only whole genome statistics enable <cite>&#8220;wg_stats_enabled&#8221;: True</cite> and disable the coding region statistics
 (<cite>&#8220;coding_region_stats_enabled&#8221;: False</cite>). The whole genome analysis might be used in combination with a bed file defining
 the region to analyse (e.g.: non N regions) that is to be passed in parameter <cite>&#8220;wg_regions&#8221;: &#8216;/path/to/non_n_regions.bed&#8217;</cite>.
 This <cite>wg_regions</cite> can be used to calculate coverage over very specific regions, for instance Cosmic variants if they are set in
-a BED file.</p>
+a BED file.
+Execution time is around 1 hour</p>
 <p>Any combination, of the previous should generate a single JSON with all the information.</p>
 </div>
 </div>

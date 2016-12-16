@@ -468,3 +468,27 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.assertEqual(bed, None)
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
+
+    def test13(self):
+        """
+        Test 13: panel from PanelApp with exon padding of 15 bp, the biggest panel with 1232 genes
+        :return:
+        """
+        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "Intellectual disability"
+        self.config["panel_version"] = "1.23"
+        self.config["exon_padding"] = 15
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_3.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_3.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
