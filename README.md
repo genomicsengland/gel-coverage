@@ -77,22 +77,26 @@ but in this case you will be missing the exon level statistics and the coverage 
 
 ### Different configurations
 
-To program iterates through the bigwig file twice: the first for the analysis of the coding region (panel, gene list or
+The program iterates through the bigwig file twice: the first for the analysis of the coding region (panel, gene list or
 full) and the second for the analysis of the whole genome.
 
 * To **run statistics only for a panel** from exon level up to panel level, provide a panel (`panel`) and panel
 version (`panel_version`) and disable the whole genome statistics (`"wg_stats_enabled": False`), while making sure that
 the coding region and the exon level statistics are enabled (`"coding_region_stats_enabled": True` and `"exon_stats_enabled": True`).
+    * Execution time is of some seconds or under a second for small panels. The panel of intellectual disability v1.23 having 1232 genes took 46s.
 * To **run statistics only for a gene list** from exon level up to gene list level, provide a gene list (`gene_list`) instead
 of panel and panel version and use the same configuration as above.
+    * Execution time similar as the previous
 * To **run statistics only for all genes in the coding region** do not provide panel (`panel`) or gene list (`gene_list`),
 disable the whole genome statistics (`"wg_stats_enabled": False`) and the exon level statistics (`"exon_stats_enabled": False`)
-(the output JSON will be over 1 GB if exon stats are enabled for all genes),
+(the output JSON will be around 4 GB if exon stats are enabled for all genes, otherwise it is around 250 MB),
 while making sure that the coding region is enabled (`"coding_region_stats_enabled": True`).
+    * Execution time is over 3 hours
 * To **run only whole genome statistics** enable `"wg_stats_enabled": True` and disable the coding region statistics
 (`"coding_region_stats_enabled": False`). The whole genome analysis might be used in combination with a bed file defining
 the region to analyse (e.g.: non N regions) that is to be passed in parameter `"wg_regions": '/path/to/non_n_regions.bed'`.
 This `wg_regions` can be used to calculate coverage over very specific regions, for instance Cosmic variants if they are set in
 a BED file.
+    * Execution time is around 1 hour
 
 Any combination, of the previous should generate a single JSON with all the information.
