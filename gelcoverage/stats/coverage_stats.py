@@ -2,6 +2,8 @@ import numpy as np
 import logging
 import itertools
 import operator
+from gelcoverage.tools.bed_reader import BedReader
+from gelcoverage.tools.bigwig_reader import BigWigReader
 
 
 def find_gaps(coverages, start_position, coverage_threshold):
@@ -65,6 +67,7 @@ def compute_exon_level_statistics(coverages, gc_content):
 
     return stats
 
+
 def compute_transcript_level_statistics(exons):
     """
     Computes coverage and GC content statistics at gene level by aggregating the statistics at exon level.
@@ -87,7 +90,7 @@ def compute_transcript_level_statistics(exons):
             [x["pct25"] * x["bases"] for x in exons_stats])) / total_bases, 3),
         "pct75": round(float(np.sum(
             [x["pct75"] * x["bases"] for x in exons_stats])) / total_bases, 3),
-        "%<15x" : round(float(bases_lt_15x) / total_bases, 5),
+        "%<15x": round(float(bases_lt_15x) / total_bases, 5),
         "%>=15x": round(float(bases_gte_15x) / total_bases, 5),
         "%>=30x": round(float(bases_gte_30x) / total_bases, 5),
         "%>=50x": round(float(bases_gte_50x) / total_bases, 5),
@@ -103,6 +106,7 @@ def compute_transcript_level_statistics(exons):
         # There is no GC content data to show (e.g.: the union transcript)
         pass
     return stats
+
 
 def compute_coding_region_statistics(genes):
     """
@@ -124,27 +128,29 @@ def compute_coding_region_statistics(genes):
     bases_lt_15x = int(np.sum([x["bases_lt_15x"] for x in genes_stats]))
     bases_gte_15x = int(np.sum([x["bases_gte_15x"] for x in genes_stats]))
     bases_gte_30x = int(np.sum([x["bases_gte_30x"] for x in genes_stats]))
-    bases_gte_50x  = int(np.sum([x["bases_gte_50x"] for x in genes_stats]))
+    bases_gte_50x = int(np.sum([x["bases_gte_50x"] for x in genes_stats]))
     results["stats"] = {
-        "bases" : total_bases,
-        "avg" : round(float(np.mean([x["avg"] for x in genes_stats])), 3),
-        "med" : round(float(np.sum(
+        "bases": total_bases,
+        "avg": round(float(np.mean([x["avg"] for x in genes_stats])), 3),
+        "med": round(float(np.sum(
             [x["med"] * x["bases"] for x in genes_stats]) / total_bases), 3),
-        "pct75" : round(float(np.sum(
+        "pct75": round(float(np.sum(
             [x["pct75"] * x["bases"] for x in genes_stats]) / total_bases), 3),
-        "pct25" : round(float(np.sum(
+        "pct25": round(float(np.sum(
             [x["pct25"] * x["bases"] for x in genes_stats]) / total_bases), 3),
-        "%<15x" : round(float(bases_lt_15x) / total_bases, 5),
-        "%>=15x" : round(float(bases_gte_15x) / total_bases, 5),
-        "%>=30x" : round(float(bases_gte_30x) / total_bases, 5),
-        "%>=50x" : round(float(bases_gte_50x) / total_bases, 5)
+        "%<15x": round(float(bases_lt_15x) / total_bases, 5),
+        "%>=15x": round(float(bases_gte_15x) / total_bases, 5),
+        "%>=30x": round(float(bases_gte_30x) / total_bases, 5),
+        "%>=50x": round(float(bases_gte_50x) / total_bases, 5)
     }
     # Compute the stats disaggregated by chromosome
     chr2stats = [(x["chr"], x["union_tr"]["stats"]) for x in genes]
+
     def groupby_chromosome(list_of_tuples):
         it = itertools.groupby(list_of_tuples, operator.itemgetter(0))
         for chromosome, subiter in it:
             yield chromosome, [item[1] for item in subiter]
+
     chromosome_stats = dict(groupby_chromosome(chr2stats))
     for chromosome, chr_stats in chromosome_stats.iteritems():
         chr_total_bases = int(np.sum([x["bases"] for x in chr_stats]))
@@ -154,7 +160,7 @@ def compute_coding_region_statistics(genes):
         chr_bases_gte_50x = int(np.sum([x["bases_gte_50x"] for x in chr_stats]))
         results["chrs"].append(
             {
-                "chr" : chromosome,
+                "chr": chromosome,
                 "bases": chr_total_bases,
                 "avg": round(float(np.mean([x["avg"] for x in chr_stats])), 3),
                 "med": round(float(np.sum(
@@ -173,16 +179,20 @@ def compute_coding_region_statistics(genes):
     logging.info("Coding region statistics computed!")
     return results
 
-def compute_whole_genome_statistics(bigwig_reader, bed_reader = None, chunk_size = 100000):
+
+def compute_whole_genome_statistics(bigwig_reader, bed_reader=None, chunk_size=100000):
     """
     Iterates through the whole genome in a sliding window to obtain some metrics
+    :type chunk_size: int
+    :type bigwig_reader: BigWigReader
+    :type bed_reader: BedReader
     :param bigwig_reader:
     :return:
     """
     logging.info("Computing whole genome statistics...")
     results = {
-        "stats" : None,
-        "chrs" : []
+        "stats": None,
+        "chrs": []
     }
     if bed_reader.is_null_bed:
         logging.info("Running on all chromosomes defined in the bigwig.")
@@ -194,28 +204,28 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader = None, chunk_size
     chr_stats = {}
     for chromosome, regions in analysis_regions.iteritems():
         chr_stats[chromosome] = {
-            "rmsd" : [],
-            "avg" : [],
-            "bases" : [],
-            "bases_lt_15x" : [],
+            "rmsd": [],
+            "avg": [],
+            "bases": [],
+            "bases_lt_15x": [],
             "bases_gte_15x": [],
             "bases_gte_30x": [],
             "bases_gte_50x": [],
-            "med" : [],
-            "pct25" : [],
-            "pct75" : []
+            "med": [],
+            "pct25": [],
+            "pct75": []
         }
         # Iterates intervals in chunks of fixed size and stores the stats for each chunk
         for (start, end) in regions:
             logging.debug("Analysing region %s:%s-%s" % (chromosome, start, end))
             current_start = start
-            current_end = min(current_start + chunk_size - 1, end)
-            while current_start <= current_end:
+            current_end = min(current_start + chunk_size, end)
+            while current_start < current_end:
                 logging.debug("Analysing chunk %s:%s-%s" % (chromosome,
                                                             current_start,
                                                             current_end))
                 coverages = bigwig_reader.read_bigwig_coverages(chromosome, current_start, current_end, strict=False)
-                length = len(coverages)
+                length = current_end - current_start
                 chunk_mean = np.mean(coverages)
                 if chunk_mean == 0:
                     # As coverage values are positive values we infer that all values are zero
@@ -242,8 +252,8 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader = None, chunk_size
                 chr_stats[chromosome]["med"].append(np.median(coverages))
                 chr_stats[chromosome]["pct25"].append(np.percentile(coverages, 25))
                 chr_stats[chromosome]["pct75"].append(np.percentile(coverages, 75))
-                current_start = current_end + 1
-                current_end = min(current_start + chunk_size - 1, end)
+                current_start = current_end
+                current_end = min(current_start + chunk_size, end)
         # Set the statistics per chromosome
         chr_total_bases = np.sum(chr_stats[chromosome]["bases"])
         chr_bases_lt_15x = np.sum(chr_stats[chromosome]["bases_lt_15x"])
@@ -251,51 +261,53 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader = None, chunk_size
         chr_bases_gte_30x = np.sum(chr_stats[chromosome]["bases_gte_30x"])
         chr_bases_gte_50x = np.sum(chr_stats[chromosome]["bases_gte_50x"])
         results["chrs"].append({
-            "chr" : chromosome,
-            "uneveness" : round(float(np.median(chr_stats[chromosome]["rmsd"])), 3),
-            "avg" : round(float(np.mean(chr_stats[chromosome]["avg"])), 3),
-            "bases" : int(chr_total_bases),
-            "%<15x" : round(float(chr_bases_lt_15x) / chr_total_bases, 5),
-            "%>=15x" : round(float(chr_bases_gte_15x) / chr_total_bases, 5),
-            "%>=30x" : round(float(chr_bases_gte_30x) / chr_total_bases, 5),
-            "%>=50x" : round(float(chr_bases_gte_50x) / chr_total_bases, 5),
-            "med" : round(float(np.sum([median * weight
-                                            for median, weight in
-                                            zip(chr_stats[chromosome]["med"],
-                                                chr_stats[chromosome]["bases"])])) /
-                             chr_total_bases, 3),
-            "pct75" : round(float(np.sum([pct75 * weight
-                                           for pct75, weight in
-                                           zip(chr_stats[chromosome]["pct75"],
-                                               chr_stats[chromosome]["bases"])])) /
-                            chr_total_bases, 3),
-            "pct25" : round(float(np.sum([pct25 * weight
-                                          for pct25, weight in
-                                          zip(chr_stats[chromosome]["pct25"],
-                                              chr_stats[chromosome]["bases"])])) /
-                            chr_total_bases, 3)
+            "chr": chromosome,
+            "uneveness": round(float(np.median(chr_stats[chromosome]["rmsd"])), 3),
+            "avg": round(float(np.mean(chr_stats[chromosome]["avg"])), 3),
+            "bases": int(chr_total_bases),
+            "%<15x": round(float(chr_bases_lt_15x) / chr_total_bases, 5),
+            "%>=15x": round(float(chr_bases_gte_15x) / chr_total_bases, 5),
+            "%>=30x": round(float(chr_bases_gte_30x) / chr_total_bases, 5),
+            "%>=50x": round(float(chr_bases_gte_50x) / chr_total_bases, 5),
+            "med": round(float(np.sum([median * weight
+                                       for median, weight in
+                                       zip(chr_stats[chromosome]["med"],
+                                           chr_stats[chromosome]["bases"])])) /
+                         chr_total_bases, 3),
+            "pct75": round(float(np.sum([pct75 * weight
+                                         for pct75, weight in
+                                         zip(chr_stats[chromosome]["pct75"],
+                                             chr_stats[chromosome]["bases"])])) /
+                           chr_total_bases, 3),
+            "pct25": round(float(np.sum([pct25 * weight
+                                         for pct25, weight in
+                                         zip(chr_stats[chromosome]["pct25"],
+                                             chr_stats[chromosome]["bases"])])) /
+                           chr_total_bases, 3)
         })
         logging.info("Whole genome statistics for chromosome %s computed!" % chromosome)
+
     # Set the statistics for the whole genome
     def aggregate_chromosomes(dictionary, field):
         return sum([dictionary[chromosome][field] for chromosome in dictionary.keys()], [])
+
     total_bases = int(np.sum(aggregate_chromosomes(chr_stats, "bases")))
     bases_lt_15x = int(np.sum(aggregate_chromosomes(chr_stats, "bases_lt_15x")))
     bases_gte_15x = int(np.sum(aggregate_chromosomes(chr_stats, "bases_gte_15x")))
     bases_gte_30x = int(np.sum(aggregate_chromosomes(chr_stats, "bases_gte_30x")))
     bases_gte_50x = int(np.sum(aggregate_chromosomes(chr_stats, "bases_gte_50x")))
     results["stats"] = {
-        "uneveness" : round(float(np.median(aggregate_chromosomes(chr_stats, "rmsd"))), 3),
-        "avg" : round(float(np.mean(aggregate_chromosomes(chr_stats, "avg"))), 3),
-        "bases" : total_bases,
-        "%<15x" : round(float(bases_lt_15x) / total_bases, 5),
+        "uneveness": round(float(np.median(aggregate_chromosomes(chr_stats, "rmsd"))), 3),
+        "avg": round(float(np.mean(aggregate_chromosomes(chr_stats, "avg"))), 3),
+        "bases": total_bases,
+        "%<15x": round(float(bases_lt_15x) / total_bases, 5),
         "%>=15x": round(float(bases_gte_15x) / total_bases, 5),
         "%>=30x": round(float(bases_gte_30x) / total_bases, 5),
         "%>=50x": round(float(bases_gte_50x) / total_bases, 5),
         "med": round(float(np.sum(
             [median * length for median, length in zip(aggregate_chromosomes(chr_stats, "med"),
                                                        aggregate_chromosomes(chr_stats, "bases"))])) /
-                        np.sum(aggregate_chromosomes(chr_stats, "bases")), 3),
+                     np.sum(aggregate_chromosomes(chr_stats, "bases")), 3),
         "pct75": round(float(np.sum(
             [pct75 * length for pct75, length in zip(aggregate_chromosomes(chr_stats, "pct75"),
                                                      aggregate_chromosomes(chr_stats, "bases"))])) /
@@ -307,5 +319,3 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader = None, chunk_size
     }
     logging.info("Whole genome statistics computed!")
     return results
-
-
