@@ -18,7 +18,7 @@ BAM2WIG_HOME=/genomes/software/apps/bam2wig
 BIGWIG_ANALYSER_HOME=/genomes/software/apps/gel-coverage
 export PATH=$BIGWIG_ANALYSER_HOME/scripts:${PATH}
 
-module load python-tiering/2.7.10
+module load python/2.7.10
 module load java/jdk1.8.0_45
 
 # Check number of arguments
