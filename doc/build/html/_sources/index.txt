@@ -7,17 +7,15 @@ GelCoverageProject Documentation
 ================================
 
 
-* :ref:`usage-bam2wig`
 * :ref:`usage-bigwig_analyser`
 
 .. _usage-bam2wig:
 
 Bam2Wig Usage
 -------------
-.. toctree::
-    :maxdepth: 2
 
-    bam2wig
+See the documentation here: https://github.com/genomicsengland/bam2wig/blob/master/README.md
+
 
 .. _usage-bigwig_analyser:
 
