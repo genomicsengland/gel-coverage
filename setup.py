@@ -1,9 +1,10 @@
 from distutils.core import setup
+from setuptools import find_packages
 
 setup(
     name='gelcoverage',
-    version='1.1.1',
-    packages=['gelcoverage'],
+    version='1.1.2',
+    packages=find_packages(),
     scripts=['scripts/bigwig_analyser'],
     url='',
     license='',

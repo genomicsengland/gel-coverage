@@ -1,6 +1,13 @@
-version 1.1.1 (19 December 2016)
+version 1.1.2 (19 December 2016)
 ----------------------------
 
+* Minor Changes:
+    - Using setuptools find_package() to create a proper python package
+
+
+
+version 1.1.1 (19 December 2016)
+----------------------------
 
 * Minor Changes:
     - Fixed bug when iterating whole genome in chunks
@@ -9,9 +16,9 @@ version 1.1.1 (19 December 2016)
     - Added execution times to documentation
     - Ported shell script for biohpc
 
+
 version 1.1.0 (14 December 2016)
 ----------------------------
-
 
 * Major Changes:
     - Output in machine readable format, JSON.
