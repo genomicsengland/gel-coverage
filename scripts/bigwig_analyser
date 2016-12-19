@@ -96,14 +96,8 @@ def main():
             )
         )
     # Saves the analysed region as a BED file
-    bed.saveas(args.output + ".bed")
-
-    # TODO: output results in different formats
-    #if args.output == "json":
-    #    print json.dumps(output, indent = 4)
-    #elif args.output == "tabular":
-        # TODO: flatten the dict into a table
-    #    pass
+    if bed is not None:
+        bed.saveas(args.output + ".bed")
 
 if __name__ == '__main__':
     main()
