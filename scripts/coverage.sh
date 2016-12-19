@@ -50,7 +50,15 @@ then
   mkdir -p $direc
 fi
 
-# 1. Make bigwig file
+# 1. Create the chromosome lengths file
+java \
+  -jar $BAM2WIG_HOME/target/bam2wig-jar-with-dependencies.jar \
+  --bam ${bam} \
+  --config $BAM2WIG_HOME/src/main/resources/bam2wig.config \
+  --output-prefix ${direc}/${lp} \
+  --chr
+
+# 2. Make bigwig file
 java \
   -jar $BAM2WIG_HOME/target/bam2wig-jar-with-dependencies.jar \
   --bam ${bam} \
@@ -59,10 +67,10 @@ java \
   --stdout | \
     /genomes/software/src/ucsc/wigToBigWig stdin ${direc}/${lp}.chr $bigwig
 
-# 2. Make coverage summary over whole genome and all coding region down to transcript level
-bigwig_analyser
+# 3. Make coverage summary over whole genome and all coding region down to transcript level
+$BIGWIG_ANALYSER_HOME/scripts/bigwig_analyser
   --bw $bigwig \
-  --output $json
-  --config $BIGWIG_ANALYSER_HOME/resources/bigwig_analyser.config
+  --output $json \
+  --config $BIGWIG_ANALYSER_HOME/resources/bigwig_analyser.config \
   --wg-regions $BIGWIG_ANALYSER_HOME/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed \
   --disable-exon-stats
