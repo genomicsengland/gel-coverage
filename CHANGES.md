@@ -1,3 +1,14 @@
+version 1.1.1 (19 December 2016)
+----------------------------
+
+
+* Minor Changes:
+    - Fixed bug when iterating whole genome in chunks
+    - Fixed bug when trying to create an unexisting BED file for whole genome analysis
+    - Add flag to avoid running analysis on the coding region
+    - Added execution times to documentation
+    - Ported shell script for biohpc
+
 version 1.1.0 (14 December 2016)
 ----------------------------
 
