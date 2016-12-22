@@ -9,11 +9,13 @@ class BigWigReader:
 
     def __init__(self, bigwig):
         # Opens the bigwig file for reading
+        logging.debug("Creating the BigWig reader...")
         self.bigwig = bigwig
         self.reader = pyBigWig.open(self.bigwig)
         self.chromosomes = self.reader.chroms().keys()
         self.has_chr_prefix = any([chromosome.startswith("chr") for chromosome in self.chromosomes])
         self.reported_unexisting_chr = []
+        logging.debug("BigWig reader created!")
 
     def read_bigwig_coverages(self, chromosome, start, end, strict = True):
         """
@@ -57,4 +59,5 @@ class BigWigReader:
         :param format: specify "dict" to return a dict instead of a bed recognisable format
         :return: list of chromosomes and start and end positions
         """
+        logging.debug("Getting chromosomes and their lenght from BigWig header")
         return {chromosome : [(0, length)] for (chromosome, length) in self.reader.chroms().iteritems()}

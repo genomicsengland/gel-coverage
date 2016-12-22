@@ -62,6 +62,7 @@ class GelCoverageRunner:
             if not self.bed_reader.is_null_bed and self.bed_reader.has_chr_prefix != self.bigwig_reader.has_chr_prefix:
                 raise GelCoverageInputError("Bed file defining whole genome analysis region and bigwig use different "
                                             "chromosome notations (i.e.: chr prefix).")
+        logging.info("Sanity checks on the configuration OK!")
 
     def get_gene_list(self):
         """
