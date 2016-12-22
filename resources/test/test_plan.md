@@ -111,18 +111,9 @@ Expected results for percentage of bases >= 15x for the previous samples on GRCh
 
 Reference GRCh38:
 ```
-# we don't have bigwigs for this... generating them...
+# Samples
 /genomes/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11
 /genomes/by_date/2016-11-23/RAREP40046/LP2000861-DNA_G06
-
-# change chromosome idetifiers to non-prefixed
-samtools view -H /genomes/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/Assembly/LP2000274-DNA_B11.bam | sed  -e 's/SN:chrM/SN:MT/' -e 's/SN:chr/SN:/'  | samtools reheader - /genomes/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/Assembly/LP2000274-DNA_B11.bam > /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bam
-
-# Extract chromosomes and their lengths from BAM header (adds chr prefix...)
-/genomes/software/apps/python2.7/bin/python /genomes/software/apps/gel-coverage/bam2wig/get_chr_sizes.py --bam /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bam --output /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.chr
-
-# Creates the bigwig
-/genomes/software/apps/jdk1.8.0_45/bin/java -jar ~/src/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bam -stdout | /genomes/software/src/ucsc/wigToBigWig stdin /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.chr /genomes/analysis/by_date/2016-11-18/RAREP40001/LP2000274-DNA_B11/coverage/LP2000274-DNA_B11.wochr.bw
 ```
 
 Expected results for percentage of bases >= 15x for the previous samples on GRCh38:
@@ -610,3 +601,5 @@ LP2000274-DNA_B11	95.96680	92.529	-3.4378
 LP2000274-DNA_D01	98.25317	96.925	-1.32817
 LP2000731-DNA_H10	99.27863	94.75	-4.52863
 ```
+
+### GRCh38
