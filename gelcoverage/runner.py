@@ -23,24 +23,33 @@ class GelCoverageRunner:
             filter_flags=config['transcript_filtering_flags'].split(","),
             filter_biotypes=config['transcript_filtering_biotypes'].split(",")
         )
-        # Initialize PanelApp helper
-        self.panelapp_helper = PanelappHelper(host=config['panelapp_host'])
-        # Gets the list of genes to analyse
-        self.gene_list = self.get_gene_list()
-        logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
-        # Opens the bigwig reader
-        self.bigwig_reader = BigWigReader(self.config['bw'])
-        # Flag indicating if exon padding is enabled
+        # Helper flags for the configuration
         if "exon_padding" not in self.config or type(self.config["exon_padding"]) != int or \
-            self.config["exon_padding"] <= 0:
+                        self.config["exon_padding"] <= 0:
             self.config["exon_padding"] = 0
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
         self.is_coding_region_stats_enabled = self.config["coding_region_stats_enabled"]
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
-        self.wg_regions = self.config["wg_regions"]
-        self.bed_reader = BedReader(self.wg_regions)
+        self.is_panel_analysis = "panel" in self.config and self.config["panel"] is not None and \
+                                 "panel_version" in self.config and self.config["panel_version"] is not None
+        self.is_gene_list_analysis = "gene_list" in self.config and self.config["gene_list"] is not None
+        # Initialize PanelApp helper
+        if self.is_panel_analysis:
+            self.panelapp_helper = PanelappHelper(host=config['panelapp_host'])
+        # Gets the list of genes to analyse
+        self.gene_list = self.get_gene_list()
+        if self.is_panel_analysis or self.is_gene_list_analysis:
+            logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
+        else:
+            logging.info("%s genes to analyse" % str(len(self.gene_list)))
+
+        # Opens the bigwig reader
+        self.bigwig_reader = BigWigReader(self.config['bw'])
+        if self.is_wg_stats_enabled:
+            self.wg_regions = self.config["wg_regions"]
+            self.bed_reader = BedReader(self.wg_regions)
         self.uncovered_genes = {}
         self.__sanity_checks()
 
@@ -49,9 +58,10 @@ class GelCoverageRunner:
         Checks on the configuration data to raise errors before starting long computations.
         :return:
         """
-        if not self.bed_reader.is_null_bed and self.bed_reader.has_chr_prefix != self.bigwig_reader.has_chr_prefix:
-            raise GelCoverageInputError("Bed file defining whole genome analysis region and bigwig use different "
-                                        "chromosome notations (i.e.: chr prefix).")
+        if self.is_wg_stats_enabled:
+            if not self.bed_reader.is_null_bed and self.bed_reader.has_chr_prefix != self.bigwig_reader.has_chr_prefix:
+                raise GelCoverageInputError("Bed file defining whole genome analysis region and bigwig use different "
+                                            "chromosome notations (i.e.: chr prefix).")
 
     def get_gene_list(self):
         """
@@ -63,14 +73,14 @@ class GelCoverageRunner:
         :return: the gene list for coverage analysis
         """
         # Gets list of genes to analyse
-        if self.config["panel"] is not None and self.config["panel_version"] is not None:
+        if self.is_panel_analysis:
             # Get list of genes from PanelApp
             gene_list = self.panelapp_helper.get_gene_list(
                 self.config["panel"],
                 self.config["panel_version"],
                 self.config["panelapp_gene_confidence"]
             )
-        elif self.config["gene_list"] is not None:
+        elif self.is_gene_list_analysis:
             # Get list of genes from parameter genes
             gene_list = self.config["gene_list"].split(",")
             # elif args.transcripts is not None:

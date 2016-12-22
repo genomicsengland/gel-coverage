@@ -255,6 +255,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         gene_0bp_padding["union_tr"] = union_transcript
         self.verify_union_transcript(gene_0bp_padding, True)
 
+    @unittest.skip("long running test")
     def test6(self):
         """
         Test 6: provided bed of nonN regions and whole genome metrics enabled
@@ -282,6 +283,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
+    @unittest.skip("long running test")
     def test6_1(self):
         """
         Test 6.1: provided bed of nonN regions and whole genome metrics enabled.
@@ -306,6 +308,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.assertTrue(caught_exception, msg="It should have raised an exception as bed and bigwig are using"
                                               "different chromosome notations")
 
+    @unittest.skip("long running test")
     def test7(self):
         """
         Test 7: whole genome metrics enabled
@@ -417,6 +420,7 @@ class GelCoverageRunnerTests(OutputVerifier):
                          msg="Uncovered genes should be of length 1")
         self.assertEqual(output["results"]["uncovered_genes"][0]["name"], "PTEN")
 
+    @unittest.skip("long running test")
     def test11(self):
         """
         Test 11: coding region analysis disabled
@@ -462,19 +466,20 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_11.json', 'w') as fp:
+        with open('../resources/test/sample_output_12.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(bed, None)
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
+    @unittest.skip("long running test")
     def test13(self):
         """
         Test 13: panel from PanelApp with exon padding of 15 bp, the biggest panel with 1232 genes
         :return:
         """
-        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        expected_gene_list = None  # too big to set here
         self.config["bw"] = "../resources/test/test1.bw"
         self.config["panel"] = "Intellectual disability"
         self.config["panel_version"] = "1.23"
@@ -484,11 +489,11 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_3.json', 'w') as fp:
+        with open('../resources/test/sample_output_13.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_3.bed')
+        bed.saveas('../resources/test/sample_output_13.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
