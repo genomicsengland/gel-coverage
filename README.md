@@ -100,3 +100,17 @@ a BED file.
     * Execution time is around 1 hour
 
 Any combination, of the previous should generate a single JSON with all the information.
+
+
+### Exploring the results
+
+The results of the coverage analysis are in JSON format which is intended to be machine readable, but not human readable. To explore the results the `jq` tool may ne useful (https://stedolan.github.io/jq/).
+
+* To just print the whole JSON in a nice tabulated format use: `jq '' your.json`
+* To retrieve a specific field from the json query for it like this: `jq '.results.whole_genome.stats.uneveness' your.json`
+
+Much more complex queries can be done. See https://robots.thoughtbot.com/jq-is-sed-for-json for further insight.
+
+**NOTE 1**: Beware that the JSONs for the coding region with coverage detail at exon level might be quite big and jq will be slow as it loads all data in memory.
+
+**NOTE 2**: jq is installed in `bio-pp9-01` at `/genomes/software/apps/jq-1.5`
