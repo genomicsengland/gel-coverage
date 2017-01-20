@@ -4,6 +4,7 @@ import logging
 import pybedtools
 from gelcoverage.runner import GelCoverageRunner, GelCoverageInputError
 from gelcoverage.test.output_verifier import OutputVerifier
+import gelcoverage.constants as constants
 
 
 class GelCoverageRunnerTests(OutputVerifier):
@@ -149,11 +150,11 @@ class GelCoverageRunnerTests(OutputVerifier):
         """
         def create_test_exon(start, end, exon_number):
             return {
-                "s": start,
-                "e": end,
-                "padded_s": start - self.config["exon_padding"],
-                "padded_e": end + self.config["exon_padding"],
-                "exon": exon_number
+                constants.EXON_START: start,
+                constants.EXON_END: end,
+                constants.EXON_PADDED_START: start - self.config["exon_padding"],
+                constants.EXON_PADDED_END: end + self.config["exon_padding"],
+                constants.EXON: exon_number
             }
         # Interval covered in the input file SCN2A: 2: 165,995,882-166,349,242
         offset = 165995882
@@ -163,12 +164,12 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Runs union transcript with exon padding 15bp
         self.config["exon_padding"] = 15
         gene_15bp_padding = {
-            "chr": "chr2",
-            "name": "TEST",
-            "trs": [
+            constants.CHROMOSOME: "chr2",
+            constants.GENE_NAME: "TEST",
+            constants.TRANSCRIPTS: [
                 {
-                    "id": "1",
-                    "exons": [
+                    constants.TRANSCRIPT_ID: "1",
+                    constants.EXONS: [
                         create_test_exon(offset + 10, offset + 15, 1),
                         create_test_exon(offset + 20, offset + 25, 2),
                         create_test_exon(offset + 30, offset + 35, 3),
@@ -178,8 +179,8 @@ class GelCoverageRunnerTests(OutputVerifier):
                     ]
                 },
                 {
-                    "id": "2",
-                    "exons": [
+                    constants.TRANSCRIPT_ID: "2",
+                    constants.EXONS: [
                         create_test_exon(offset + 10, offset + 15, 1),
                         create_test_exon(offset + 20, offset + 25, 2),
                         create_test_exon(offset + 30, offset + 35, 3),
@@ -190,8 +191,8 @@ class GelCoverageRunnerTests(OutputVerifier):
                     ]
                 },
                 {
-                    "id": "3",
-                    "exons": [
+                    constants.TRANSCRIPT_ID: "3",
+                    constants.EXONS: [
                         create_test_exon(offset + 0, offset + 5, 1),
                         create_test_exon(offset + 10, offset + 15, 2),
                         create_test_exon(offset + 20, offset + 25, 3),
@@ -204,18 +205,18 @@ class GelCoverageRunnerTests(OutputVerifier):
             ]
         }
         union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_15bp_padding)
-        self.assertEqual(len(union_transcript["exons"]), 1)
-        gene_15bp_padding["union_tr"] = union_transcript
+        self.assertEqual(len(union_transcript[constants.EXONS]), 1)
+        gene_15bp_padding[constants.UNION_TRANSCRIPT] = union_transcript
         self.verify_union_transcript(gene_15bp_padding, True)
         # Runs union transcript with exon padding 0bp
         self.config["exon_padding"] = 0
         gene_0bp_padding = {
-            "chr": "chr2",
-            "name": "TEST",
-            "trs": [
+            constants.CHROMOSOME: "chr2",
+            constants.GENE_NAME: "TEST",
+            constants.TRANSCRIPTS: [
                 {
-                    "id": "1",
-                    "exons": [
+                    constants.TRANSCRIPT_ID: "1",
+                    constants.EXONS: [
                         create_test_exon(offset + 10, offset + 15, 1),
                         create_test_exon(offset + 20, offset + 25, 2),
                         create_test_exon(offset + 30, offset + 35, 3),
@@ -225,8 +226,8 @@ class GelCoverageRunnerTests(OutputVerifier):
                     ]
                 },
                 {
-                    "id": "2",
-                    "exons": [
+                    constants.TRANSCRIPT_ID: "2",
+                    constants.EXONS: [
                         create_test_exon(offset + 10, offset + 15, 1),
                         create_test_exon(offset + 20, offset + 25, 2),
                         create_test_exon(offset + 30, offset + 35, 3),
@@ -237,8 +238,8 @@ class GelCoverageRunnerTests(OutputVerifier):
                     ]
                 },
                 {
-                    "id": "3",
-                    "exons": [
+                    constants.TRANSCRIPT_ID: "3",
+                    constants.EXONS: [
                         create_test_exon(offset + 0, offset + 5, 1),
                         create_test_exon(offset + 10, offset + 15, 2),
                         create_test_exon(offset + 20, offset + 25, 3),
@@ -251,8 +252,8 @@ class GelCoverageRunnerTests(OutputVerifier):
             ]
         }
         union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_0bp_padding)
-        self.assertEqual(len(union_transcript["exons"]), 8)
-        gene_0bp_padding["union_tr"] = union_transcript
+        self.assertEqual(len(union_transcript[constants.EXONS]), 8)
+        gene_0bp_padding[constants.UNION_TRANSCRIPT] = union_transcript
         self.verify_union_transcript(gene_0bp_padding, True)
 
     @unittest.skip("long running test")
@@ -388,7 +389,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.verify_output(output, expected_gene_list)
         self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
                          msg="Uncovered genes should be of length 1")
-        self.assertEqual(output["results"]["uncovered_genes"][0]["name"], "PTEN")
+        self.assertEqual(output["results"]["uncovered_genes"][0][constants.GENE_NAME], "PTEN")
 
     def test10(self):
         """
@@ -418,7 +419,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Runs verifications on output JSON
         self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
                          msg="Uncovered genes should be of length 1")
-        self.assertEqual(output["results"]["uncovered_genes"][0]["name"], "PTEN")
+        self.assertEqual(output["results"]["uncovered_genes"][0][constants.GENE_NAME], "PTEN")
 
     @unittest.skip("long running test")
     def test11(self):

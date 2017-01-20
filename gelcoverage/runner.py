@@ -5,6 +5,7 @@ from gelcoverage.tools.cellbase_helper import CellbaseHelper
 from gelcoverage.tools.panelapp_helper import PanelappHelper
 from gelcoverage.tools.bigwig_reader import BigWigReader, UncoveredIntervalException
 from gelcoverage.tools.bed_reader import BedReader
+import gelcoverage.constants as constants
 
 
 class GelCoverageInputError(Exception):
@@ -155,9 +156,9 @@ class GelCoverageRunner:
         :return: the basic gene data structure
         """
         return {
-            "name": gene_name,
-            "chr": chromosome,
-            "trs": transcripts
+            constants.GENE_NAME: gene_name,
+            constants.CHROMOSOME: chromosome,
+            constants.TRANSCRIPTS: transcripts
         }
 
     @staticmethod
@@ -168,8 +169,8 @@ class GelCoverageRunner:
         :return: the basic transcript data structure
         """
         return {
-            "id": transcript_id,
-            "exons": exons
+            constants.TRANSCRIPT_ID: transcript_id,
+            constants.EXONS: exons
         }
 
     @staticmethod
@@ -182,14 +183,14 @@ class GelCoverageRunner:
         :return: the basic exon data structure
         """
         exon = {
-                "exon": exon_number,
-                "s": start,
-                "e": end,
-                "l": end - start + 1
+                constants.EXON: exon_number,
+                constants.EXON_START: start,
+                constants.EXON_END: end,
+                constants.EXON_LENGTH: end - start + 1
             }
         if padded_start is not None and padded_start != start:
-            exon["padded_s"] = padded_start
-            exon["padded_e"] = padded_end
+            exon[constants.EXON_PADDED_START] = padded_start
+            exon[constants.EXON_PADDED_END] = padded_end
         return exon
 
     def __create_exon(self, chromosome, start, end, exon_idx, gc_content = None):
@@ -211,17 +212,17 @@ class GelCoverageRunner:
             padded_end = end + self.config["exon_padding"] if self.is_exon_padding else None
         )
         # Update length
-        exon["l"] = end - start + 1
+        exon[constants.EXON_LENGTH] = end - start + 1
         # Read from the bigwig file
         coverages = self.bigwig_reader.read_bigwig_coverages(
             chromosome,
             start,
             end)
         # Compute statistics at exon level (no GC content information)
-        exon["stats"] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
+        exon[constants.STATISTICS] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
         # Compute gaps
         if self.is_find_gaps_enabled:
-            exon["gaps"] = coverage_stats.find_gaps(
+            exon[constants.GAPS] = coverage_stats.find_gaps(
                 coverages,
                 start,
                 self.config['coverage_threshold']
@@ -238,8 +239,8 @@ class GelCoverageRunner:
         """
         transcript = self.__initialize_transcript_dict(id, exons)
         # Compute transcript level statistics by aggregating stats on every exon
-        transcript["stats"] = coverage_stats.compute_transcript_level_statistics(
-            transcript["exons"]
+        transcript[constants.STATISTICS] = coverage_stats.compute_transcript_level_statistics(
+            transcript[constants.EXONS]
         )
         return transcript
 
@@ -249,21 +250,21 @@ class GelCoverageRunner:
         :param gene: the gene data structure containing all exons
         :return: the data structure for the union transcript
         """
-        logging.debug("Creating union transcript for gene %s" % gene["name"])
-        all_exons = sum([transcript["exons"] for transcript in gene["trs"]], [])
-        all_exons.sort(key = lambda x: x["s"])
+        logging.debug("Creating union transcript for gene %s" % gene[constants.GENE_NAME])
+        all_exons = sum([transcript[constants.EXONS] for transcript in gene[constants.TRANSCRIPTS]], [])
+        all_exons.sort(key = lambda x: x[constants.EXON_START])
         union_exons = []
         first_exon = all_exons[0]
-        current_padded_end = first_exon["padded_e"] if self.is_exon_padding else first_exon["e"]
-        current_start = first_exon["s"]
-        current_end = first_exon["e"]
+        current_padded_end = first_exon[constants.EXON_PADDED_END] if self.is_exon_padding else first_exon[constants.EXON_END]
+        current_start = first_exon[constants.EXON_START]
+        current_end = first_exon[constants.EXON_END]
         # TODO: consider strand when assigning exon indices
         exon_idx = 1
         for exon in all_exons[1:]:
-            padded_start = exon["padded_s"] if self.is_exon_padding else exon["s"]
-            padded_end = exon["padded_e"] if self.is_exon_padding else exon["e"]
-            start = exon["s"]
-            end = exon["e"]
+            padded_start = exon[constants.EXON_PADDED_START] if self.is_exon_padding else exon[constants.EXON_START]
+            padded_end = exon[constants.EXON_PADDED_END] if self.is_exon_padding else exon[constants.EXON_END]
+            start = exon[constants.EXON_START]
+            end = exon[constants.EXON_END]
             if padded_start <= current_padded_end:
                 # Exons overlaps, we join them
                 current_padded_end = max(current_padded_end, padded_end)
@@ -271,7 +272,7 @@ class GelCoverageRunner:
             else:
                 # Exons do not overlap, they are different exons in the union transcript
                 current_exon = self.__create_exon(
-                    gene["chr"],
+                    gene[constants.CHROMOSOME],
                     current_start,
                     current_end,
                     exon_idx
@@ -284,7 +285,7 @@ class GelCoverageRunner:
                 exon_idx += 1
         # Stores the last exon
         last_exon = self.__create_exon(
-            gene["chr"],
+            gene[constants.CHROMOSOME],
             current_start,
             current_end,
             exon_idx
@@ -293,10 +294,10 @@ class GelCoverageRunner:
         union_exons.append(last_exon)
         # Create union transcript dict
         union_transcript = {
-            "exons" : union_exons,
-            "stats": coverage_stats.compute_transcript_level_statistics(union_exons)
+            constants.EXONS : union_exons,
+            constants.STATISTICS: coverage_stats.compute_transcript_level_statistics(union_exons)
         }
-        logging.debug("Built union transcript for gene %s" % gene["name"])
+        logging.debug("Built union transcript for gene %s" % gene[constants.GENE_NAME])
         return union_transcript
 
     def __create_gene(self, gene_name, chromosome, transcripts):
@@ -309,7 +310,7 @@ class GelCoverageRunner:
         """
         gene = self.__initialize_gene_dict(gene_name, chromosome, transcripts)
         # Calculate union transcript and compute stats
-        gene["union_tr"] = self.__create_union_transcript(gene)
+        gene[constants.UNION_TRANSCRIPT] = self.__create_union_transcript(gene)
         logging.info("Processed gene %s" % gene_name)
         return gene
 
@@ -413,43 +414,43 @@ class GelCoverageRunner:
             # Get genes annotations in BED format
             bed = self.cellbase_helper.make_exons_bed(self.gene_list, has_chr_prefix=self.bigwig_reader.has_chr_prefix)
             # Process the intervals for the coding region in the BED file
-            results["genes"] = self.__process_coding_region(bed)
+            results[constants.GENES] = self.__process_coding_region(bed)
             # Aggregate coding region statistics
             results["coding_region"] = coverage_stats.compute_coding_region_statistics(
-                results["genes"]
+                results[constants.GENES]
             )
             # Add uncovered genes
             results["uncovered_genes"] = [
-                {"name": k, "chr": v} for k, v in self.uncovered_genes.iteritems()
+                {constants.GENE_NAME: k, constants.CHROMOSOME: v} for k, v in self.uncovered_genes.iteritems()
                 ]
             # Removes unnecessary statistics of count bases at given coverage thresholds
             # NOTE: the clean way would be not to store them and infer them dynamically from the percentage value...
-            for gene in results["genes"]:
-                del gene["union_tr"]["stats"]["bases_lt_15x"]
-                del gene["union_tr"]["stats"]["bases_gte_15x"]
-                del gene["union_tr"]["stats"]["bases_gte_30x"]
-                del gene["union_tr"]["stats"]["bases_gte_50x"]
-                for exon in gene["union_tr"]["exons"]:
-                    del exon["stats"]["bases_lt_15x"]
-                    del exon["stats"]["bases_gte_15x"]
-                    del exon["stats"]["bases_gte_30x"]
-                    del exon["stats"]["bases_gte_50x"]
-                for transcript in gene["trs"]:
-                    del transcript["stats"]["bases_lt_15x"]
-                    del transcript["stats"]["bases_gte_15x"]
-                    del transcript["stats"]["bases_gte_30x"]
-                    del transcript["stats"]["bases_gte_50x"]
-                    for exon in transcript["exons"]:
-                        del exon["stats"]["bases_lt_15x"]
-                        del exon["stats"]["bases_gte_15x"]
-                        del exon["stats"]["bases_gte_30x"]
-                        del exon["stats"]["bases_gte_50x"]
+            for gene in results[constants.GENES]:
+                del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_LT15X]
+                del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE15X]
+                del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE30X]
+                del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE50X]
+                for exon in gene[constants.UNION_TRANSCRIPT][constants.EXONS]:
+                    del exon[constants.STATISTICS][constants.BASES_LT15X]
+                    del exon[constants.STATISTICS][constants.BASES_GTE15X]
+                    del exon[constants.STATISTICS][constants.BASES_GTE30X]
+                    del exon[constants.STATISTICS][constants.BASES_GTE50X]
+                for transcript in gene[constants.TRANSCRIPTS]:
+                    del transcript[constants.STATISTICS][constants.BASES_LT15X]
+                    del transcript[constants.STATISTICS][constants.BASES_GTE15X]
+                    del transcript[constants.STATISTICS][constants.BASES_GTE30X]
+                    del transcript[constants.STATISTICS][constants.BASES_GTE50X]
+                    for exon in transcript[constants.EXONS]:
+                        del exon[constants.STATISTICS][constants.BASES_LT15X]
+                        del exon[constants.STATISTICS][constants.BASES_GTE15X]
+                        del exon[constants.STATISTICS][constants.BASES_GTE30X]
+                        del exon[constants.STATISTICS][constants.BASES_GTE50X]
             # Remove the exon statistics to save space if enabled
             if not self.is_exon_stats_enabled:
-                for gene in results["genes"]:
-                    for transcript in gene["trs"]:
-                        del transcript["exons"]
-                    del gene["union_tr"]["exons"]
+                for gene in results[constants.GENES]:
+                    for transcript in gene[constants.TRANSCRIPTS]:
+                        del transcript[constants.EXONS]
+                    del gene[constants.UNION_TRANSCRIPT][constants.EXONS]
         else:
             logging.info("Coding region analysis disabled")
         # Compute the whole genome statistics if enabled (this is time consuming)
