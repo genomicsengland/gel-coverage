@@ -521,4 +521,8 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Saves the analysed region as a BED file
         bed.saveas('../resources/test/sample_output_14.bed')
         # Runs verifications on output JSON
-        self.verify_output(output, expected_gene_list)
+        self.expected_gene_list = expected_gene_list
+        self.assertEqual(type(output), dict)
+        # Verify that content in parameters is correct
+        self._verify_dict_field(output, "parameters", dict)
+        self._verify_parameters(output["parameters"])

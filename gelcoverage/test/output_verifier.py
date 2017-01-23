@@ -13,7 +13,7 @@ class OutputVerifier(unittest.TestCase):
         self.assertEqual(type(json), dict)
         # Verify that content in parameters is correct
         self._verify_dict_field(json, "parameters", dict)
-        self.__verify_parameters(json["parameters"])
+        self._verify_parameters(json["parameters"])
         # Verify that coverage results are correct
         self._verify_dict_field(json, "results", dict)
         if json["parameters"]["wg_stats_enabled"]:
@@ -62,7 +62,7 @@ class OutputVerifier(unittest.TestCase):
                             "found %s, expected any of %s" % (
                             name, str(type(_dict[name])), ",".join([str(x) for x in types])))
 
-    def __verify_parameters(self, parameters):
+    def _verify_parameters(self, parameters):
         try:
             self._verify_dict_field(parameters, "gap_coverage_threshold", int)
             self._verify_dict_field(parameters, "input_file", str)

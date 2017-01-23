@@ -327,7 +327,7 @@ class GelCoverageRunner:
         """
         # Checks that the BED file contains the expected information
         logging.info("Processing the information in the coverage bigwig on the bed intervals...")
-        if bed is None or len(bed) == 0:
+        if bed is None:
             logging.error("Incorrect BED file!")
             raise RuntimeError("Incorrect BED file!")
         # Initialize results data structure
