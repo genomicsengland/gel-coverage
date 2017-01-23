@@ -1,3 +1,16 @@
+version 1.2.0 (23 January 2017)
+----------------------------
+
+* Major changes:
+    - Coverage standard deviation is added to set of coverage metrics
+    - Coverage statistics aggregated for autosomes
+    - Some fields are renamed and every field name is not stored as a constant in the code, so renaming is not so painful.
+
+* Minor Changes:
+    - Fixed bug when all transcripts in a panel have been filtered out
+    - Longs list of genes (>99) are never printed to logs
+
+
 version 1.1.2 (19 December 2016)
 ----------------------------
 
