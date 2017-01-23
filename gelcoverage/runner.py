@@ -34,17 +34,21 @@ class GelCoverageRunner:
         self.is_coding_region_stats_enabled = self.config["coding_region_stats_enabled"]
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
         self.is_panel_analysis = "panel" in self.config and self.config["panel"] is not None and \
-                                 "panel_version" in self.config and self.config["panel_version"] is not None
-        self.is_gene_list_analysis = "gene_list" in self.config and self.config["gene_list"] is not None
+                                 self.config["panel"] != "" and \
+                                 "panel_version" in self.config and self.config["panel_version"] is not None and \
+                                 self.config["panel_version"] != ""
+        self.is_gene_list_analysis = "gene_list" in self.config and \
+                                     self.config["gene_list"] is not None and \
+                                     self.config["gene_list"] != ""
         # Initialize PanelApp helper
         if self.is_panel_analysis:
             self.panelapp_helper = PanelappHelper(host=config['panelapp_host'])
         # Gets the list of genes to analyse
         self.gene_list = self.get_gene_list()
-        if self.is_panel_analysis or self.is_gene_list_analysis:
+        if (self.is_panel_analysis or self.is_gene_list_analysis) and len(self.gene_list) < 100:
+            # Only prints the gene list when under 100 genes, otherwise becomes useless
             logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
-        else:
-            logging.info("%s genes to analyse" % str(len(self.gene_list)))
+        logging.info("%s genes to analyse" % str(len(self.gene_list)))
 
         # Opens the bigwig reader
         self.bigwig_reader = BigWigReader(self.config['bw'])
