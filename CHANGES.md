@@ -1,3 +1,9 @@
+version 1.2.1 (23 January 2017 a bit later...)
+----------------------------
+
+* Minor changes
+    - Upgrading required numpy version to 1.10.4
+
 version 1.2.0 (23 January 2017)
 ----------------------------
 
