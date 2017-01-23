@@ -123,6 +123,7 @@ class CellbaseHelper:
         :param filter: flag indicating if filtering should be applied
         :return: list of HGNC gene names
         """
+        logging.debug("Getting gene list from CellBase...")
         cellbase_result = self.cellbase_gene_client.search(
             assembly=self.assembly,
             include=",".join(["name", "transcripts.annotationFlags"]),
@@ -130,7 +131,7 @@ class CellbaseHelper:
         )
         gene_list = [x["name"] for x in cellbase_result[0]["result"]
                      if self.__is_any_flag_included(CellbaseHelper.__get_all_flags_for_gene(x["transcripts"]))]
-
+        logging.debug("Gene list obtained from CellBase of %s genes" % str(len(gene_list)))
         return gene_list
 
     def __get_gene_info(self, gene_list, filter= True):

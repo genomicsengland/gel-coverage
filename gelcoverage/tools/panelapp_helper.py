@@ -1,5 +1,6 @@
 import ujson
 import urllib2
+import logging
 
 
 class PanelappHelper:
@@ -16,6 +17,7 @@ class PanelappHelper:
         :param gene_confidence_threshold: the gene's level of evidence
         :return: a list of HGNC gene names
         """
+        logging.debug("Getting gene list from PanelApp...")
         url = "{host}/get_panel/{panel}/".format(
             host=self.host,
             panel=panel)
@@ -30,4 +32,5 @@ class PanelappHelper:
         if type(panel) != dict:
             raise SystemError("PanelApp returned an error for the query %s" % url)
         gene_list = [x["GeneSymbol"] for x in panel["result"]["Genes"]]
+        logging.debug("Gene list obtained from PanelApp of %s!" % str(len(gene_list)))
         return gene_list

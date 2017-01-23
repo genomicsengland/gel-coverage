@@ -2,3 +2,7 @@
 *.pyd
 *.bw
 *.log
+build
+dist
+.idea
+gelcoverage.egg-info
