@@ -256,7 +256,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         gene_0bp_padding[constants.UNION_TRANSCRIPT] = union_transcript
         self.verify_union_transcript(gene_0bp_padding, True)
 
-    @unittest.skip("long running test")
+    #@unittest.skip("long running test")
     def test6(self):
         """
         Test 6: provided bed of nonN regions and whole genome metrics enabled
@@ -496,5 +496,29 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
         bed.saveas('../resources/test/sample_output_13.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+
+    def test14(self):
+        """
+        Test panel with no transcript passing filters.
+        :return:
+        """
+        expected_gene_list = None  # too big to set here
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "5763f2ea8f620350a1996048"
+        self.config["panel_version"] = "1.0"
+        self.config["exon_padding"] = 15
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_14.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_14.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)

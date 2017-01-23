@@ -6,9 +6,12 @@ import logging
 import gelcoverage.stats.coverage_stats as coverage_stats
 import gelcoverage.stats.sequence_stats as sequence_stats
 import gelcoverage.constants as constants
+from gelcoverage.tools.bigwig_reader import BigWigReader
+from gelcoverage.tools.bed_reader import BedReader
+from gelcoverage.test.output_verifier import OutputVerifier
 
 
-class CoverageStatsTests(unittest.TestCase):
+class CoverageStatsTests(OutputVerifier):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
@@ -24,6 +27,11 @@ class CoverageStatsTests(unittest.TestCase):
         self.start_position = 1234
         self.coverage_threshold = 30
         self.gc_content = 0.59
+
+        self.bw = "../../resources/test/test1.bw"
+        self.bigwig_reader = BigWigReader(self.bw)
+        self.wg_regions = "../../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.onlychr2122.bed"
+        self.bed_reader = BedReader(self.wg_regions)
 
     def test1(self):
         """
@@ -118,6 +126,23 @@ class CoverageStatsTests(unittest.TestCase):
         self.assertEqual(type(stats[constants.GC_CONTENT]), float)
 
     # TODO: test the panel level statistics
+
+    def test4(self):
+        """
+        Compute whole genome statistics
+        :return:
+        """
+        results = coverage_stats.compute_whole_genome_statistics(self.bigwig_reader, self.bed_reader)
+        self._verify_dict_field(results, constants.STATISTICS, dict)
+        self._verify_dict_field(results, constants.CHROMOSOMES, list)
+        self._verify_wg_stats(results[constants.STATISTICS])
+        found_autosomes = False
+        for chr_stats in results[constants.CHROMOSOMES]:
+            self._verify_wg_stats(chr_stats)
+            if chr_stats[constants.CHROMOSOME] == constants.AUTOSOMES:
+                found_autosomes = True
+        self.assertTrue(found_autosomes, "No aggregated stats in whole genome for autosomes")
+
 
 class SequenceStatsTests(unittest.TestCase):
 

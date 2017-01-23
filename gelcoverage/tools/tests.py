@@ -208,6 +208,13 @@ class CellbaseHelperTests(unittest.TestCase):
         bed = self.cellbase_helper.make_exons_bed(gene_list)
         self.assertIsNotNone(bed)
 
+    def test7(self):
+        """
+        Test panel with no transcript passing filters.
+        :return:
+        """
+        "5763f2ea8f620350a1996048", "1.0", "HighEvidence"
+
 
 class PanelappHelperTests(unittest.TestCase):
 
