@@ -4,6 +4,7 @@ from pycellbase.cbconfig import ConfigClient
 import logging
 
 import gelcoverage.stats.sequence_stats as sequence_stats
+import gelcoverage.tools.backoff_retrier as backoff_retrier
 
 
 chromosome_mapping = {
@@ -68,7 +69,7 @@ chromosome_mapping = {
 
 class CellbaseHelper:
 
-    def __init__(self, species, version, assembly, host, filter_flags, filter_biotypes):
+    def __init__(self, species, version, assembly, host, retries, filter_flags, filter_biotypes):
         """
         Initializes the CellBase helper.
         :param species: The species
@@ -83,6 +84,7 @@ class CellbaseHelper:
         self.filter_biotypes = filter_biotypes
         self.assembly = assembly
         self.species = species
+        self.retries = retries
         # Builds JSON configuration
         json_config = {
             "species": species,
@@ -97,6 +99,8 @@ class CellbaseHelper:
         config = ConfigClient(json_config)
         self.cellbase_client = CellBaseClient(config)
         self.cellbase_gene_client = self.cellbase_client.get_gene_client()
+        # Wraps the CB search call into the truncated binary backoff implementation
+        self.cellbase_search = backoff_retrier.wrapper(self.cellbase_gene_client.search, self.retries)
         # Loads chromosome mapping for this specific reference
         self.chromosome_mapping = chromosome_mapping[self.species.lower()][self.assembly.lower()]
 
@@ -124,11 +128,12 @@ class CellbaseHelper:
         :return: list of HGNC gene names
         """
         logging.debug("Getting gene list from CellBase...")
-        cellbase_result = self.cellbase_gene_client.search(
-            assembly=self.assembly,
-            include=",".join(["name", "transcripts.annotationFlags"]),
-            **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
-        )
+        # calls to CB
+        cellbase_result = self.cellbase_search(
+                    assembly=self.assembly,
+                    include=",".join(["name", "transcripts.annotationFlags"]),
+                    **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
+                )
         gene_list = [x["name"] for x in cellbase_result[0]["result"]
                      if self.__is_any_flag_included(CellbaseHelper.__get_all_flags_for_gene(x["transcripts"]))]
         logging.debug("Gene list obtained from CellBase of %s genes" % str(len(gene_list)))
@@ -142,7 +147,8 @@ class CellbaseHelper:
         :param filter: flag indicating whether to filter by biotypes
         :return: the data structure returned by CellBase
         """
-        cellbase_genes = self.cellbase_gene_client.search(
+        # calls to CB
+        cellbase_genes = self.cellbase_search(
             name=gene_list,
             assembly=self.assembly,
             include=["name", "chromosome", "transcripts.exons.start",

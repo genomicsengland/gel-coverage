@@ -15,12 +15,15 @@ class GelCoverageRunner:
 
     def __init__(self, config):
         self.config = config
+        # Run sanity checks on the configuration
+        self.__config_sanity_checks()
         # Initialize CellBase helper
         self.cellbase_helper = CellbaseHelper(
             species=config['cellbase_species'],
             version=config['cellbase_version'],
             assembly=config['cellbase_assembly'],
             host=config['cellbase_host'],
+            retries=config['cellbase_retries'],
             filter_flags=config['transcript_filtering_flags'].split(","),
             filter_biotypes=config['transcript_filtering_biotypes'].split(",")
         )
@@ -42,7 +45,10 @@ class GelCoverageRunner:
                                      self.config["gene_list"] != ""
         # Initialize PanelApp helper
         if self.is_panel_analysis:
-            self.panelapp_helper = PanelappHelper(host=config['panelapp_host'])
+            self.panelapp_helper = PanelappHelper(
+                host=config['panelapp_host'],
+                retries=config['panelapp_retries']
+            )
         # Gets the list of genes to analyse
         self.gene_list = self.get_gene_list()
         if (self.is_panel_analysis or self.is_gene_list_analysis) and len(self.gene_list) < 100:
@@ -57,6 +63,53 @@ class GelCoverageRunner:
             self.bed_reader = BedReader(self.wg_regions)
         self.uncovered_genes = {}
         self.__sanity_checks()
+
+    def __config_sanity_checks(self):
+        """
+        Checks the input configuration is not missing any value
+        :return:
+        """
+        errors = []
+        if "bw" not in self.config:
+            errors.append("'bw' field is mising")
+        if "coverage_threshold" not in self.config:
+            errors.append("'coverage_threshold' field is mising")
+        if "configuration_file" not in self.config:
+            errors.append("'configuration_file' field is mising")
+        if "cellbase_species" not in self.config:
+            errors.append("'cellbase_species' field is mising")
+        if "cellbase_version" not in self.config:
+            errors.append("'cellbase_version' field is mising")
+        if "cellbase_assembly" not in self.config:
+            errors.append("'cellbase_assembly' field is mising")
+        if "cellbase_host" not in self.config:
+            errors.append("'cellbase_host' field is mising")
+        if "cellbase_retries" not in self.config:
+            errors.append("'cellbase_retries' field is mising")
+        if "panelapp_host" not in self.config:
+            errors.append("'panelapp_host' field is mising")
+        if "panelapp_gene_confidence" not in self.config:
+            errors.append("'panelapp_gene_confidence' field is mising")
+        if "panelapp_retries" not in self.config:
+            errors.append("'panelapp_retries' field is mising")
+        if "transcript_filtering_flags" not in self.config:
+            errors.append("'transcript_filtering_flags' field is mising")
+        if "transcript_filtering_biotypes" not in self.config:
+            errors.append("'transcript_filtering_biotypes' field is mising")
+        if "wg_stats_enabled" not in self.config:
+            errors.append("'wg_stats_enabled' field is mising")
+        if "wg_regions" not in self.config:
+            errors.append("'wg_regions' field is mising")
+        if "exon_stats_enabled" not in self.config:
+            errors.append("'exon_stats_enabled' field is mising")
+        if "coding_region_stats_enabled" not in self.config:
+            errors.append("'coding_region_stats_enabled' field is mising")
+
+        if len(errors) > 0:
+            for error in errors:
+                logging.error(error)
+            raise GelCoverageInputError("Error in configuration data!")
+
 
     def __sanity_checks(self):
         """

@@ -2,11 +2,15 @@ import ujson
 import urllib2
 import logging
 
+import gelcoverage.tools.backoff_retrier as backoff_retrier
+
 
 class PanelappHelper:
 
-    def __init__(self, host):
+    def __init__(self, host, retries):
         self.host = host
+        self.retries = retries
+        self.urlopen = backoff_retrier.wrapper(urllib2.urlopen, self.retries)
 
     def get_gene_list(self, panel, panel_version, gene_confidence_threshold):
         """
@@ -27,7 +31,7 @@ class PanelappHelper:
             confidence=",".join(gene_confidence_threshold) if type(gene_confidence_threshold) == list
             else gene_confidence_threshold)
         url = urllib2.quote(url) + parameters  # we don't want parameters quoted
-        panel = ujson.load(urllib2.urlopen("https://" + url))
+        panel = ujson.load(self.urlopen("https://" + url))
         # TODO: refine error management
         if type(panel) != dict:
             raise SystemError("PanelApp returned an error for the query %s" % url)
