@@ -203,13 +203,13 @@ def compute_coding_region_statistics(genes):
         constants.SD: round(float(np.sum(
             [x[constants.SD] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 3),
         constants.LT15X: round(float(np.sum(
-            [x[constants.LT15X] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 3),
+            [x[constants.LT15X] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 5),
         constants.GTE15X: round(float(np.sum(
-            [x[constants.GTE15X] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 3),
+            [x[constants.GTE15X] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 5),
         constants.GTE30X: round(float(np.sum(
-            [x[constants.GTE30X] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 3),
+            [x[constants.GTE30X] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 5),
         constants.GTE50X: round(float(np.sum(
-            [x[constants.GTE50X] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 3)
+            [x[constants.GTE50X] * x[constants.BASES] for x in autosomes_stats]) / autosomes_total_bases), 5)
     }
     results[constants.CHROMOSOMES].append(autosomes_chr_stats)
 
@@ -370,13 +370,13 @@ def aggregate_chromosomes(stats):
         constants.SD: round(float(np.sum(
             [x[constants.SD] * x[constants.BASES] for x in stats]) / total_bases), 3),
         constants.LT15X: round(float(np.sum(
-            [x[constants.LT15X] * x[constants.BASES] for x in stats]) / total_bases), 3),
+            [x[constants.LT15X] * x[constants.BASES] for x in stats]) / total_bases), 5),
         constants.GTE15X: round(float(np.sum(
-            [x[constants.GTE15X] * x[constants.BASES] for x in stats]) / total_bases), 3),
+            [x[constants.GTE15X] * x[constants.BASES] for x in stats]) / total_bases), 5),
         constants.GTE30X: round(float(np.sum(
-            [x[constants.GTE30X] * x[constants.BASES] for x in stats]) / total_bases), 3),
+            [x[constants.GTE30X] * x[constants.BASES] for x in stats]) / total_bases), 5),
         constants.GTE50X: round(float(np.sum(
-            [x[constants.GTE50X] * x[constants.BASES] for x in stats]) / total_bases), 3),
+            [x[constants.GTE50X] * x[constants.BASES] for x in stats]) / total_bases), 5),
         constants.RMSD: round(float(np.sum(
             [x[constants.RMSD] * x[constants.BASES] for x in stats]) / total_bases), 3)
     }
