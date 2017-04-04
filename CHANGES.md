@@ -1,3 +1,10 @@
+version 1.2.2 (3 April 2017)
+----------------------------
+
+* Minor changes
+    - Implemented a truncated binary backoff retry policy for CellBase and PanelApp connections.
+    - Fixed a bug with some percentages truncated to only 1 decimal place.
+
 version 1.2.1 (23 January 2017 a bit later...)
 ----------------------------
 

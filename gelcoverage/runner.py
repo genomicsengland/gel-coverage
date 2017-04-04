@@ -9,25 +9,29 @@ import gelcoverage.constants as constants
 
 
 class GelCoverageInputError(Exception):
+
     pass
+
 
 class GelCoverageRunner:
 
     def __init__(self, config):
         self.config = config
+        # Run sanity checks on the configuration
+        self.__config_sanity_checks()
+        # Configure logs
+        logging.basicConfig(level=self.config["log_level"])
         # Initialize CellBase helper
         self.cellbase_helper = CellbaseHelper(
-            species=config['cellbase_species'],
-            version=config['cellbase_version'],
-            assembly=config['cellbase_assembly'],
-            host=config['cellbase_host'],
-            filter_flags=config['transcript_filtering_flags'].split(","),
-            filter_biotypes=config['transcript_filtering_biotypes'].split(",")
+            species=self.config['cellbase_species'],
+            version=self.config['cellbase_version'],
+            assembly=self.config['cellbase_assembly'],
+            host=self.config['cellbase_host'],
+            retries=self.config['cellbase_retries'],
+            filter_flags=self.config['transcript_filtering_flags'].split(","),
+            filter_biotypes=self.config['transcript_filtering_biotypes'].split(",")
         )
         # Helper flags for the configuration
-        if "exon_padding" not in self.config or type(self.config["exon_padding"]) != int or \
-                        self.config["exon_padding"] <= 0:
-            self.config["exon_padding"] = 0
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
@@ -42,7 +46,10 @@ class GelCoverageRunner:
                                      self.config["gene_list"] != ""
         # Initialize PanelApp helper
         if self.is_panel_analysis:
-            self.panelapp_helper = PanelappHelper(host=config['panelapp_host'])
+            self.panelapp_helper = PanelappHelper(
+                host=self.config['panelapp_host'],
+                retries=self.config['panelapp_retries']
+            )
         # Gets the list of genes to analyse
         self.gene_list = self.get_gene_list()
         if (self.is_panel_analysis or self.is_gene_list_analysis) and len(self.gene_list) < 100:
@@ -57,6 +64,59 @@ class GelCoverageRunner:
             self.bed_reader = BedReader(self.wg_regions)
         self.uncovered_genes = {}
         self.__sanity_checks()
+
+    def __config_sanity_checks(self):
+        """
+        Checks the input configuration is not missing any value
+        :return:
+        """
+        # add default values to missing parameters
+        if "cellbase_retries" not in self.config:
+            # setting default value, infinite retries
+            self.config["cellbase_retries"] = -1
+        if "panelapp_retries" not in self.config:
+            # setting default value, infinite retries
+            self.config["panelapp_retries"] = -1
+        if "exon_padding" not in self.config or type(self.config["exon_padding"]) != int or \
+                        self.config["exon_padding"] <= 0:
+            # default value exon padding disabled
+            self.config["exon_padding"] = 0
+        if "log_level" not in self.config:
+            # default value log level to INFO
+            self.config["log_level"] = 20
+        # check required parameters
+        errors = []
+        if "bw" not in self.config:
+            errors.append("'bw' field is mising")
+        if "coverage_threshold" not in self.config:
+            errors.append("'coverage_threshold' field is mising")
+        if "cellbase_species" not in self.config:
+            errors.append("'cellbase_species' field is mising")
+        if "cellbase_version" not in self.config:
+            errors.append("'cellbase_version' field is mising")
+        if "cellbase_assembly" not in self.config:
+            errors.append("'cellbase_assembly' field is mising")
+        if "cellbase_host" not in self.config:
+            errors.append("'cellbase_host' field is mising")
+        if "panelapp_host" not in self.config:
+            errors.append("'panelapp_host' field is mising")
+        if "panelapp_gene_confidence" not in self.config:
+            errors.append("'panelapp_gene_confidence' field is mising")
+        if "transcript_filtering_flags" not in self.config:
+            errors.append("'transcript_filtering_flags' field is mising")
+        if "transcript_filtering_biotypes" not in self.config:
+            errors.append("'transcript_filtering_biotypes' field is mising")
+        if "wg_stats_enabled" not in self.config:
+            errors.append("'wg_stats_enabled' field is mising")
+        if "exon_stats_enabled" not in self.config:
+            errors.append("'exon_stats_enabled' field is mising")
+        if "coding_region_stats_enabled" not in self.config:
+            errors.append("'coding_region_stats_enabled' field is mising")
+        # raise exceptino if necessary
+        if len(errors) > 0:
+            for error in errors:
+                logging.error(error)
+            raise GelCoverageInputError("Error in configuration data!")
 
     def __sanity_checks(self):
         """
@@ -108,7 +168,6 @@ class GelCoverageRunner:
         parameters = {
             "gap_coverage_threshold": self.config["coverage_threshold"],
             "input_file": self.config["bw"],
-            "configuration_file": self.config["configuration_file"],
             "species": self.config['cellbase_species'],
             "assembly": self.config['cellbase_assembly'],
             "transcript_filtering_flags": self.config['transcript_filtering_flags'],
@@ -184,6 +243,8 @@ class GelCoverageRunner:
         :param exon_number: the exon number
         :param start: the start position
         :param end: the end position
+        :param padded_start: the padded start position
+        :param padded_end: the padded end position
         :return: the basic exon data structure
         """
         exon = {
@@ -197,7 +258,7 @@ class GelCoverageRunner:
             exon[constants.EXON_PADDED_END] = padded_end
         return exon
 
-    def __create_exon(self, chromosome, start, end, exon_idx, gc_content = None):
+    def __create_exon(self, chromosome, start, end, exon_idx, gc_content=None):
         """
         Creates an exon data structure, computes the coverage statistics and find gaps
         :param chromosome: the chromosome
@@ -210,10 +271,10 @@ class GelCoverageRunner:
         exon_number = "exon%s" % exon_idx if type(exon_idx) == int else exon_idx
         exon = GelCoverageRunner.__initialize_exon_dict(
             exon_number,
-            start = start,
-            end = end,
-            padded_start = start - self.config["exon_padding"] if self.is_exon_padding else None,
-            padded_end = end + self.config["exon_padding"] if self.is_exon_padding else None
+            start=start,
+            end=end,
+            padded_start=start - self.config["exon_padding"] if self.is_exon_padding else None,
+            padded_end=end + self.config["exon_padding"] if self.is_exon_padding else None
         )
         # Update length
         exon[constants.EXON_LENGTH] = end - start + 1
@@ -231,17 +292,17 @@ class GelCoverageRunner:
                 start,
                 self.config['coverage_threshold']
             )
-        #logging.debug("Created exon %s" % exon_number)
+        # logging.debug("Created exon %s" % exon_number)
         return exon
 
-    def __create_transcript(self, id, exons):
+    def __create_transcript(self, _id, exons):
         """
         Creates a transcript data structure and computes statistics
-        :param id: the transcript id
+        :param _id: the transcript id
         :param exons: the exons data structure
         :return: the transcript data structure
         """
-        transcript = self.__initialize_transcript_dict(id, exons)
+        transcript = self.__initialize_transcript_dict(_id, exons)
         # Compute transcript level statistics by aggregating stats on every exon
         transcript[constants.STATISTICS] = coverage_stats.compute_transcript_level_statistics(
             transcript[constants.EXONS]
@@ -256,10 +317,11 @@ class GelCoverageRunner:
         """
         logging.debug("Creating union transcript for gene %s" % gene[constants.GENE_NAME])
         all_exons = sum([transcript[constants.EXONS] for transcript in gene[constants.TRANSCRIPTS]], [])
-        all_exons.sort(key = lambda x: x[constants.EXON_START])
+        all_exons.sort(key=lambda x: x[constants.EXON_START])
         union_exons = []
         first_exon = all_exons[0]
-        current_padded_end = first_exon[constants.EXON_PADDED_END] if self.is_exon_padding else first_exon[constants.EXON_END]
+        current_padded_end = first_exon[constants.EXON_PADDED_END] if self.is_exon_padding \
+            else first_exon[constants.EXON_END]
         current_start = first_exon[constants.EXON_START]
         current_end = first_exon[constants.EXON_END]
         # TODO: consider strand when assigning exon indices
@@ -298,7 +360,7 @@ class GelCoverageRunner:
         union_exons.append(last_exon)
         # Create union transcript dict
         union_transcript = {
-            constants.EXONS : union_exons,
+            constants.EXONS: union_exons,
             constants.STATISTICS: coverage_stats.compute_transcript_level_statistics(union_exons)
         }
         logging.debug("Built union transcript for gene %s" % gene[constants.GENE_NAME])
@@ -387,7 +449,7 @@ class GelCoverageRunner:
         if len(current_exons) > 0:
             transcript = self.__create_transcript(current_transcript_id, current_exons)
             current_transcripts.append(transcript)
-        if len(current_transcripts) >0:
+        if len(current_transcripts) > 0:
             gene = self.__create_gene(gene_name, chromosome, current_transcripts)
             genes.append(gene)
         logging.info("Coverage bigwig coding region processed!")
@@ -466,5 +528,4 @@ class GelCoverageRunner:
         else:
             logging.info("Whole genome analysis disabled")
 
-
-        return (self.__output(results), bed)
+        return self.__output(results), bed

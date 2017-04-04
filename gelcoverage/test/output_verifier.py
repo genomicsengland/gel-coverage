@@ -66,7 +66,6 @@ class OutputVerifier(unittest.TestCase):
         try:
             self._verify_dict_field(parameters, "gap_coverage_threshold", int)
             self._verify_dict_field(parameters, "input_file", str)
-            self._verify_dict_field(parameters, "configuration_file", str)
             self._verify_dict_field(parameters, "species", str)
             self._verify_dict_field(parameters, "assembly", str)
             self._verify_dict_field(parameters, "transcript_filtering_flags", str)
@@ -245,22 +244,17 @@ class OutputVerifier(unittest.TestCase):
             self.assertEqual(type(stats), dict)
             if has_gc:
                 self._verify_dict_field(stats, constants.GC_CONTENT, float)
-                self.assertTrue(stats[constants.GC_CONTENT] >= 0 and
-                                stats[constants.GC_CONTENT] <= 1)
+                self.assertTrue(stats[constants.GC_CONTENT] >= 0 and stats[constants.GC_CONTENT] <= 1)
             self._verify_dict_field(stats, constants.AVERAGE, float)
             self.assertTrue(stats[constants.AVERAGE] >= 0)
             self._verify_dict_field(stats, constants.GTE15X, float)
-            self.assertTrue(stats[constants.GTE15X] >= 0 and
-                            stats[constants.GTE15X] <= 1)
+            self.assertTrue(stats[constants.GTE15X] >= 0 and stats[constants.GTE15X] <= 1)
             self._verify_dict_field(stats, constants.GTE30X, float)
-            self.assertTrue(stats[constants.GTE30X] >= 0 and
-                            stats[constants.GTE30X] <= 1)
+            self.assertTrue(stats[constants.GTE30X] >= 0 and stats[constants.GTE30X] <= 1)
             self._verify_dict_field(stats, constants.GTE50X, float)
-            self.assertTrue(stats[constants.GTE50X] >= 0 and
-                            stats[constants.GTE50X] <= 1)
+            self.assertTrue(stats[constants.GTE50X] >= 0 and stats[constants.GTE50X] <= 1)
             self._verify_dict_field(stats, constants.LT15X, float)
-            self.assertTrue(stats[constants.LT15X] >= 0 and
-                            stats[constants.LT15X] <= 1)
+            self.assertTrue(stats[constants.LT15X] >= 0 and stats[constants.LT15X] <= 1)
             self._verify_dict_field(stats, constants.BASES, [int, long])
             self.assertTrue(stats[constants.BASES] >= 0)
             self._verify_dict_field(stats, constants.MEDIAN, float)

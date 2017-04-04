@@ -38,8 +38,10 @@ config = {
     "cellbase_version": 'latest',
     "cellbase_assembly": 'GRCh37/GRCh38',
     "cellbase_host": '10.5.8.201:8080/cellbase-4.5.0-rc',
+    "cellbase_retries": -1,
     "panelapp_host": 'bioinfo.extge.co.uk/crowdsourcing/WebServices',
     "panelapp_gene_confidence": 'HighEvidence',
+    "panelapp_retries": -1,
     "transcript_filtering_flags": 'basic',
     "transcript_filtering_biotypes": 'IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene',
     "exon_padding": 15,
@@ -100,6 +102,12 @@ a BED file.
     * Execution time is around 1 hour
 
 Any combination, of the previous should generate a single JSON with all the information.
+
+
+### Dependencies and connection retries
+
+The coverage module depends on two external systems: CellBase and PanelApp. CellBase is used to retrieve the genes to be analysed and the precise coordinates of each genomic region. PanelApp is used only in the panel mode to retrieve those genes belonging to a given panel. If any of these systems is down the analysis cannot run.
+An exponential backoff policy will work whenever the connection to any of these two systems fails. The maximum number of retries can be configured by using the parameters `cellbase_retries` and `panelapp_retries`. If the value is -1 infinite retries will apply. These parameters are not available from the command line, but from the configuration file.
 
 
 ### Exploring the results
