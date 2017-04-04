@@ -4,6 +4,8 @@ version 1.2.2 (3 April 2017)
 * Minor changes
     - Implemented a truncated binary backoff retry policy for CellBase and PanelApp connections.
     - Fixed a bug with some percentages truncated to only 1 decimal place.
+    - Logs are now more controlled when missing regions are found. Also, log level is configurable when using the module as a Python library, default log level is INFO.
+    - PEP8 fixes
 
 version 1.2.1 (23 January 2017 a bit later...)
 ----------------------------
