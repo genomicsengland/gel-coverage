@@ -8,10 +8,10 @@ import gelcoverage.tools.backoff_retrier as backoff_retrier
 
 
 chromosome_mapping = {
-    "hsapiens" : {
+    "hsapiens": {
         "grch38": {
-            "1":"chr1",
-            "2":"chr2",
+            "1": "chr1",
+            "2": "chr2",
             "3": "chr3",
             "4": "chr4",
             "5": "chr5",
@@ -37,8 +37,8 @@ chromosome_mapping = {
             "MT": "chrM"
         },
         "grch37": {
-            "1":"chr1",
-            "2":"chr2",
+            "1": "chr1",
+            "2": "chr2",
             "3": "chr3",
             "4": "chr4",
             "5": "chr5",
@@ -121,10 +121,10 @@ class CellbaseHelper:
         """
         return sum([y["annotationFlags"] if "annotationFlags" in y else [] for y in transcripts], [])
 
-    def get_all_gene_names(self, filter=True):
+    def get_all_gene_names(self, _filter=True):
         """
         Gets all existing HGNC gene names
-        :param filter: flag indicating if filtering should be applied
+        :param _filter: flag indicating if filtering should be applied
         :return: list of HGNC gene names
         """
         logging.debug("Getting gene list from CellBase...")
@@ -132,42 +132,41 @@ class CellbaseHelper:
         cellbase_result = self.cellbase_search(
                     assembly=self.assembly,
                     include=",".join(["name", "transcripts.annotationFlags"]),
-                    **{"transcripts.biotype": ",".join(self.filter_biotypes) if filter else ""}
+                    **{"transcripts.biotype": ",".join(self.filter_biotypes) if _filter else ""}
                 )
         gene_list = [x["name"] for x in cellbase_result[0]["result"]
                      if self.__is_any_flag_included(CellbaseHelper.__get_all_flags_for_gene(x["transcripts"]))]
         logging.debug("Gene list obtained from CellBase of %s genes" % str(len(gene_list)))
         return gene_list
 
-    def __get_gene_info(self, gene_list, filter= True):
+    def __get_gene_info(self, gene_list, _filter=True):
         """
         For a list of HGNC gene names queries CellBase for all information about transcripts and
         their corresponding exons, including the exonic sequence.
         :param gene_list: the list of HGNC gene names
-        :param filter: flag indicating whether to filter by biotypes
+        :param _filter: flag indicating whether to filter by biotypes
         :return: the data structure returned by CellBase
         """
         # calls to CB
         cellbase_genes = self.cellbase_search(
             name=gene_list,
             assembly=self.assembly,
-            include=["name", "chromosome", "transcripts.exons.start",
-                              "transcripts.exons.exonNumber",
-                              "transcripts.id,transcripts.strand",
-                              "transcripts.exons.end", "transcripts.exons.sequence",
-                              "exonNumber", "transcripts.annotationFlags"],
-            **{"transcripts.biotype": self.filter_biotypes if filter else []}
+            include=["name", "chromosome", "transcripts.exons.start", "transcripts.exons.exonNumber",
+                     "transcripts.id,transcripts.strand", "transcripts.exons.end", "transcripts.exons.sequence",
+                     "exonNumber", "transcripts.annotationFlags"],
+            **{"transcripts.biotype": self.filter_biotypes if _filter else []}
         )
         # TODO: check for errors and empty results
         # TODO: unit test
         return cellbase_genes
 
-    def make_exons_bed(self, gene_list, filter=True, has_chr_prefix=False):
+    def make_exons_bed(self, gene_list, _filter=True, has_chr_prefix=False):
         """
         Gets all exons from cellbase and makes a bed - also calculates gc content, returns a valid bed with gc in the
         score column
         :param gene_list The list of genes to be analysed
-        :param filter: flag indicating if filtering should be applied
+        :param _filter: flag indicating if filtering should be applied
+        :param has_chr_prefix: flag indicating if the chromosomes have the chr prefix or not
         :return: pybedtools object
         """
         logging.info("Building gene annotations bed file from CellBase...")
@@ -193,7 +192,7 @@ class CellbaseHelper:
                 for transcript in gene["transcripts"]:
                     filtered_out = "annotationFlags" not in transcript or \
                                    not self.__is_any_flag_included(transcript["annotationFlags"])
-                    if filter and filtered_out:
+                    if _filter and filtered_out:
                         # We ignore transcripts not flagged as any of a set of flags in the config file
                         continue
                     txid = transcript["id"]
@@ -214,8 +213,8 @@ class CellbaseHelper:
         logging.info("Gene annotations bed file built!")
         return bed
 
-    def get_gene_list_from_transcripts (self, transcripts_list):
-        # TODO:
+    def get_gene_list_from_transcripts(self, transcripts_list):
+        # TODO: implement it
         # gene_list = []
         # return gene_list
         raise NotImplemented

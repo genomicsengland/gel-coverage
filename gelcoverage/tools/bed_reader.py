@@ -31,7 +31,6 @@ class BedReader:
     def get_regions_dictionary(self):
         """
         Builds the regions in a bed file into a python dictionary structure
-        :param bed: the bed file
         :return: the dict structure
         """
         logging.debug("Loading Bed regions into a dict...")

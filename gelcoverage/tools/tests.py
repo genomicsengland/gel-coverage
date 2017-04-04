@@ -40,7 +40,7 @@ class CellbaseHelperTests(unittest.TestCase):
         Tests get_all_genes() without filtering enabled
         :return:
         """
-        genes = self.cellbase_helper.get_all_gene_names(filter = False)
+        genes = self.cellbase_helper.get_all_gene_names(_filter=False)
         self.assertEqual(type(genes), list)
         self.assertEqual(len(genes), 57905)
         print "%s genes were returned" % str(len(genes))
@@ -113,7 +113,7 @@ class CellbaseHelperTests(unittest.TestCase):
         gene_list = ["CFTR", "BRCA1", "BRCA2",
                      "IGHE"  # gene with 3 transcripts flagged as basic and 1 not flagged as basic
                      ]
-        bed = self.cellbase_helper.make_exons_bed(gene_list, filter = False)
+        bed = self.cellbase_helper.make_exons_bed(gene_list, _filter=False)
         self.assertIsNotNone(bed)
         ighe_transcripts = []
         for interval in bed:
@@ -263,7 +263,7 @@ class CellbaseHelperRetriesTests(unittest.TestCase):
         Tests get_all_genes() without filtering enabled
         :return:
         """
-        genes = self.cellbase_helper.get_all_gene_names(filter = False)
+        genes = self.cellbase_helper.get_all_gene_names(_filter=False)
         self.assertEqual(type(genes), list)
         self.assertEqual(len(genes), 57905)
         self.assertEqual(self.count_failures, 3)
@@ -338,7 +338,7 @@ class CellbaseHelperRetriesTests(unittest.TestCase):
         gene_list = ["CFTR", "BRCA1", "BRCA2",
                      "IGHE"  # gene with 3 transcripts flagged as basic and 1 not flagged as basic
                      ]
-        bed = self.cellbase_helper.make_exons_bed(gene_list, filter = False)
+        bed = self.cellbase_helper.make_exons_bed(gene_list, _filter=False)
         self.assertIsNotNone(bed)
         self.assertEqual(self.count_failures, 3)
         ighe_transcripts = []

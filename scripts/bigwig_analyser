@@ -56,9 +56,6 @@ def main():
     config_parser = ConfigParser.ConfigParser()
     config_parser.readfp(open(args.config))
 
-    # Sets logging level
-    logging.basicConfig(level=int(config_parser.get("logging", "level")))
-
     # Creates a data structure with all config parameters
     config = {
         # Sets parameters from CLI
@@ -83,7 +80,8 @@ def main():
         "wg_stats_enabled": args.wg_stats_enabled,
         "wg_regions": args.wg_regions,
         "exon_stats_enabled": args.exon_stats_enabled,
-        "coding_region_stats_enabled": args.coding_region_stats_enabled
+        "coding_region_stats_enabled": args.coding_region_stats_enabled,
+        "log_level": int(config_parser.get("logging", "level"))
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)

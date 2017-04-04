@@ -4,6 +4,7 @@ import logging
 import time
 import random
 
+
 def wrapper(func, retries):
     """
     This wrapper implements a truncated binary exponential backoff algorithm between retries.
@@ -26,7 +27,7 @@ def wrapper(func, retries):
         backoff_iteration = 1
         truncate_iteration = 8
         success = False
-        while (not success):
+        while not success:
             try:
                 results = func(*args, **kwargs)
                 success = True
