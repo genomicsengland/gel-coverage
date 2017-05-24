@@ -1,3 +1,9 @@
+version 1.2.3 (24 May 2017)
+----------------------------
+
+* Minor changes
+    - The binary backoff policy has been added to the cellbase client initialisation (https://jira.extge.co.uk/browse/BERTHA-239)
+
 version 1.2.2 (3 April 2017)
 ----------------------------
 

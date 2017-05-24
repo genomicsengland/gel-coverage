@@ -96,13 +96,18 @@ class CellbaseHelper:
             }
         }
         # Initializes the CellBase client
-        config = ConfigClient(json_config)
-        self.cellbase_client = CellBaseClient(config)
+        self.__secure_initialise_cellbase_client = backoff_retrier.wrapper(self.__initialise_cellbase_client,
+                                                                           self.retries)
+        self.cellbase_client = self.__secure_initialise_cellbase_client(json_config)
         self.cellbase_gene_client = self.cellbase_client.get_gene_client()
         # Wraps the CB search call into the truncated binary backoff implementation
         self.cellbase_search = backoff_retrier.wrapper(self.cellbase_gene_client.search, self.retries)
         # Loads chromosome mapping for this specific reference
         self.chromosome_mapping = chromosome_mapping[self.species.lower()][self.assembly.lower()]
+
+    def __initialise_cellbase_client(self, json_config):
+        config = ConfigClient(json_config)
+        return CellBaseClient(config)
 
     def __is_any_flag_included(self, flags):
         """
