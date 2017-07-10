@@ -63,7 +63,7 @@ Create the BAMs as follows:
 samtools view -b /genomes/by_date/2016-11-25/HX01579108/LP3000160-DNA_A02/Assembly/LP3000160-DNA_A02.bam SCN2A: 2:165,995,882-166,349,242 9:131,214,837-131,495,941 20:8,012,824-9,049,003 11:690,475-898,333 12:51,884,050-52,306,648 9:130,341,649-130,458,394 19:50,263,139-50,481,608  > ~/test1.bam
 samtools index test1.bam
 samtools view -b /genomes/by_date/2016-11-25/HX01579108/LP3000160-DNA_A02/Assembly/LP3000160-DNA_A02.bam CFTR: 7:117,005,838-117,456,025 17:41,096,312-41,422,262 13:32,789,611-33,074,403 14:105,964,224-106,168,065 > ~/test2.bam
-samtools index test1.bam
+samtools index test2.bam
 ```
 
 We will need a file describing chromosome lengths:
