@@ -12,6 +12,17 @@ class GelCoverageInputError(Exception):
 
     pass
 
+# Might be a good idea to create a helpers and put these classes there.
+class BedInterval:
+    def __init__(self, bedline):
+        self.bedline = bedline.rstrip('\n').split('\t')
+        self.chrom = self.bedline[0]
+        self.start = self.bedline[1]
+        self.end = self.bedline[2]
+        self.name = self.bedline[3]
+        self.score = self.bedline[4]
+        self.strand = self.bedline[5]
+
 
 class GelCoverageRunner:
 
@@ -21,44 +32,56 @@ class GelCoverageRunner:
         self.__config_sanity_checks()
         # Configure logs
         logging.basicConfig(level=self.config["log_level"])
-        # Initialize CellBase helper
-        self.cellbase_helper = CellbaseHelper(
-            species=self.config['cellbase_species'],
-            version=self.config['cellbase_version'],
-            assembly=self.config['cellbase_assembly'],
-            host=self.config['cellbase_host'],
-            retries=self.config['cellbase_retries'],
-            filter_flags=self.config['transcript_filtering_flags'].split(","),
-            filter_biotypes=self.config['transcript_filtering_biotypes'].split(",")
-        )
+
         # Helper flags for the configuration
+
+        self.use_pregenerated_bed = True if "use_pregenerated_bed" in self.config and \
+                                            self.config['use_pregenerated_bed'] else False
+
+
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
         self.is_coding_region_stats_enabled = self.config["coding_region_stats_enabled"]
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
-        self.is_panel_analysis = "panel" in self.config and self.config["panel"] is not None and \
-                                 self.config["panel"] != "" and \
-                                 "panel_version" in self.config and self.config["panel_version"] is not None and \
-                                 self.config["panel_version"] != ""
-        self.is_gene_list_analysis = "gene_list" in self.config and \
-                                     self.config["gene_list"] is not None and \
-                                     self.config["gene_list"] != ""
+        self.is_panel_analysis = "panel" in self.config and self.config["panel"] and \
+                                 "panel_version" in self.config and self.config["panel_version"]
+        self.is_gene_list_analysis = "gene_list" in self.config and self.config["gene_list"]
+
+        # Attach bigwig reader
+        self.bigwig_reader = BigWigReader(self.config['bw'])
+
         # Initialize PanelApp helper
         if self.is_panel_analysis:
             self.panelapp_helper = PanelappHelper(
                 host=self.config['panelapp_host'],
                 retries=self.config['panelapp_retries']
             )
+
+        if self.use_pregenerated_bed:
+            self.bed_file_path = self.config['bed_file_path']
+        else:
+            # Initialize CellBase helper
+
+            self.cellbase_helper = CellbaseHelper(
+                species=self.config['cellbase_species'],
+                version=self.config['cellbase_version'],
+                assembly=self.config['cellbase_assembly'],
+                host=self.config['cellbase_host'],
+                retries=self.config['cellbase_retries'],
+                filter_flags=self.config['transcript_filtering_flags'].split(","),
+                filter_biotypes=self.config['transcript_filtering_biotypes'].split(",")
+            )
+
         # Gets the list of genes to analyse
         self.gene_list = self.get_gene_list()
+
         if (self.is_panel_analysis or self.is_gene_list_analysis) and len(self.gene_list) < 100:
             # Only prints the gene list when under 100 genes, otherwise becomes useless
             logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
         logging.info("%s genes to analyse" % str(len(self.gene_list)))
 
         # Opens the bigwig reader
-        self.bigwig_reader = BigWigReader(self.config['bw'])
         if self.is_wg_stats_enabled:
             self.wg_regions = self.config["wg_regions"]
             self.bed_reader = BedReader(self.wg_regions)
@@ -88,16 +111,17 @@ class GelCoverageRunner:
         errors = []
         if "bw" not in self.config:
             errors.append("'bw' field is mising")
-        if "coverage_threshold" not in self.config:
-            errors.append("'coverage_threshold' field is mising")
-        if "cellbase_species" not in self.config:
-            errors.append("'cellbase_species' field is mising")
-        if "cellbase_version" not in self.config:
-            errors.append("'cellbase_version' field is mising")
-        if "cellbase_assembly" not in self.config:
-            errors.append("'cellbase_assembly' field is mising")
-        if "cellbase_host" not in self.config:
-            errors.append("'cellbase_host' field is mising")
+        if 'use_cellbase' in self.config:
+            if "coverage_threshold" not in self.config:
+                errors.append("'coverage_threshold' field is mising")
+            if "cellbase_species" not in self.config:
+                errors.append("'cellbase_species' field is mising")
+            if "cellbase_version" not in self.config:
+                errors.append("'cellbase_version' field is mising")
+            if "cellbase_assembly" not in self.config:
+                errors.append("'cellbase_assembly' field is mising")
+            if "cellbase_host" not in self.config:
+                errors.append("'cellbase_host' field is mising")
         if "panelapp_host" not in self.config:
             errors.append("'panelapp_host' field is mising")
         if "panelapp_gene_confidence" not in self.config:
@@ -117,6 +141,9 @@ class GelCoverageRunner:
             for error in errors:
                 logging.error(error)
             raise GelCoverageInputError("Error in configuration data!")
+        if 'use_cellbase' not in self.config and 'use_pregenerated_bed' not in self.config:
+            raise GelCoverageInputError('Must get a bed from somewhere, either cellbase '
+                                        'or a file, check your config file')
 
     def __sanity_checks(self):
         """
@@ -149,10 +176,6 @@ class GelCoverageRunner:
         elif self.is_gene_list_analysis:
             # Get list of genes from parameter genes
             gene_list = self.config["gene_list"].split(",")
-            # elif args.transcripts is not None:
-            #    transcripts_list = args.transcripts.split(",")
-            # Get list of genes from CellBase client
-            #    gene_list = cellbase_helper.get_gene_list_from_transcripts(transcripts_list)
         else:
             # Warn the user as this will be time consuming
             logging.warning("You are about to run a whole exome coverage analysis!")
@@ -173,8 +196,6 @@ class GelCoverageRunner:
             "transcript_filtering_flags": self.config['transcript_filtering_flags'],
             "transcript_filtering_biotypes": self.config['transcript_filtering_biotypes'],
             "exon_padding": self.config["exon_padding"],
-            "cellbase_host": self.config["cellbase_host"],
-            "cellbase_version": self.config["cellbase_version"],
             "panelapp_host": self.config["panelapp_host"],
             "panelapp_gene_confidence": self.config["panelapp_gene_confidence"],
             "wg_stats_enabled": self.config["wg_stats_enabled"],
@@ -182,8 +203,11 @@ class GelCoverageRunner:
             "exon_stats_enabled": self.config["exon_stats_enabled"],
             "coding_region_stats_enabled": self.config["coding_region_stats_enabled"]
         }
-        if 'panel' in self.config and self.config['panel'] is not None \
-                and 'panel_version' in self.config and self.config['panel_version'] is not None:
+        if not self.use_pregenerated_bed:
+            parameters["cellbase_host"] = self.config["cellbase_host"],
+            parameters["cellbase_version"] = self.config["cellbase_version"],
+        if 'panel' in self.config and self.config['panel']\
+                and 'panel_version' in self.config and self.config['panel_version']:
             parameters["panel"] = self.config['panel']
             parameters["panel_version"] = self.config['panel_version']
             parameters["panel_gene_confidence"] = self.config['panelapp_gene_confidence']
@@ -469,8 +493,8 @@ class GelCoverageRunner:
     def run(self):
         """
         PRE: we assume that the BED generated is sorted by transcript and then by gene position
-        this assumption is true for BEDs generated with make_exons_bed() but might not be
-        always true.
+          this assumption is true for BEDs generated with make_exons_bed() but might not be
+          always true.
         :return: the output data structure
         """
         logging.info("Starting coverage analysis")
@@ -478,7 +502,7 @@ class GelCoverageRunner:
         bed = None
         if self.is_coding_region_stats_enabled:
             # Get genes annotations in BED format
-            bed = self.cellbase_helper.make_exons_bed(self.gene_list, has_chr_prefix=self.bigwig_reader.has_chr_prefix)
+            bed = self.__get_bed_for_genes()
             # Process the intervals for the coding region in the BED file
             results[constants.GENES] = self.__process_coding_region(bed)
             # Aggregate coding region statistics
@@ -489,34 +513,7 @@ class GelCoverageRunner:
             results["uncovered_genes"] = [
                 {constants.GENE_NAME: k, constants.CHROMOSOME: v} for k, v in self.uncovered_genes.iteritems()
                 ]
-            # Removes unnecessary statistics of count bases at given coverage thresholds
-            # NOTE: the clean way would be not to store them and infer them dynamically from the percentage value...
-            for gene in results[constants.GENES]:
-                del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_LT15X]
-                del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE15X]
-                del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE30X]
-                del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE50X]
-                for exon in gene[constants.UNION_TRANSCRIPT][constants.EXONS]:
-                    del exon[constants.STATISTICS][constants.BASES_LT15X]
-                    del exon[constants.STATISTICS][constants.BASES_GTE15X]
-                    del exon[constants.STATISTICS][constants.BASES_GTE30X]
-                    del exon[constants.STATISTICS][constants.BASES_GTE50X]
-                for transcript in gene[constants.TRANSCRIPTS]:
-                    del transcript[constants.STATISTICS][constants.BASES_LT15X]
-                    del transcript[constants.STATISTICS][constants.BASES_GTE15X]
-                    del transcript[constants.STATISTICS][constants.BASES_GTE30X]
-                    del transcript[constants.STATISTICS][constants.BASES_GTE50X]
-                    for exon in transcript[constants.EXONS]:
-                        del exon[constants.STATISTICS][constants.BASES_LT15X]
-                        del exon[constants.STATISTICS][constants.BASES_GTE15X]
-                        del exon[constants.STATISTICS][constants.BASES_GTE30X]
-                        del exon[constants.STATISTICS][constants.BASES_GTE50X]
-            # Remove the exon statistics to save space if enabled
-            if not self.is_exon_stats_enabled:
-                for gene in results[constants.GENES]:
-                    for transcript in gene[constants.TRANSCRIPTS]:
-                        del transcript[constants.EXONS]
-                    del gene[constants.UNION_TRANSCRIPT][constants.EXONS]
+            results = self.__delete_unnecessary_info_from_genes(results, constants)
         else:
             logging.info("Coding region analysis disabled")
         # Compute the whole genome statistics if enabled (this is time consuming)
@@ -529,3 +526,55 @@ class GelCoverageRunner:
             logging.info("Whole genome analysis disabled")
 
         return self.__output(results), bed
+
+
+    def __get_bed_for_genes(self):
+        if self.use_pregenerated_bed:
+            return self.load_bed_from_file()
+        return self.cellbase_helper.make_exons_bed(self.gene_list,
+                                                   has_chr_prefix=self.bigwig_reader.has_chr_prefix)
+
+    def load_bed_from_file(self):
+        bedfile = []
+        bedfile_handler = open(self.bed_file_path, 'r')
+        for line in bedfile_handler:
+            bedfile.append(BedInterval(line))
+        bedfile_handler.close()
+        return bedfile
+
+    def __delete_unnecessary_info_from_genes(self, results, constants):
+        """
+        Removes unnecessary statistics of count bases at given coverage thresholds
+        NOTE: the clean way would be not to store them and infer them dynamically from
+        the percentage value...
+        :param results:
+        :param constants:
+        :return:
+        """
+        for gene in results[constants.GENES]:
+            del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_LT15X]
+            del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE15X]
+            del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE30X]
+            del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE50X]
+            for exon in gene[constants.UNION_TRANSCRIPT][constants.EXONS]:
+                del exon[constants.STATISTICS][constants.BASES_LT15X]
+                del exon[constants.STATISTICS][constants.BASES_GTE15X]
+                del exon[constants.STATISTICS][constants.BASES_GTE30X]
+                del exon[constants.STATISTICS][constants.BASES_GTE50X]
+            for transcript in gene[constants.TRANSCRIPTS]:
+                del transcript[constants.STATISTICS][constants.BASES_LT15X]
+                del transcript[constants.STATISTICS][constants.BASES_GTE15X]
+                del transcript[constants.STATISTICS][constants.BASES_GTE30X]
+                del transcript[constants.STATISTICS][constants.BASES_GTE50X]
+                for exon in transcript[constants.EXONS]:
+                    del exon[constants.STATISTICS][constants.BASES_LT15X]
+                    del exon[constants.STATISTICS][constants.BASES_GTE15X]
+                    del exon[constants.STATISTICS][constants.BASES_GTE30X]
+                    del exon[constants.STATISTICS][constants.BASES_GTE50X]
+        # Remove the exon statistics to save space if enabled
+        if not self.is_exon_stats_enabled:
+            for gene in results[constants.GENES]:
+                for transcript in gene[constants.TRANSCRIPTS]:
+                    del transcript[constants.EXONS]
+                del gene[constants.UNION_TRANSCRIPT][constants.EXONS]
+        return results
