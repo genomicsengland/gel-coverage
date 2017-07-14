@@ -13,9 +13,12 @@
 # (use 2 of the 8 large_file_scan consumables)
 #$ -l large_file_scan=2
 
-export PATH=/genomes/software/apps/gel-coverage/scripts:${PATH}
 
-module load python-tiering/2.7.10
+BAM2WIG_HOME=/genomes/software/apps/bam2wig
+BIGWIG_ANALYSER_HOME=/genomes/software/apps/gel-coverage
+export PATH=$BIGWIG_ANALYSER_HOME/scripts:${PATH}
+
+module load python/2.7.10
 module load java/jdk1.8.0_45
 
 # Check number of arguments
@@ -33,6 +36,7 @@ bam=${pth}/Assembly/${lp}.bam
 pth2=$(echo $pth | sed 's:/genomes/by_date/:/genomes/analysis/by_date/:')
 direc=${pth2}/coverage/
 bigwig=${direc}/${lp}.bw
+json=${direc}/${lp}.json
 
 # Exit if the bigwig file already exists
 if [ -f "${bigwig}" ]
@@ -46,22 +50,27 @@ then
   mkdir -p $direc
 fi
 
-# 1. Make chromosome size file
-python /genomes/software/apps/gel-coverage/bam2wig/get_chr_sizes.py \
-  --bam $bam \
-  --output ${direc}/${lp}.chr
+# 1. Create the chromosome lengths file
+java \
+  -jar $BAM2WIG_HOME/target/bam2wig-jar-with-dependencies.jar \
+  --bam ${bam} \
+  --config $BAM2WIG_HOME/src/main/resources/bam2wig.config \
+  --output-prefix ${direc}/${lp} \
+  --chr
 
 # 2. Make bigwig file
 java \
-  -jar /genomes/software/apps/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar \
-  -bam ${bam} \
-  -stdout | \
+  -jar $BAM2WIG_HOME/target/bam2wig-jar-with-dependencies.jar \
+  --bam ${bam} \
+  --config $BAM2WIG_HOME/src/main/resources/bam2wig.config \
+  --output-prefix ${direc}/${lp} \
+  --stdout | \
     /genomes/software/src/ucsc/wigToBigWig stdin ${direc}/${lp}.chr $bigwig
 
-# 3. Make coverage summary
-python /genomes/software/apps/gel-coverage/scripts/coverage_summary.py \
+# 3. Make coverage summary over whole genome and all coding region down to transcript level
+$BIGWIG_ANALYSER_HOME/scripts/bigwig_analyser
   --bw $bigwig \
-  --xlim 101 \
-  --outdir $direc \
-  --outprefix $lp \
-  --genome_n /genomes/software/apps/gel-coverage/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed
+  --output $json \
+  --config $BIGWIG_ANALYSER_HOME/resources/bigwig_analyser.config \
+  --wg-regions $BIGWIG_ANALYSER_HOME/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed \
+  --disable-exon-stats
