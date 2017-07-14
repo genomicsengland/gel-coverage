@@ -45,6 +45,8 @@ class BigWigReader:
             # bigwig file
             try:
                 intervals = self.reader.intervals(chromosome, start, end)
+                if intervals is None:
+                    intervals = []
                 coverages = [coverage for _, _, coverage in intervals]
             except RuntimeError:
                 if chromosome not in self.reported_unexisting_chr:
