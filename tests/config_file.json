@@ -1,0 +1,33 @@
+[config]
+{
+        'bw': params['input_files']['files']['coverage_bigwig'],
+        'panel': None,
+        'panel_version': None,
+        'gene_list': params['config']['gene_list'],
+        'coverage_threshold': params['config']['min_coverage'],
+        'configuration_file': '-',
+        'cellbase_species': 'hsapiens',
+        'cellbase_version': 'latest',
+        'cellbase_assembly': cellbase_assembly,
+        'cellbase_host': params['config']['cellbase_ws_url'],
+        'panelapp_host': params['config']['panelapp_ws_url'],
+        'panelapp_gene_confidence': 'HighEvidence',
+        'transcript_filtering_flags': 'basic',
+        'transcript_filtering_biotypes': 'IG_C_gene,'
+                                         'IG_D_gene,'
+                                         'IG_J_gene,'
+                                         'IG_V_gene,'
+                                         'IG_V_gene,'
+                                         'protein_coding,'
+                                         'nonsense_mediated_decay,'
+                                         'non_stop_decay,'
+                                         'TR_C_gene,'
+                                         'TR_D_gene,'
+                                         'TR_J_gene,'
+                                         'TR_V_gene',
+        'exon_padding': params['config']['exon_padding'],
+        'wg_stats_enabled': params['config']['wg_stats_enabled'],
+        'wg_regions': params['input_files']['files']['wg_regions'],
+        'exon_stats_enabled': params['config']['exon_stats_enabled'],
+        'coding_region_stats_enabled': params['config']['coding_region_stats_enabled']
+    }
