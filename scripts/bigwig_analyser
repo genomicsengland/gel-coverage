@@ -105,7 +105,7 @@ def main():
             )
         )
     # Saves the analysed region as a BED file
-    if bed is not None:
+    if bed is not None and not args.use_pregenerated_bed:
         bed.saveas(args.output + ".bed")
 
 if __name__ == '__main__':

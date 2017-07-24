@@ -12,8 +12,10 @@ class GelCoverageInputError(Exception):
 
     pass
 
+
 # Might be a good idea to create a helpers and put these classes there.
 class BedInterval:
+
     def __init__(self, bedline):
         self.bedline = bedline.rstrip('\n').split('\t')
         self.chrom = self.bedline[0]
@@ -38,15 +40,16 @@ class GelCoverageRunner:
         self.use_pregenerated_bed = True if "use_pregenerated_bed" in self.config and \
                                             self.config['use_pregenerated_bed'] else False
 
-
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
         self.is_coding_region_stats_enabled = self.config["coding_region_stats_enabled"]
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
-        self.is_panel_analysis = "panel" in self.config and self.config["panel"] and \
-                                 "panel_version" in self.config and self.config["panel_version"]
-        self.is_gene_list_analysis = "gene_list" in self.config and self.config["gene_list"]
+        self.is_panel_analysis = True if "panel" in self.config and self.config["panel"] and \
+                                 "panel_version" in self.config and self.config["panel_version"] else False
+
+        self.is_gene_list_analysis = True if "gene_list" in self.config and self.config["gene_list"] else False
+
 
         # Attach bigwig reader
         self.bigwig_reader = BigWigReader(self.config['bw'])
@@ -59,8 +62,8 @@ class GelCoverageRunner:
             )
 
         if self.use_pregenerated_bed:
-            self.bed_file_path = self.config['bed_file_path']
-        else:
+            self.exome_regions = self.config['exome_regions']
+        if not self.use_pregenerated_bed or not self.is_gene_list_analysis:
             # Initialize CellBase helper
 
             self.cellbase_helper = CellbaseHelper(
@@ -94,6 +97,7 @@ class GelCoverageRunner:
         :return:
         """
         # add default values to missing parameters
+        print self.config['gene_list']
         if "cellbase_retries" not in self.config:
             # setting default value, infinite retries
             self.config["cellbase_retries"] = -1
@@ -111,17 +115,18 @@ class GelCoverageRunner:
         errors = []
         if "bw" not in self.config:
             errors.append("'bw' field is mising")
-        if 'use_cellbase' in self.config:
-            if "coverage_threshold" not in self.config:
-                errors.append("'coverage_threshold' field is mising")
-            if "cellbase_species" not in self.config:
-                errors.append("'cellbase_species' field is mising")
-            if "cellbase_version" not in self.config:
-                errors.append("'cellbase_version' field is mising")
-            if "cellbase_assembly" not in self.config:
-                errors.append("'cellbase_assembly' field is mising")
-            if "cellbase_host" not in self.config:
-                errors.append("'cellbase_host' field is mising")
+            # We must discuss this, it is not clear whether we always want a cellbase_helper just in
+            # case or we want to get rid of it unless it is specified
+        if "coverage_threshold" not in self.config:
+            errors.append("'coverage_threshold' field is mising")
+        if "cellbase_species" not in self.config:
+            errors.append("'cellbase_species' field is mising")
+        if "cellbase_version" not in self.config:
+            errors.append("'cellbase_version' field is mising")
+        if "cellbase_assembly" not in self.config:
+            errors.append("'cellbase_assembly' field is mising")
+        if "cellbase_host" not in self.config:
+            errors.append("'cellbase_host' field is mising")
         if "panelapp_host" not in self.config:
             errors.append("'panelapp_host' field is mising")
         if "panelapp_gene_confidence" not in self.config:
@@ -143,7 +148,8 @@ class GelCoverageRunner:
             raise GelCoverageInputError("Error in configuration data!")
         if 'use_cellbase' not in self.config and 'use_pregenerated_bed' not in self.config:
             raise GelCoverageInputError('Must get a bed from somewhere, either cellbase '
-                                        'or a file, check your config file')
+                                        'or a file, check your configuration/options')
+
 
     def __sanity_checks(self):
         """
@@ -206,7 +212,7 @@ class GelCoverageRunner:
         if not self.use_pregenerated_bed:
             parameters["cellbase_host"] = self.config["cellbase_host"],
             parameters["cellbase_version"] = self.config["cellbase_version"],
-        if 'panel' in self.config and self.config['panel']\
+        if 'panel' in self.config and self.config['panel'] \
                 and 'panel_version' in self.config and self.config['panel_version']:
             parameters["panel"] = self.config['panel']
             parameters["panel_version"] = self.config['panel_version']
@@ -272,11 +278,11 @@ class GelCoverageRunner:
         :return: the basic exon data structure
         """
         exon = {
-                constants.EXON: exon_number,
-                constants.EXON_START: start,
-                constants.EXON_END: end,
-                constants.EXON_LENGTH: end - start + 1
-            }
+            constants.EXON: exon_number,
+            constants.EXON_START: start,
+            constants.EXON_END: end,
+            constants.EXON_LENGTH: end - start + 1
+        }
         if padded_start is not None and padded_start != start:
             exon[constants.EXON_PADDED_START] = padded_start
             exon[constants.EXON_PADDED_END] = padded_end
@@ -427,7 +433,7 @@ class GelCoverageRunner:
         for interval in bed:
             # Reads data from BED entry
             chromosome, start, end, gene_name, transcript_id, \
-                exon_number, strand, gc_content = GelCoverageRunner.__parse_bed_interval(interval)
+            exon_number, strand, gc_content = GelCoverageRunner.__parse_bed_interval(interval)
 
             # Store transcript in data structure. Needs to run before gene
             if current_transcript_id != transcript_id:
@@ -502,7 +508,7 @@ class GelCoverageRunner:
         bed = None
         if self.is_coding_region_stats_enabled:
             # Get genes annotations in BED format
-            bed = self.__get_bed_for_genes()
+            bed = self.__get_bed_for_exons()
             # Process the intervals for the coding region in the BED file
             results[constants.GENES] = self.__process_coding_region(bed)
             # Aggregate coding region statistics
@@ -512,7 +518,7 @@ class GelCoverageRunner:
             # Add uncovered genes
             results["uncovered_genes"] = [
                 {constants.GENE_NAME: k, constants.CHROMOSOME: v} for k, v in self.uncovered_genes.iteritems()
-                ]
+            ]
             results = self.__delete_unnecessary_info_from_genes(results, constants)
         else:
             logging.info("Coding region analysis disabled")
@@ -528,19 +534,24 @@ class GelCoverageRunner:
         return self.__output(results), bed
 
 
-    def __get_bed_for_genes(self):
+    def __get_bed_for_exons(self):
+        """
+        Loads a bed file or creates it using cellbase connector
+        :return: An iterator on a bedfile
+        """
         if self.use_pregenerated_bed:
             return self.load_bed_from_file()
         return self.cellbase_helper.make_exons_bed(self.gene_list,
                                                    has_chr_prefix=self.bigwig_reader.has_chr_prefix)
 
     def load_bed_from_file(self):
-        bedfile = []
-        bedfile_handler = open(self.bed_file_path, 'r')
+        """
+        Loads a bedfile
+        :return: An iterator of BedInterval
+        """
+        bedfile_handler = open(self.exome_regions, 'r')
         for line in bedfile_handler:
-            bedfile.append(BedInterval(line))
-        bedfile_handler.close()
-        return bedfile
+            yield BedInterval(line)
 
     def __delete_unnecessary_info_from_genes(self, results, constants):
         """
