@@ -45,8 +45,8 @@ def main():
     parser.add_argument('--use-pregenerated-bed', dest='use_pregenerated_bed',
                         help='Do not get bed file for exons from cellbase, '
                              'but rather load it from a file', action='store_true')
-    parser.add_argument('--exome-regions', dest='exome_regions', metavar='exome_regions',
-                        help='Location of a pregenerated bed file for exonic sequences.', default=None)
+    parser.add_argument('--bed-file', dest='bed_file', metavar='exome_regions',
+                        help='Location of a pregenerated bed file.', default=None)
     parser.add_argument('--disable-exon-stats', dest='exon_stats_enabled', action='store_false',
                         help='Disable the calculation of exon statistics. Use this flag when running a coverage '
                              'analysis on whole exome to minimise the space taken by the output JSON.')
@@ -72,7 +72,7 @@ def main():
         "gene_list": args.gene_list,
         "coverage_threshold": args.coverage_threshold,
         "use_pregenerated_bed": args.use_pregenerated_bed,
-        "exome_regions": args.exome_regions,
+        "bed_file": args.bed_file,
         # Sets parameters from config file
         'configuration_file': args.config,
         "cellbase_species": config_parser.get('cellbase', 'species'),

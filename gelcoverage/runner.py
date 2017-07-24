@@ -62,7 +62,7 @@ class GelCoverageRunner:
             )
 
         if self.use_pregenerated_bed:
-            self.exome_regions = self.config['exome_regions']
+            self.bed_file = self.config['bed_file']
         if not self.use_pregenerated_bed or not self.is_gene_list_analysis:
             # Initialize CellBase helper
 
@@ -549,7 +549,7 @@ class GelCoverageRunner:
         Loads a bedfile
         :return: An iterator of BedInterval
         """
-        bedfile_handler = open(self.exome_regions, 'r')
+        bedfile_handler = open(self.bed_file, 'r')
         for line in bedfile_handler:
             yield BedInterval(line)
 
