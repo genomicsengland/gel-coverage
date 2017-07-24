@@ -30,7 +30,6 @@ class GelCoverageRunner:
 
     def __init__(self, config):
         self.config = config
-        print self.config
         # Run sanity checks on the configuration
         self.__config_sanity_checks()
         # Configure logs
@@ -98,7 +97,6 @@ class GelCoverageRunner:
         :return:
         """
         # add default values to missing parameters
-        print self.config['gene_list']
         if "panelapp_retries" not in self.config:
             # setting default value, infinite retries
             self.config["panelapp_retries"] = -1
