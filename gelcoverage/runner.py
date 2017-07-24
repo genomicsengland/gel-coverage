@@ -30,6 +30,7 @@ class GelCoverageRunner:
 
     def __init__(self, config):
         self.config = config
+        print self.config
         # Run sanity checks on the configuration
         self.__config_sanity_checks()
         # Configure logs
@@ -98,9 +99,6 @@ class GelCoverageRunner:
         """
         # add default values to missing parameters
         print self.config['gene_list']
-        if "cellbase_retries" not in self.config:
-            # setting default value, infinite retries
-            self.config["cellbase_retries"] = -1
         if "panelapp_retries" not in self.config:
             # setting default value, infinite retries
             self.config["panelapp_retries"] = -1
@@ -119,14 +117,18 @@ class GelCoverageRunner:
             # case or we want to get rid of it unless it is specified
         if "coverage_threshold" not in self.config:
             errors.append("'coverage_threshold' field is mising")
-        if "cellbase_species" not in self.config:
-            errors.append("'cellbase_species' field is mising")
-        if "cellbase_version" not in self.config:
-            errors.append("'cellbase_version' field is mising")
-        if "cellbase_assembly" not in self.config:
-            errors.append("'cellbase_assembly' field is mising")
-        if "cellbase_host" not in self.config:
-            errors.append("'cellbase_host' field is mising")
+        if "use_pregenerated_bed" not in self.config:
+            if "cellbase_retries" not in self.config:
+                # setting default value, infinite retries
+                self.config["cellbase_retries"] = -1
+            if "cellbase_species" not in self.config:
+                errors.append("'cellbase_species' field is mising")
+            if "cellbase_version" not in self.config:
+                errors.append("'cellbase_version' field is mising")
+            if "cellbase_assembly" not in self.config:
+                errors.append("'cellbase_assembly' field is mising")
+            if "cellbase_host" not in self.config:
+                errors.append("'cellbase_host' field is mising")
         if "panelapp_host" not in self.config:
             errors.append("'panelapp_host' field is mising")
         if "panelapp_gene_confidence" not in self.config:
@@ -197,8 +199,6 @@ class GelCoverageRunner:
         parameters = {
             "gap_coverage_threshold": self.config["coverage_threshold"],
             "input_file": self.config["bw"],
-            "species": self.config['cellbase_species'],
-            "assembly": self.config['cellbase_assembly'],
             "transcript_filtering_flags": self.config['transcript_filtering_flags'],
             "transcript_filtering_biotypes": self.config['transcript_filtering_biotypes'],
             "exon_padding": self.config["exon_padding"],
@@ -212,6 +212,8 @@ class GelCoverageRunner:
         if not self.use_pregenerated_bed:
             parameters["cellbase_host"] = self.config["cellbase_host"],
             parameters["cellbase_version"] = self.config["cellbase_version"],
+            parameters["species"] = self.config['cellbase_species']
+            parameters["assembly"] = self.config['cellbase_assembly']
         if 'panel' in self.config and self.config['panel'] \
                 and 'panel_version' in self.config and self.config['panel_version']:
             parameters["panel"] = self.config['panel']

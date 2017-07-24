@@ -75,11 +75,6 @@ def main():
         "bed_file": args.bed_file,
         # Sets parameters from config file
         'configuration_file': args.config,
-        "cellbase_species": config_parser.get('cellbase', 'species'),
-        "cellbase_version": config_parser.get('cellbase', 'version'),
-        "cellbase_assembly": config_parser.get('cellbase', 'assembly'),
-        "cellbase_host": config_parser.get('cellbase', 'host'),
-        "cellbase_retries": int(config_parser.get('cellbase', 'retries')),
         "panelapp_host": config_parser.get('panelapp', 'host'),
         "panelapp_gene_confidence": config_parser.get('panelapp', 'gene_confidence'),
         "panelapp_retries": int(config_parser.get('panelapp', 'retries')),
@@ -92,6 +87,12 @@ def main():
         "coding_region_stats_enabled": args.coding_region_stats_enabled,
         "log_level": int(config_parser.get("logging", "level"))
     }
+    if not config['use_pregenerated_bed']:
+        config['cellbase_host'] = config_parser.get('cellbase', 'host')
+        config['cellbase_species'] = config_parser.get('cellbase', 'species')
+        config['cellbase_version'] = config_parser.get('cellbase', 'version')
+        config['cellbase_assembly'] = config_parser.get('cellbase', 'assembly')
+        config['cellbase_retries'] = int(config_parser.get('cellbase', 'retries'))
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageRunner(config)
     (results, bed) = gel_coverage_engine.run()
