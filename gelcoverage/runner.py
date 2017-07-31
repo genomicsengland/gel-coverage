@@ -232,7 +232,7 @@ class GelCoverageRunner:
             parameters["gene_list"] = self.gene_list
         elif 'gene_list' in self.config and self.config['gene_list'] is not None:
             parameters["gene_list"] = self.gene_list
-        
+
         # Beware that when performing analysis on the whole exome the gene list field is
         # not set. We don't want a list of 20K genes in here. Do we?
         return parameters

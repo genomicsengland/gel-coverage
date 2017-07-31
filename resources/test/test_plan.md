@@ -61,21 +61,33 @@ IGHE: 14:105,964,224-106,168,065
 Create the BAMs as follows:
 ```
 samtools view -b /genomes/by_date/2016-11-25/HX01579108/LP3000160-DNA_A02/Assembly/LP3000160-DNA_A02.bam SCN2A: 2:165,995,882-166,349,242 9:131,214,837-131,495,941 20:8,012,824-9,049,003 11:690,475-898,333 12:51,884,050-52,306,648 9:130,341,649-130,458,394 19:50,263,139-50,481,608  > ~/test1.bam
+samtools sort test1.bam >test1_sorted.bam; mv test1_sorted.bam test1.bam
 samtools index test1.bam
 samtools view -b /genomes/by_date/2016-11-25/HX01579108/LP3000160-DNA_A02/Assembly/LP3000160-DNA_A02.bam CFTR: 7:117,005,838-117,456,025 17:41,096,312-41,422,262 13:32,789,611-33,074,403 14:105,964,224-106,168,065 > ~/test2.bam
+samtools sort test2.bam >test2_sorted.bam;mv test2_sorted.bam test2.bam
 samtools index test2.bam
+```
+
+We will need a config file containing:
+```
+[bam2wig]
+base_quality : 30
+mapping_quality : 11
+filter_duplicates : true
 ```
 
 We will need a file describing chromosome lengths:
 ```
-/genomes/software/apps/python2.7/bin/python /genomes/software/apps/gel-coverage/bam2wig/get_chr_sizes.py --bam ~/data/test1.bam --output ~/data/test1.chr
-/genomes/software/apps/python2.7/bin/python /genomes/software/apps/gel-coverage/bam2wig/get_chr_sizes.py --bam ~/data/test2.bam --output ~/data/test2.chr
+java -jar /genomes/software/apps/bam2wig/target/bam2wig-jar-with-dependencies.jar --bam ./test1.bam --output-prefix test1 --config config.txt --chr
+java -jar /genomes/software/apps/bam2wig/target/bam2wig-jar-with-dependencies.jar --bam ./test2.bam --output-prefix test2 --config config.txt --chr
 ```
 
 Create the bigwigs as follows:
 ```
-/genomes/software/apps/jdk1.8.0_45/bin/java -jar ~/src/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam ~/data/test1.bam -stdout | /genomes/software/src/ucsc/wigToBigWig stdin ~/data/test1.chr ~/data/test1.bw
-/genomes/software/apps/jdk1.8.0_45/bin/java -jar ~/src/gel-coverage/bam2wig/gel-coverage-jar-with-dependencies.jar -bam ~/data/test2.bam -stdout | /genomes/software/src/ucsc/wigToBigWig stdin ~/data/test1.chr ~/data/test2.bw
+java -jar /genomes/software/apps/bam2wig/target/bam2wig-jar-with-dependencies.jar --bam ./test1.bam --stdout  --config config.config  >test1.Wig
+/genomes/software/src/ucsc/wigToBigWig ./test1.Wig ./test1.chr ./test1.bw
+java -jar /genomes/software/apps/bam2wig/target/bam2wig-jar-with-dependencies.jar --bam ./test2.bam --stdout  --config config.config  >test2.Wig
+/genomes/software/src/ucsc/wigToBigWig ./test2.Wig ./test2.chr ./test2.bw
 ```
 
 **NOTE:** tests on reduced datasets need to run using the flag --disable-wg-stats so running time is limited

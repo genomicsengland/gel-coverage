@@ -15,6 +15,7 @@ class GelCoverageRunnerTests(OutputVerifier):
             # Sets parameters from CLI
             "bw": "../resources/test/test1.bw",
             "configuration_file": "../resources/bigwig_analyser.config",
+            "use_cellbase": "True",
             "panel": "Epileptic encephalopathy",
             "panel_version": "0.2",
             #"gene_list": args.gene_list,
