@@ -222,15 +222,17 @@ class GelCoverageRunner:
             parameters["cellbase_version"] = self.config["cellbase_version"],
             parameters["species"] = self.config['cellbase_species']
             parameters["assembly"] = self.config['cellbase_assembly']
+        else:
+            parameters['gene_list'] = self.gene_list
         if 'panel' in self.config and self.config['panel'] \
                 and 'panel_version' in self.config and self.config['panel_version']:
             parameters["panel"] = self.config['panel']
             parameters["panel_version"] = self.config['panel_version']
             parameters["panel_gene_confidence"] = self.config['panelapp_gene_confidence']
             parameters["gene_list"] = self.gene_list
-        elif ('gene_list' in self.config and self.config['gene_list'] is not None) or \
-                (self.use_pregenerated_bed):
+        elif 'gene_list' in self.config and self.config['gene_list'] is not None:
             parameters["gene_list"] = self.gene_list
+        
         # Beware that when performing analysis on the whole exome the gene list field is
         # not set. We don't want a list of 20K genes in here. Do we?
         return parameters
