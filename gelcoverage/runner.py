@@ -63,7 +63,7 @@ class GelCoverageRunner:
 
         if self.use_pregenerated_bed:
             self.bed_file = self.config['bed_file']
-        if not self.use_pregenerated_bed or not self.is_gene_list_analysis:
+        if not self.use_pregenerated_bed:
             # Initialize CellBase helper
 
             self.cellbase_helper = CellbaseHelper(
@@ -182,12 +182,22 @@ class GelCoverageRunner:
         elif self.is_gene_list_analysis:
             # Get list of genes from parameter genes
             gene_list = self.config["gene_list"].split(",")
+        elif self.use_pregenerated_bed:
+            gene_list = self.__get_gene_list_from_bed()
         else:
             # Warn the user as this will be time consuming
             logging.warning("You are about to run a whole exome coverage analysis!")
             # Retrieve the list of all genes
             gene_list = self.cellbase_helper.get_all_gene_names()
         return gene_list
+
+    def __get_gene_list_from_bed(self):
+        gene_list = set()
+        bedfile_handler = open(self.bed_file, 'r')
+        for line in bedfile_handler:
+             gene_list.add(BedInterval(line).name.split('|')[0])
+        bedfile_handler.close()
+        return list(gene_list)
 
     def __get_parameters_output(self):
         """
@@ -218,7 +228,8 @@ class GelCoverageRunner:
             parameters["panel_version"] = self.config['panel_version']
             parameters["panel_gene_confidence"] = self.config['panelapp_gene_confidence']
             parameters["gene_list"] = self.gene_list
-        elif 'gene_list' in self.config and self.config['gene_list'] is not None:
+        elif ('gene_list' in self.config and self.config['gene_list'] is not None) or \
+                (self.use_pregenerated_bed):
             parameters["gene_list"] = self.gene_list
         # Beware that when performing analysis on the whole exome the gene list field is
         # not set. We don't want a list of 20K genes in here. Do we?
