@@ -15,7 +15,6 @@ class GelCoverageRunnerTests(OutputVerifier):
             # Sets parameters from CLI
             "bw": "../resources/test/test1.bw",
             "configuration_file": "../resources/bigwig_analyser.config",
-            "use_cellbase": "True",
             "panel": "Epileptic encephalopathy",
             "panel_version": "0.2",
             #"gene_list": args.gene_list,
@@ -272,7 +271,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
+            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
         runner = GelCoverageRunner(
             config=self.config
         )
@@ -301,7 +300,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
+            "../resources/resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
         try:
             runner = GelCoverageRunner(
                 config=self.config

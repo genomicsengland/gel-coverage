@@ -146,7 +146,7 @@ class GelCoverageRunner:
             for error in errors:
                 logging.error(error)
             raise GelCoverageInputError("Error in configuration data!")
-        if 'use_cellbase' not in self.config and 'use_pregenerated_bed' not in self.config:
+        if 'skip_cellbase' in self.config and 'use_pregenerated_bed' not in self.config:
             raise GelCoverageInputError('Must get a bed from somewhere, either cellbase '
                                         'or a file, check your configuration/options')
 
@@ -217,12 +217,12 @@ class GelCoverageRunner:
             "exon_stats_enabled": self.config["exon_stats_enabled"],
             "coding_region_stats_enabled": self.config["coding_region_stats_enabled"]
         }
-        if not self.use_pregenerated_bed:
+        if 'skip_cellbase' not in parameters:
             parameters["cellbase_host"] = self.config["cellbase_host"],
             parameters["cellbase_version"] = self.config["cellbase_version"],
             parameters["species"] = self.config['cellbase_species']
             parameters["assembly"] = self.config['cellbase_assembly']
-        else:
+        if not self.use_pregenerated_bed:
             parameters['gene_list'] = self.gene_list
         if 'panel' in self.config and self.config['panel'] \
                 and 'panel_version' in self.config and self.config['panel_version']:
