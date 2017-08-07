@@ -179,7 +179,7 @@ class GelCoverageRunner:
             gene_list = self.config["gene_list"].split(",")
         elif self.bed_file:
             gene_list = self.__get_gene_list_from_bed()
-        elif self.use_cellbase:
+        elif not self.skip_cellbase:
             # Warn the user as this will be time consuming
             logging.warning("You are about to run a whole exome coverage analysis!")
             # Retrieve the list of all genes
