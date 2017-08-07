@@ -36,10 +36,6 @@ class GelCoverageRunner:
         logging.basicConfig(level=self.config["log_level"])
 
         # Helper flags for the configuration
-
-        self.use_pregenerated_bed = True if "use_pregenerated_bed" in self.config and \
-                                            self.config['use_pregenerated_bed'] else False
-
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
@@ -47,7 +43,8 @@ class GelCoverageRunner:
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
         self.is_panel_analysis = True if "panel" in self.config and self.config["panel"] and \
                                  "panel_version" in self.config and self.config["panel_version"] else False
-
+        self.skip_cellbase = True if 'skip_cellbase' in self.config and \
+                                     self.config['skip_cellbase'] else False
         self.is_gene_list_analysis = True if "gene_list" in self.config and self.config["gene_list"] else False
 
 
@@ -61,11 +58,9 @@ class GelCoverageRunner:
                 retries=self.config['panelapp_retries']
             )
 
-        if self.use_pregenerated_bed:
-            self.bed_file = self.config['bed_file']
-        if not self.use_pregenerated_bed:
+        self.bed_file = self.config['bed_file'] if 'bed_file' in self.config else False
+        if not self.skip_cellbase:
             # Initialize CellBase helper
-
             self.cellbase_helper = CellbaseHelper(
                 species=self.config['cellbase_species'],
                 version=self.config['cellbase_version'],
@@ -115,7 +110,7 @@ class GelCoverageRunner:
             # case or we want to get rid of it unless it is specified
         if "coverage_threshold" not in self.config:
             errors.append("'coverage_threshold' field is mising")
-        if "use_pregenerated_bed" not in self.config:
+        if "skip_cellbase" not in self.config or not self.config['skip_cellbase']:
             if "cellbase_retries" not in self.config:
                 # setting default value, infinite retries
                 self.config["cellbase_retries"] = -1
@@ -146,7 +141,7 @@ class GelCoverageRunner:
             for error in errors:
                 logging.error(error)
             raise GelCoverageInputError("Error in configuration data!")
-        if 'skip_cellbase' in self.config and 'use_pregenerated_bed' not in self.config:
+        if 'skip_cellbase' in self.config and self.config['skip_cellbase']:
             raise GelCoverageInputError('Must get a bed from somewhere, either cellbase '
                                         'or a file, check your configuration/options')
 
@@ -182,9 +177,9 @@ class GelCoverageRunner:
         elif self.is_gene_list_analysis:
             # Get list of genes from parameter genes
             gene_list = self.config["gene_list"].split(",")
-        elif self.use_pregenerated_bed:
+        elif self.bed_file:
             gene_list = self.__get_gene_list_from_bed()
-        else:
+        elif self.use_cellbase:
             # Warn the user as this will be time consuming
             logging.warning("You are about to run a whole exome coverage analysis!")
             # Retrieve the list of all genes
@@ -222,7 +217,7 @@ class GelCoverageRunner:
             parameters["cellbase_version"] = self.config["cellbase_version"],
             parameters["species"] = self.config['cellbase_species']
             parameters["assembly"] = self.config['cellbase_assembly']
-        if not self.use_pregenerated_bed:
+        if not self.bed_file:
             parameters['gene_list'] = self.gene_list
         if 'panel' in self.config and self.config['panel'] \
                 and 'panel_version' in self.config and self.config['panel_version']:
@@ -552,7 +547,7 @@ class GelCoverageRunner:
         Loads a bed file or creates it using cellbase connector
         :return: An iterator on a bedfile
         """
-        if self.use_pregenerated_bed:
+        if self.bed_file:
             return self.load_bed_from_file()
         return self.cellbase_helper.make_exons_bed(self.gene_list,
                                                    has_chr_prefix=self.bigwig_reader.has_chr_prefix)
