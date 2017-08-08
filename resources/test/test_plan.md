@@ -76,6 +76,9 @@ mapping_quality : 11
 filter_duplicates : true
 ```
 
+Note: You will need to load java 1.8 for this to work
+
+
 We will need a file describing chromosome lengths:
 ```
 java -jar /genomes/software/apps/bam2wig/target/bam2wig-jar-with-dependencies.jar --bam ./test1.bam --output-prefix test1 --config config.txt --chr
