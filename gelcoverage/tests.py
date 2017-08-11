@@ -91,7 +91,6 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
-
     def test3(self):
         """
         Test 3: panel from PanelApp with exon padding of 15 bp
@@ -115,7 +114,6 @@ class GelCoverageRunnerTests(OutputVerifier):
         bed.saveas('../resources/test/sample_output_3.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
-
 
     def test4(self):
         """
@@ -258,7 +256,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         gene_0bp_padding[constants.UNION_TRANSCRIPT] = union_transcript
         self.verify_union_transcript(gene_0bp_padding, True)
 
-    #@unittest.skip("long running test")
+    @unittest.skip("long running test")
     def test6(self):
         """
         Test 6: provided bed of nonN regions and whole genome metrics enabled
@@ -271,7 +269,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
+            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
         runner = GelCoverageRunner(
             config=self.config
         )
@@ -286,7 +284,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
-    @unittest.skip("long running test")
+    #@unittest.skip("long running test")
     def test6_1(self):
         """
         Test 6.1: provided bed of nonN regions and whole genome metrics enabled.
@@ -300,7 +298,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
+            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
         try:
             runner = GelCoverageRunner(
                 config=self.config
@@ -436,7 +434,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
+            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
         self.config["coding_region_stats_enabled"] = False
         runner = GelCoverageRunner(
             config=self.config

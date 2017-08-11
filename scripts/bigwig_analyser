@@ -42,16 +42,14 @@ def main():
                         help='A BED file specifying the regions to be analysed in the whole genome analysis. '
                              'Typically these are the NonN regions in the genome.',
                         default=None)
-    parser.add_argument('--use-pregenerated-bed', dest='use_pregenerated_bed',
-                        help='Do not get bed file for exons from cellbase, '
-                             'but rather load it from a file', action='store_true')
+    parser.add_argument('--skip-cellbase', dest='skip_cellbase', help='Avoid using cellbase, all'
+                                                                      'inputs must be probided', action='store_true')
     parser.add_argument('--bed-file', dest='bed_file', metavar='exome_regions',
                         help='Location of a pregenerated bed file.', default=None)
     parser.add_argument('--disable-exon-stats', dest='exon_stats_enabled', action='store_false',
                         help='Disable the calculation of exon statistics. Use this flag when running a coverage '
                              'analysis on whole exome to minimise the space taken by the output JSON.')
     parser.set_defaults(exon_stats_enabled=True)
-    parser.set_defaults(use_pregenerated_bed=False)
 
     # parser.add_argument('--transcripts', metavar='transcripts',
     #                    help='Comma separated list of transcripts to analyse. Will be masked by a panel or a list of genes')
@@ -66,12 +64,11 @@ def main():
     # Creates a data structure with all config parameters
     config = {
         # Sets parameters from CLI
-        "bw" : args.bw,
-        "panel" : args.panel,
+        "bw": args.bw,
+        "panel": args.panel,
         "panel_version": args.panel_version,
         "gene_list": args.gene_list,
         "coverage_threshold": args.coverage_threshold,
-        "use_pregenerated_bed": args.use_pregenerated_bed,
         "bed_file": args.bed_file,
         # Sets parameters from config file
         'configuration_file': args.config,
@@ -87,7 +84,7 @@ def main():
         "coding_region_stats_enabled": args.coding_region_stats_enabled,
         "log_level": int(config_parser.get("logging", "level"))
     }
-    if not config['use_pregenerated_bed']:
+    if 'skip_cellbase' not in config:
         config['cellbase_host'] = config_parser.get('cellbase', 'host')
         config['cellbase_species'] = config_parser.get('cellbase', 'species')
         config['cellbase_version'] = config_parser.get('cellbase', 'version')
@@ -106,7 +103,7 @@ def main():
             )
         )
     # Saves the analysed region as a BED file
-    if bed is not None and not args.use_pregenerated_bed:
+    if bed is not None and not args.bed_file:
         bed.saveas(args.output + ".bed")
 
 if __name__ == '__main__':
