@@ -43,7 +43,7 @@ def main():
                              'Typically these are the NonN regions in the genome.',
                         default=None)
     parser.add_argument('--skip-cellbase', dest='skip_cellbase', help='Avoid using cellbase, all'
-                                                                      'inputs must be probided', action='store_true')
+                                                                      'inputs must be provided', action='store_true')
     parser.add_argument('--bed-file', dest='bed_file', metavar='exome_regions',
                         help='Location of a pregenerated bed file.', default=None)
     parser.add_argument('--disable-exon-stats', dest='exon_stats_enabled', action='store_false',
@@ -77,6 +77,7 @@ def main():
         "panelapp_retries": int(config_parser.get('panelapp', 'retries')),
         "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
         "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
+	"skip_cellbase": args.skip_cellbase,
         "exon_padding": int(config_parser.get("exon", "exon_padding")),
         "wg_stats_enabled": args.wg_stats_enabled,
         "wg_regions": args.wg_regions,
@@ -84,7 +85,7 @@ def main():
         "coding_region_stats_enabled": args.coding_region_stats_enabled,
         "log_level": int(config_parser.get("logging", "level"))
     }
-    if 'skip_cellbase' not in config:
+    if not config['skip_cellbase']:
         config['cellbase_host'] = config_parser.get('cellbase', 'host')
         config['cellbase_species'] = config_parser.get('cellbase', 'species')
         config['cellbase_version'] = config_parser.get('cellbase', 'version')

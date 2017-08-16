@@ -91,6 +91,7 @@ class GelCoverageRunner:
         Checks the input configuration is not missing any value
         :return:
         """
+	print self.config
         # add default values to missing parameters
         if "panelapp_retries" not in self.config:
             # setting default value, infinite retries
@@ -141,7 +142,7 @@ class GelCoverageRunner:
             for error in errors:
                 logging.error(error)
             raise GelCoverageInputError("Error in configuration data!")
-        if 'skip_cellbase' in self.config and self.config['skip_cellbase'] and not self.bed_file:
+        if 'skip_cellbase' in self.config and self.config['skip_cellbase'] and not 'bed_file' in self.config:
             raise GelCoverageInputError('Must get a bed from somewhere, either cellbase '
                                         'or a file, check your configuration/options')
 
