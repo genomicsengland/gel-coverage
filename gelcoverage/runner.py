@@ -141,7 +141,7 @@ class GelCoverageRunner:
             for error in errors:
                 logging.error(error)
             raise GelCoverageInputError("Error in configuration data!")
-        if 'skip_cellbase' in self.config and self.config['skip_cellbase']:
+        if 'skip_cellbase' in self.config and self.config['skip_cellbase'] and not self.bed_file:
             raise GelCoverageInputError('Must get a bed from somewhere, either cellbase '
                                         'or a file, check your configuration/options')
 
