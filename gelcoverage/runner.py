@@ -32,7 +32,6 @@ class GelCoverageRunner:
                                  "panel_version" in self.config and self.config["panel_version"] else False
         self.is_gene_list_analysis = True if "gene_list" in self.config and self.config["gene_list"] else False
 
-
         # Attach bigwig reader
         self.bigwig_reader = BigWigReader(self.config['bw'])
 
@@ -44,7 +43,9 @@ class GelCoverageRunner:
             )
 
         self.coding_regions = self.config['coding_regions'] if 'coding_regions' in self.config else None
-        if not self.coding_regions:
+        self.requires_cellbase = self.is_panel_analysis or self.is_gene_list_analysis \
+                                 or (self.is_coding_region_stats_enabled and not self.coding_regions)
+        if self.requires_cellbase:
             # Initialize CellBase helper only if no coding regions have been provided
             self.cellbase_helper = CellbaseHelper(
                 species=self.config['cellbase_species'],
