@@ -1,4 +1,4 @@
-version 1.3.3 (22 August 2017)
+version 1.3.0 (24 August 2017)
 ----------------------------
 
 * Major changes
