@@ -1,3 +1,9 @@
+version 1.3.0 (24 August 2017)
+----------------------------
+
+* Major changes
+    - The coverage module now accepts a bed file defining the coding regions (--coding-regions) to avoid connection to CellBase.
+
 version 1.2.3 (24 May 2017)
 ----------------------------
 
