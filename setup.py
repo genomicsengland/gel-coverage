@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='gelcoverage',
-    version='1.2.3',
+    version='1.3.0',
     packages=find_packages(),
     scripts=['scripts/bigwig_analyser'],
     url='',
@@ -12,11 +12,11 @@ setup(
     author_email='pablo.ferreiro@genomicsengland.co.uk',
     description='', requires=['pandas', 'pyBigWig', 'pybedtools', 'numpy', 'ujson', 'pycellbase'],
     install_requires=[
-        'pandas',
+        'pandas==0.20.3',
         'pybedtools==0.7.8',
-        'ujson==1.33',
+        'ujson==1.35',
         'pyBigWig==0.3.4',
-        'numpy==1.10.4',
-        'pycellbase==0.3.2'
+        'numpy==1.11.2',
+        'pycellbase==0.3.3'
     ]
 )

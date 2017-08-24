@@ -5,6 +5,7 @@
 This script calculates coverage statistics, using a bigwig as input. It has different execution modes.
    * `--panel`: This mode will calculate the coverage metrics for one panel.
    * `--gene-list`: This mode will calculate the coverage metrics for a list of genes.
+   * `--coding-regions`: This mode will calculate the coverage metrics for a set of genes defined in the BED file provided, while avoiding any connection to CellBase.
    * `none of above`: This version will calculate the coverage metrics for all genes.
 
 It will output statistics at exon, transcript, gene (by creating a union transcript), chromosome, analysis coding region
@@ -32,6 +33,7 @@ config = {
     "panel" : None,
     "panel_version": None,
     "gene_list": None,
+    "coding_regions": None,
     "coverage_threshold": 15,
     'configuration_file': '-',
     "cellbase_species": 'hsapiens',
@@ -109,6 +111,18 @@ Any combination, of the previous should generate a single JSON with all the info
 The coverage module depends on two external systems: CellBase and PanelApp. CellBase is used to retrieve the genes to be analysed and the precise coordinates of each genomic region. PanelApp is used only in the panel mode to retrieve those genes belonging to a given panel. If any of these systems is down the analysis cannot run.
 An exponential backoff policy will work whenever the connection to any of these two systems fails. The maximum number of retries can be configured by using the parameters `cellbase_retries` and `panelapp_retries`. If the value is -1 infinite retries will apply. These parameters are not available from the command line, but from the configuration file.
 
+### Avoiding connection to CellBase
+
+The connection to CellBase can be avoided by using the parameter `--coding-regions`. The BED file provided must follow the format:
+```
+17	67323193	67323242	ABCA5|ENST00000392676|exon1	0.68	-
+17	67310455	67310571	ABCA5|ENST00000392676|exon2	0.37607	-
+17	67309233	67309437	ABCA5|ENST00000392676|exon3	0.30732	-
+17	67305403	67305564	ABCA5|ENST00000392676|exon4	0.33333	-
+17	67304421	67304509	ABCA5|ENST00000392676|exon5	0.44944	-
+```
+
+**IMPORTANT**: the BED file must be sorted by transcript (not by gene!), otherwise coverage statistics will be erroneous!
 
 ### Exploring the results
 

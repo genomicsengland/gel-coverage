@@ -2,6 +2,17 @@ import pybedtools
 import logging
 
 
+class BedInterval:
+
+    def __init__(self, bedline):
+        self.bedline = bedline.rstrip('\n').split('\t')
+        self.chrom = self.bedline[0]
+        self.start = self.bedline[1]
+        self.end = self.bedline[2]
+        self.name = self.bedline[3]
+        self.score = self.bedline[4]
+        self.strand = self.bedline[5]
+
 class BedReader:
 
     def __init__(self, bed):

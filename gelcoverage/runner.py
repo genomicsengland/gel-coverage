@@ -4,26 +4,13 @@ import gelcoverage.stats.coverage_stats as coverage_stats
 from gelcoverage.tools.cellbase_helper import CellbaseHelper
 from gelcoverage.tools.panelapp_helper import PanelappHelper
 from gelcoverage.tools.bigwig_reader import BigWigReader, UncoveredIntervalException
-from gelcoverage.tools.bed_reader import BedReader
+from gelcoverage.tools.bed_reader import BedReader, BedInterval
 import gelcoverage.constants as constants
 
 
 class GelCoverageInputError(Exception):
 
     pass
-
-
-# Might be a good idea to create a helpers and put these classes there.
-class BedInterval:
-
-    def __init__(self, bedline):
-        self.bedline = bedline.rstrip('\n').split('\t')
-        self.chrom = self.bedline[0]
-        self.start = self.bedline[1]
-        self.end = self.bedline[2]
-        self.name = self.bedline[3]
-        self.score = self.bedline[4]
-        self.strand = self.bedline[5]
 
 
 class GelCoverageRunner:
@@ -36,10 +23,6 @@ class GelCoverageRunner:
         logging.basicConfig(level=self.config["log_level"])
 
         # Helper flags for the configuration
-
-        self.use_pregenerated_bed = True if "use_pregenerated_bed" in self.config and \
-                                            self.config['use_pregenerated_bed'] else False
-
         self.is_exon_padding = self.config["exon_padding"] > 0
         self.is_find_gaps_enabled = self.config["coverage_threshold"] > 0
         self.is_wg_stats_enabled = self.config["wg_stats_enabled"]
@@ -47,9 +30,7 @@ class GelCoverageRunner:
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
         self.is_panel_analysis = True if "panel" in self.config and self.config["panel"] and \
                                  "panel_version" in self.config and self.config["panel_version"] else False
-
         self.is_gene_list_analysis = True if "gene_list" in self.config and self.config["gene_list"] else False
-
 
         # Attach bigwig reader
         self.bigwig_reader = BigWigReader(self.config['bw'])
@@ -61,11 +42,11 @@ class GelCoverageRunner:
                 retries=self.config['panelapp_retries']
             )
 
-        if self.use_pregenerated_bed:
-            self.bed_file = self.config['bed_file']
-        if not self.use_pregenerated_bed or not self.is_gene_list_analysis:
-            # Initialize CellBase helper
-
+        self.coding_regions = self.config['coding_regions'] if 'coding_regions' in self.config else None
+        self.requires_cellbase = self.is_panel_analysis or self.is_gene_list_analysis \
+                                 or (self.is_coding_region_stats_enabled and not self.coding_regions)
+        if self.requires_cellbase:
+            # Initialize CellBase helper only if no coding regions have been provided
             self.cellbase_helper = CellbaseHelper(
                 species=self.config['cellbase_species'],
                 version=self.config['cellbase_version'],
@@ -115,7 +96,7 @@ class GelCoverageRunner:
             # case or we want to get rid of it unless it is specified
         if "coverage_threshold" not in self.config:
             errors.append("'coverage_threshold' field is mising")
-        if "use_pregenerated_bed" not in self.config:
+        if "coding_regions" not in self.config or not self.config['coding_regions']:
             if "cellbase_retries" not in self.config:
                 # setting default value, infinite retries
                 self.config["cellbase_retries"] = -1
@@ -146,9 +127,12 @@ class GelCoverageRunner:
             for error in errors:
                 logging.error(error)
             raise GelCoverageInputError("Error in configuration data!")
-        if 'use_cellbase' not in self.config and 'use_pregenerated_bed' not in self.config:
-            raise GelCoverageInputError('Must get a bed from somewhere, either cellbase '
-                                        'or a file, check your configuration/options')
+        self.has_gene_list = "gene_list" in self.config and self.config["gene_list"] is not None
+        self.has_coding_regions = "coding_regions" in self.config and self.config["coding_regions"] is not None
+        # raise an error if both gene list and custom coding regions bed are provided
+        if self.has_gene_list and self.has_coding_regions:
+            raise GelCoverageInputError('Both modes gene list and custom coding region are not allowed, please'
+                                        ' provide either "gene-list" or "coding-regions"')
 
 
     def __sanity_checks(self):
@@ -182,12 +166,26 @@ class GelCoverageRunner:
         elif self.is_gene_list_analysis:
             # Get list of genes from parameter genes
             gene_list = self.config["gene_list"].split(",")
+        elif self.has_coding_regions:
+            gene_list = self.__get_gene_list_from_bed()
         else:
             # Warn the user as this will be time consuming
             logging.warning("You are about to run a whole exome coverage analysis!")
             # Retrieve the list of all genes
             gene_list = self.cellbase_helper.get_all_gene_names()
         return gene_list
+
+    def __get_gene_list_from_bed(self):
+        """
+        Gets the gene list from a BED file
+        :return:
+        """
+        gene_list = set()
+        bedfile_handler = open(self.coding_regions, 'r')
+        for line in bedfile_handler:
+             gene_list.add(BedInterval(line).name.split('|')[0])
+        bedfile_handler.close()
+        return list(gene_list)
 
     def __get_parameters_output(self):
         """
@@ -205,21 +203,22 @@ class GelCoverageRunner:
             "wg_stats_enabled": self.config["wg_stats_enabled"],
             "wg_regions": self.config["wg_regions"],
             "exon_stats_enabled": self.config["exon_stats_enabled"],
-            "coding_region_stats_enabled": self.config["coding_region_stats_enabled"]
+            "coding_region_stats_enabled": self.config["coding_region_stats_enabled"],
         }
-        if not self.use_pregenerated_bed:
+        if not self.has_coding_regions:
             parameters["cellbase_host"] = self.config["cellbase_host"],
             parameters["cellbase_version"] = self.config["cellbase_version"],
             parameters["species"] = self.config['cellbase_species']
             parameters["assembly"] = self.config['cellbase_assembly']
-        if 'panel' in self.config and self.config['panel'] \
-                and 'panel_version' in self.config and self.config['panel_version']:
+            # we don't want to add the gene list read from the bed as it might be too big
+        if self.is_panel_analysis:
             parameters["panel"] = self.config['panel']
             parameters["panel_version"] = self.config['panel_version']
             parameters["panel_gene_confidence"] = self.config['panelapp_gene_confidence']
             parameters["gene_list"] = self.gene_list
-        elif 'gene_list' in self.config and self.config['gene_list'] is not None:
+        elif self.is_gene_list_analysis:
             parameters["gene_list"] = self.gene_list
+
         # Beware that when performing analysis on the whole exome the gene list field is
         # not set. We don't want a list of 20K genes in here. Do we?
         return parameters
@@ -539,17 +538,19 @@ class GelCoverageRunner:
         Loads a bed file or creates it using cellbase connector
         :return: An iterator on a bedfile
         """
-        if self.use_pregenerated_bed:
-            return self.load_bed_from_file()
-        return self.cellbase_helper.make_exons_bed(self.gene_list,
+        if self.coding_regions:
+            bed = self.load_bed_from_file()
+        else:
+            bed = self.cellbase_helper.make_exons_bed(self.gene_list,
                                                    has_chr_prefix=self.bigwig_reader.has_chr_prefix)
+        return bed
 
     def load_bed_from_file(self):
         """
         Loads a bedfile
         :return: An iterator of BedInterval
         """
-        bedfile_handler = open(self.bed_file, 'r')
+        bedfile_handler = open(self.coding_regions, 'r')
         for line in bedfile_handler:
             yield BedInterval(line)
 
