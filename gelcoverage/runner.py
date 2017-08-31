@@ -58,12 +58,19 @@ class GelCoverageRunner:
             )
 
         # Gets the list of genes to analyse
-        self.gene_list = self.get_gene_list()
+        requires_gene_list = self.is_panel_analysis or \
+                             self.is_gene_list_analysis or \
+                             self.is_coding_region_stats_enabled
+        self.gene_list = []
+        if requires_gene_list:
+            self.gene_list = self.get_gene_list()
 
-        if (self.is_panel_analysis or self.is_gene_list_analysis) and len(self.gene_list) < 100:
-            # Only prints the gene list when under 100 genes, otherwise becomes useless
-            logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
-        logging.info("%s genes to analyse" % str(len(self.gene_list)))
+        if self.is_panel_analysis or self.is_gene_list_analysis:
+            if len(self.gene_list) < 100:
+                # Only prints the gene list when under 100 genes, otherwise becomes useless
+                logging.info("Gene list to analyse: %s" % ",".join(self.gene_list))
+            else:
+                logging.info("%s genes to analyse" % str(len(self.gene_list)))
 
         # Opens the bigwig reader
         if self.is_wg_stats_enabled:
