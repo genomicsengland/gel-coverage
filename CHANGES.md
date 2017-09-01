@@ -1,3 +1,9 @@
+version 1.3.1 (31 August 2017)
+----------------------------
+
+* Minor changes
+    - Avoid retrieving gene list for whole genome analysis
+
 version 1.3.0 (24 August 2017)
 ----------------------------
 
