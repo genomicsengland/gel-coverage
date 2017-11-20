@@ -7,7 +7,7 @@ from gelcoverage.tools.panelapp_helper import PanelappHelper
 import gelcoverage.tools.backoff_retrier as backoff_retrier
 
 
-PANELAPP_HOST = "panelapp.genomicsengland.co.uk/WebServices"
+PANELAPP_HOST = "bio-test-panelapp.gel.zone/WebServices"
 ASSEMBLY = "GRCh37"
 SPECIES = "hsapiens"
 CELLBASE_VERSION = "latest"
@@ -610,7 +610,6 @@ class PanelappHelperTests(unittest.TestCase):
 
 
 class PanelappHelperConnectionRetriesTests(unittest.TestCase):
-
 
 
     def setUp(self):
