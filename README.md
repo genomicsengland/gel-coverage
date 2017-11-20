@@ -44,6 +44,7 @@ config = {
     "panelapp_host": 'bioinfo.extge.co.uk/crowdsourcing/WebServices',
     "panelapp_gene_confidence": 'HighEvidence',
     "panelapp_retries": -1,
+    "panelapp_assembly": "GRCh37",
     "transcript_filtering_flags": 'basic',
     "transcript_filtering_biotypes": 'IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene',
     "exon_padding": 15,

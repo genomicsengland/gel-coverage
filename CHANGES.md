@@ -1,3 +1,9 @@
+version 1.4.0 (20 November 2017)
+----------------------------
+
+* Major changes
+    - Support for assembly when querying PanelApp
+
 version 1.3.1 (31 August 2017)
 ----------------------------
 

@@ -76,6 +76,7 @@ def main():
         "panelapp_host": config_parser.get('panelapp', 'host'),
         "panelapp_gene_confidence": config_parser.get('panelapp', 'gene_confidence'),
         "panelapp_retries": int(config_parser.get('panelapp', 'retries')),
+        "panelapp_assembly": config_parser.get('cellbase', 'assembly'),
         "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
         "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
         "exon_padding": int(config_parser.get("exon", "exon_padding")),

@@ -7,7 +7,8 @@ import gelcoverage.tools.backoff_retrier as backoff_retrier
 
 class PanelappHelper:
 
-    def __init__(self, host, retries):
+    def __init__(self, host, retries, assembly):
+        self.assembly = assembly
         self.host = host
         self.retries = retries
         self.urlopen = backoff_retrier.wrapper(urllib2.urlopen, self.retries)
@@ -26,10 +27,12 @@ class PanelappHelper:
             host=self.host,
             panel=panel)
 
-        parameters = "?version={version}&LevelOfConfidence={confidence}".format(
+        parameters = "?version={version}&LevelOfConfidence={confidence}&assembly={assembly}".format(
             version=panel_version,
             confidence=",".join(gene_confidence_threshold) if type(gene_confidence_threshold) == list
-            else gene_confidence_threshold)
+            else gene_confidence_threshold,
+            assembly=self.assembly
+        )
         url = urllib2.quote(url) + parameters  # we don't want parameters quoted
         panel = ujson.load(self.urlopen("https://" + url))
         # TODO: refine error management
