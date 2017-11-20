@@ -7,22 +7,26 @@ from gelcoverage.tools.panelapp_helper import PanelappHelper
 import gelcoverage.tools.backoff_retrier as backoff_retrier
 
 
+PANELAPP_HOST = "panelapp.genomicsengland.co.uk/WebServices"
+ASSEMBLY = "GRCh37"
+SPECIES = "hsapiens"
+CELLBASE_VERSION = "latest"
+CELLBASE_HOST = "bio-test-cellbase-tomcat-01.gel.zone:8080/cellbase"
+FILTER_BASIC_FLAG = ["basic"]
+FILTER_BIOTYPES = ["IG_C_gene", "IG_D_gene", "IG_J_gene", "IG_V_gene", "IG_V_gene", "protein_coding",
+                   "nonsense_mediated_decay", "non_stop_decay", "TR_C_gene",
+                   "TR_D_gene", "TR_J_gene", "TR_V_gene"]
+
+
 class CellbaseHelperTests(unittest.TestCase):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
-        self.species = "hsapiens"
-        self.version = "latest"
-        self.assembly = "GRCh37"
-        self.host = "10.5.8.201:8080/cellbase-4.5.0-rc"
         self.retries = -1
-        self.filter_basic_flag = ["basic"]
-        self.filter_biotypes = ["IG_C_gene", "IG_D_gene", "IG_J_gene", "IG_V_gene", "IG_V_gene", "protein_coding",
-                           "nonsense_mediated_decay", "non_stop_decay", "TR_C_gene",
-                           "TR_D_gene", "TR_J_gene", "TR_V_gene"]
         self.cellbase_helper = CellbaseHelper(
-            self.species, self.version, self.assembly, self.host, self.retries,
-            self.filter_basic_flag, self.filter_biotypes)
+            SPECIES, CELLBASE_VERSION, ASSEMBLY, CELLBASE_HOST, self.retries,
+            FILTER_BASIC_FLAG, FILTER_BIOTYPES
+        )
 
     def test1(self):
         """
@@ -55,7 +59,7 @@ class CellbaseHelperTests(unittest.TestCase):
                      "IGHE" # gene with 3 transcripts flagged as basic and 1 not flagged as basic
                      ]
         bed = self.cellbase_helper.make_exons_bed(gene_list)
-        bed.saveas("/home/priesgo/test.bed")
+        #bed.saveas("/home/priesgo/test.bed")
 
         self.assertIsNotNone(bed)
         ighe_transcripts = []
@@ -224,18 +228,11 @@ class CellbaseHelperRetriesTests(unittest.TestCase):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
-        self.species = "hsapiens"
-        self.version = "latest"
-        self.assembly = "GRCh37"
-        self.host = "10.5.8.201:8080/cellbase-4.5.0-rc"
         self.retries = -1
-        self.filter_basic_flag = ["basic"]
-        self.filter_biotypes = ["IG_C_gene", "IG_D_gene", "IG_J_gene", "IG_V_gene", "IG_V_gene", "protein_coding",
-                           "nonsense_mediated_decay", "non_stop_decay", "TR_C_gene",
-                           "TR_D_gene", "TR_J_gene", "TR_V_gene"]
         self.cellbase_helper = CellbaseHelper(
-            self.species, self.version, self.assembly, self.host, self.retries,
-            self.filter_basic_flag, self.filter_biotypes)
+            SPECIES, CELLBASE_VERSION, ASSEMBLY, CELLBASE_HOST, self.retries,
+            FILTER_BASIC_FLAG, FILTER_BIOTYPES
+        )
         # overwrites wrapped CB search
         self.count_failures = 0
         def simulate_connection_failures(*args, **kwargs):
@@ -279,7 +276,7 @@ class CellbaseHelperRetriesTests(unittest.TestCase):
                      "IGHE" # gene with 3 transcripts flagged as basic and 1 not flagged as basic
                      ]
         bed = self.cellbase_helper.make_exons_bed(gene_list)
-        bed.saveas("/home/priesgo/test.bed")
+        #bed.saveas("/home/priesgo/test.bed")
         self.assertEqual(self.count_failures, 3)
 
         self.assertIsNotNone(bed)
@@ -454,18 +451,11 @@ class CellbaseHelperRetriesTests2(unittest.TestCase):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
-        self.species = "hsapiens"
-        self.version = "latest"
-        self.assembly = "GRCh37"
-        self.host = "10.5.8.201:8080/cellbase-4.5.0-rc"
         self.retries = -1
-        self.filter_basic_flag = ["basic"]
-        self.filter_biotypes = ["IG_C_gene", "IG_D_gene", "IG_J_gene", "IG_V_gene", "IG_V_gene", "protein_coding",
-                           "nonsense_mediated_decay", "non_stop_decay", "TR_C_gene",
-                           "TR_D_gene", "TR_J_gene", "TR_V_gene"]
         self.cellbase_helper = CellbaseHelper(
-            self.species, self.version, self.assembly, self.host, self.retries,
-            self.filter_basic_flag, self.filter_biotypes)
+            SPECIES, CELLBASE_VERSION, ASSEMBLY, CELLBASE_HOST, self.retries,
+            FILTER_BASIC_FLAG, FILTER_BIOTYPES
+        )
         # overwrites wrapped CB search
         self.count_failures = 0
         def simulate_connection_failures(*args, **kwargs):
@@ -493,18 +483,11 @@ class CellbaseHelperRetriesTests3(unittest.TestCase):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
-        self.species = "hsapiens"
-        self.version = "latest"
-        self.assembly = "GRCh37"
-        self.host = "10.5.8.201:8080/cellbase-4.5.0-rc"
         self.retries = -1
-        self.filter_basic_flag = ["basic"]
-        self.filter_biotypes = ["IG_C_gene", "IG_D_gene", "IG_J_gene", "IG_V_gene", "IG_V_gene", "protein_coding",
-                           "nonsense_mediated_decay", "non_stop_decay", "TR_C_gene",
-                           "TR_D_gene", "TR_J_gene", "TR_V_gene"]
         self.cellbase_helper = CellbaseHelper(
-            self.species, self.version, self.assembly, self.host, self.retries,
-            self.filter_basic_flag, self.filter_biotypes)
+            SPECIES, CELLBASE_VERSION, ASSEMBLY, CELLBASE_HOST, self.retries,
+            FILTER_BASIC_FLAG, FILTER_BIOTYPES
+        )
         # overwrites wrapped CB search
         self.count_failures = 0
         def simulate_connection_failures(*args, **kwargs):
@@ -533,18 +516,11 @@ class CellbaseHelperRetriesTests4(unittest.TestCase):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
-        self.species = "hsapiens"
-        self.version = "latest"
-        self.assembly = "GRCh37"
-        self.host = "10.5.8.201:8080/cellbase-4.5.0-rc"
         self.retries = 3
-        self.filter_basic_flag = ["basic"]
-        self.filter_biotypes = ["IG_C_gene", "IG_D_gene", "IG_J_gene", "IG_V_gene", "IG_V_gene", "protein_coding",
-                           "nonsense_mediated_decay", "non_stop_decay", "TR_C_gene",
-                           "TR_D_gene", "TR_J_gene", "TR_V_gene"]
         self.cellbase_helper = CellbaseHelper(
-            self.species, self.version, self.assembly, self.host, self.retries,
-            self.filter_basic_flag, self.filter_biotypes)
+            SPECIES, CELLBASE_VERSION, ASSEMBLY, CELLBASE_HOST, self.retries,
+            FILTER_BASIC_FLAG, FILTER_BIOTYPES
+        )
         # overwrites wrapped CB search
         self.count_failures = 0
         def simulate_connection_failures(*args, **kwargs):
@@ -571,22 +547,22 @@ class PanelappHelperTests(unittest.TestCase):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
-        host = "bioinfo.extge.co.uk/crowdsourcing/WebServices"
         retries = 3
-        self.panelapp_helper = PanelappHelper(host, retries)
+        assembly = "GRCh37"
+        self.panelapp_helper = PanelappHelper(PANELAPP_HOST, retries, assembly)
+        self.panel_name = "Adult solid tumours"
+        self.panel_version = "0.19"
 
     def test1(self):
         """
         Tests querying of an existing panel filtered by HighEvidence
         :return:
         """
-        panel_name = "Epileptic encephalopathy"
-        panel_version = "0.2"
         gene_confidence_threshold = "HighEvidence"
-        gene_list = self.panelapp_helper.get_gene_list(panel = panel_name,
-                                           panel_version = panel_version,
+        gene_list = self.panelapp_helper.get_gene_list(panel = self.panel_name,
+                                           panel_version = self.panel_version,
                                            gene_confidence_threshold = gene_confidence_threshold)
-        self.assertEqual(len(gene_list), 7)
+        self.assertEqual(len(gene_list), 54)
         print "%s genes were returned" % str(len(gene_list))
         print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
 
@@ -595,13 +571,11 @@ class PanelappHelperTests(unittest.TestCase):
         Tests querying of an existing panel filtered by LowEvidence
         :return:
         """
-        panel_name = "Epileptic encephalopathy"
-        panel_version = "0.2"
         gene_confidence_threshold = "LowEvidence"
-        gene_list = self.panelapp_helper.get_gene_list(panel = panel_name,
-                                           panel_version = panel_version,
+        gene_list = self.panelapp_helper.get_gene_list(panel = self.panel_name,
+                                           panel_version = self.panel_version,
                                            gene_confidence_threshold = gene_confidence_threshold)
-        self.assertEqual(len(gene_list), 117)
+        self.assertEqual(len(gene_list), 0)
         print "%s genes were returned" % str(len(gene_list))
         print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
 
@@ -610,13 +584,11 @@ class PanelappHelperTests(unittest.TestCase):
         Tests querying of an existing panel filtered by LowEvidence
         :return:
         """
-        panel_name = "Epileptic encephalopathy"
-        panel_version = "0.2"
         gene_confidence_threshold = ["LowEvidence", "HighEvidence"]
-        gene_list = self.panelapp_helper.get_gene_list(panel = panel_name,
-                                           panel_version = panel_version,
+        gene_list = self.panelapp_helper.get_gene_list(panel = self.panel_name,
+                                           panel_version = self.panel_version,
                                            gene_confidence_threshold = gene_confidence_threshold)
-        self.assertEqual(len(gene_list), 124)
+        self.assertEqual(len(gene_list), 54)
         print "%s genes were returned" % str(len(gene_list))
         print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
 
@@ -643,10 +615,12 @@ class PanelappHelperConnectionRetriesTests(unittest.TestCase):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
-        host = "bioinfo.extge.co.uk/crowdsourcing/WebServices"
+
         retries = 3
-        self.panelapp_helper = PanelappHelper(host, retries)
+        assembly = "GRCh37"
+        self.panelapp_helper = PanelappHelper(PANELAPP_HOST, retries, assembly)
         self.count_failures = 0
+
         def simulate_connection_failures(*args, **kwargs):
             if self.count_failures < 3:
                 self.count_failures += 1
@@ -654,20 +628,20 @@ class PanelappHelperConnectionRetriesTests(unittest.TestCase):
             return urllib2.urlopen(*args, **kwargs)
 
         self.panelapp_helper.urlopen = backoff_retrier.wrapper(simulate_connection_failures, retries)
+        self.panel_name = "Adult solid tumours"
+        self.panel_version = "0.19"
 
     def test1(self):
         """
         Tests querying of an existing panel filtered by HighEvidence
         :return:
         """
-        panel_name = "Epileptic encephalopathy"
-        panel_version = "0.2"
         gene_confidence_threshold = "HighEvidence"
-        gene_list = self.panelapp_helper.get_gene_list(panel = panel_name,
-                                           panel_version = panel_version,
+        gene_list = self.panelapp_helper.get_gene_list(panel = self.panel_name,
+                                           panel_version = self.panel_version,
                                            gene_confidence_threshold = gene_confidence_threshold)
         self.assertEqual(self.count_failures, 3)
-        self.assertEqual(len(gene_list), 7)
+        self.assertEqual(len(gene_list), 54)
         print "%s genes were returned" % str(len(gene_list))
         print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
 
@@ -676,14 +650,12 @@ class PanelappHelperConnectionRetriesTests(unittest.TestCase):
         Tests querying of an existing panel filtered by LowEvidence
         :return:
         """
-        panel_name = "Epileptic encephalopathy"
-        panel_version = "0.2"
         gene_confidence_threshold = "LowEvidence"
-        gene_list = self.panelapp_helper.get_gene_list(panel = panel_name,
-                                           panel_version = panel_version,
+        gene_list = self.panelapp_helper.get_gene_list(panel = self.panel_name,
+                                           panel_version = self.panel_version,
                                            gene_confidence_threshold = gene_confidence_threshold)
         self.assertEqual(self.count_failures, 3)
-        self.assertEqual(len(gene_list), 117)
+        self.assertEqual(len(gene_list), 0)
         print "%s genes were returned" % str(len(gene_list))
         print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
 
@@ -692,14 +664,12 @@ class PanelappHelperConnectionRetriesTests(unittest.TestCase):
         Tests querying of an existing panel filtered by LowEvidence
         :return:
         """
-        panel_name = "Epileptic encephalopathy"
-        panel_version = "0.2"
         gene_confidence_threshold = ["LowEvidence", "HighEvidence"]
-        gene_list = self.panelapp_helper.get_gene_list(panel = panel_name,
-                                           panel_version = panel_version,
+        gene_list = self.panelapp_helper.get_gene_list(panel = self.panel_name,
+                                           panel_version = self.panel_version,
                                            gene_confidence_threshold = gene_confidence_threshold)
         self.assertEqual(self.count_failures, 3)
-        self.assertEqual(len(gene_list), 124)
+        self.assertEqual(len(gene_list), 54)
         print "%s genes were returned" % str(len(gene_list))
         print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
 
