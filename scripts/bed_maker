@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+import ConfigParser
+import argparse
+from gelcoverage.runner import BedMaker
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description='This script makes your bed! '
+                                                 '...a whole exome bed ready to use for BigWig analyser.')
+    parser.add_argument('--config', metavar='config',
+                        help='The configuration file [required]',
+                        required=True)
+    parser.add_argument('--output', metavar='output',
+                        help='The file to write the bed [required]',
+                        required=True)
+    parser.add_argument('--gene-list', metavar='gene_list',
+                        default=None,
+                        help='Comma separated list of genes (HGNC gene symbols) to analyse. If not provided will'
+                             ' just use all genes in th human genome.')
+    parser.add_argument('--chr-prefix', dest='chr_prefix', action='store_true',
+                        help='Outputs a bed file with chromosomes having a "chr" prefix')
+    parser.set_defaults(chr_prefix=True)
+
+    args = parser.parse_args()
+
+    # Reads configuration file
+    config_parser = ConfigParser.ConfigParser()
+    config_parser.readfp(open(args.config))
+
+    # Creates a data structure with all config parameters
+    config = {
+        # Sets parameters from CLI
+        "gene_list": args.gene_list,
+        # Sets parameters from config file
+        'configuration_file': args.config,
+        'chr_prefix': args.chr_prefix,
+        "log_level": int(config_parser.get("logging", "level")),
+        "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
+        "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
+        'cellbase_host': config_parser.get('cellbase', 'host'),
+        'cellbase_species': config_parser.get('cellbase', 'species'),
+        'cellbase_version': config_parser.get('cellbase', 'version'),
+        'cellbase_assembly': config_parser.get('cellbase', 'assembly'),
+        'cellbase_retries': int(config_parser.get('cellbase', 'retries'))
+    }
+    # Calls the GEL coverage engine
+    bed_maker = BedMaker(config)
+    bed = bed_maker.run()
+    if bed is None:
+        raise ValueError("Result is an empty bed!")
+    bed.saveas(args.output)
+
+if __name__ == '__main__':
+    main()

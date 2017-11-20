@@ -7,6 +7,47 @@ from gelcoverage.test.output_verifier import OutputVerifier
 import gelcoverage.constants as constants
 
 
+class BedMakerTests(unittest.TestCase):
+
+    def setUp(self):
+        logging.basicConfig(level=logging.INFO)
+        config = {
+            # Sets parameters from CLI
+            "gene_list": None,
+            "chr_prefix": False,
+            # Sets parameters from config file
+            'configuration_file': "whatever",
+            "log_level": int(config_parser.get("logging", "level")),
+            "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
+            "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
+            "cellbase_species": "hsapiens",
+            "cellbase_version": "latest",
+            "cellbase_assembly": "grch37",
+            "cellbase_host": "10.5.8.201:8080/cellbase-4.5.0-rc",
+            "cellbase_retries": -1,
+        }
+
+    def test1(self):
+        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "Epileptic encephalopathy"
+        self.config["panel_version"] = "0.2"
+        self.config["exon_padding"] = 0
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_1.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_1.bed')
+        # Runs verifications on output JSON
+        self.verify_output(output, expected_gene_list)
+
+
 class GelCoverageRunnerTests(OutputVerifier):
 
     def setUp(self):

@@ -597,3 +597,96 @@ class GelCoverageRunner:
                     del transcript[constants.EXONS]
                 del gene[constants.UNION_TRANSCRIPT][constants.EXONS]
         return results
+
+
+class BedMaker:
+
+    def __init__(self, config):
+        self.config = config
+        # Run sanity checks on the configuration
+        self.__config_sanity_checks()
+        # Configure logs
+        logging.basicConfig(level=self.config["log_level"])
+        self.is_gene_list_analysis = True if "gene_list" in self.config and self.config["gene_list"] else False
+        # Initialize CellBase helper only if no coding regions have been provided
+        self.cellbase_helper = CellbaseHelper(
+            species=self.config['cellbase_species'],
+            version=self.config['cellbase_version'],
+            assembly=self.config['cellbase_assembly'],
+            host=self.config['cellbase_host'],
+            retries=self.config['cellbase_retries'],
+            filter_flags=self.config['transcript_filtering_flags'].split(","),
+            filter_biotypes=self.config['transcript_filtering_biotypes'].split(",")
+        )
+
+    def __config_sanity_checks(self):
+        """
+        Checks the input configuration is not missing any value
+        :return:
+        """
+        # add default values to missing parameters
+        if "log_level" not in self.config:
+            # default value log level to INFO
+            self.config["log_level"] = 20
+        # check required parameters
+        errors = []
+        if "cellbase_retries" not in self.config:
+            # setting default value, infinite retries
+            self.config["cellbase_retries"] = -1
+        if "cellbase_species" not in self.config:
+            errors.append("'cellbase_species' field is mising")
+        if "cellbase_version" not in self.config:
+            errors.append("'cellbase_version' field is mising")
+        if "cellbase_assembly" not in self.config:
+            errors.append("'cellbase_assembly' field is mising")
+        if "cellbase_host" not in self.config:
+            errors.append("'cellbase_host' field is mising")
+        if "transcript_filtering_flags" not in self.config:
+            errors.append("'transcript_filtering_flags' field is mising")
+        if "transcript_filtering_biotypes" not in self.config:
+            errors.append("'transcript_filtering_biotypes' field is mising")
+        # raise exception if necessary
+        if len(errors) > 0:
+            for error in errors:
+                logging.error(error)
+            raise GelCoverageInputError("Error in configuration data!")
+        self.has_gene_list = "gene_list" in self.config and self.config["gene_list"] is not None
+
+    def __get_bed_for_exons(self, chr_prefix):
+        """
+        Creates a bed file using cellbase connector
+        :return: An iterator on a bedfile
+        """
+        bed = self.cellbase_helper.make_exons_bed(self.gene_list, has_chr_prefix=chr_prefix)
+        return bed
+
+    def get_gene_list(self):
+        """
+        Retrieves the gene list to analyse based on the input parameters.
+        This list might be retrieved from PanelApp, from the parameter genes or
+        just get every gene in the human genome.
+        When all parameters are provided, genes are retrieved from PanelApp and
+        the parameter genes is ignored.
+        :return: the gene list for coverage analysis
+        """
+        # Gets list of genes to analyse
+        gene_list = self.cellbase_helper.get_all_gene_names()
+        return gene_list
+
+    def run(self):
+        """
+        :return: the output data structure
+        """
+        logging.info("Starting making your bed")
+
+        # Gets the list of genes to analyse
+        if self.has_gene_list:
+            self.gene_list = self.config["gene_list"]
+        else:
+            self.gene_list = self.get_gene_list()
+
+        # Gets the bed
+        bed = self.__get_bed_for_exons(self.config["chr_prefix"])
+        logging.info("Your bed is made!")
+
+        return bed

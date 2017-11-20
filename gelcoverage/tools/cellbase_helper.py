@@ -187,7 +187,7 @@ class CellbaseHelper:
         all_exons = list()
         while gene_count < number_genes:
             limit = min(len(gene_list) - gene_count, gene_batch)
-            current_list = gene_list[gene_count: limit]
+            current_list = gene_list[gene_count: gene_count + limit]
             gene_count += limit
             # Query CellBase for a subset of genes
             cellbase_genes = self.__get_gene_info(current_list)
