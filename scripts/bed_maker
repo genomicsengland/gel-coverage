@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import ConfigParser
 import argparse
-from gelcoverage.runner import BedMaker
+
+from gelcoverage import runner
 
 
 def main():
@@ -45,7 +46,7 @@ def main():
         'cellbase_retries': int(config_parser.get('cellbase', 'retries'))
     }
     # Calls the GEL coverage engine
-    bed_maker = BedMaker(config)
+    bed_maker = runner.BedMaker(config)
     bed = bed_maker.run()
     if bed is None:
         raise ValueError("Result is an empty bed!")

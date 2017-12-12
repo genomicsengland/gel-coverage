@@ -231,7 +231,7 @@ class GelCoverageRunner:
         return parameters
 
     @staticmethod
-    def __parse_bed_interval(interval):
+    def _parse_bed_interval(interval):
         """
         Extracts information from a BED interval.
         :param interval: the BED interval
@@ -439,7 +439,7 @@ class GelCoverageRunner:
         for interval in bed:
             # Reads data from BED entry
             chromosome, start, end, gene_name, transcript_id, \
-            exon_number, strand, gc_content = GelCoverageRunner.__parse_bed_interval(interval)
+            exon_number, strand, gc_content = GelCoverageRunner._parse_bed_interval(interval)
 
             # Store transcript in data structure. Needs to run before gene
             if current_transcript_id != transcript_id:

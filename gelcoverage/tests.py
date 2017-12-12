@@ -2,7 +2,7 @@ import unittest
 import json
 import logging
 import pybedtools
-from gelcoverage.runner import GelCoverageRunner, GelCoverageInputError
+from gelcoverage.runner import GelCoverageRunner, GelCoverageInputError, BedMaker
 from gelcoverage.test.output_verifier import OutputVerifier
 import gelcoverage.constants as constants
 
@@ -10,42 +10,64 @@ import gelcoverage.constants as constants
 class BedMakerTests(unittest.TestCase):
 
     def setUp(self):
-        logging.basicConfig(level=logging.INFO)
-        config = {
+        logging.basicConfig(level=logging.DEBUG)
+        self.config = {
             # Sets parameters from CLI
             "gene_list": None,
             "chr_prefix": False,
             # Sets parameters from config file
             'configuration_file': "whatever",
-            "log_level": int(config_parser.get("logging", "level")),
-            "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
-            "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
+            "log_level": 10,
+            "transcript_filtering_flags": "basic",
+            "transcript_filtering_biotypes": "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,"
+                                             "nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,"
+                                             "TR_V_gene",
             "cellbase_species": "hsapiens",
             "cellbase_version": "latest",
             "cellbase_assembly": "grch37",
-            "cellbase_host": "10.5.8.201:8080/cellbase-4.5.0-rc",
+            "cellbase_host": "bio-test-cellbase-haproxy-01.gel.zone/cellbase",
             "cellbase_retries": -1,
         }
 
     def test1(self):
-        expected_gene_list = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
-        self.config["bw"] = "../resources/test/test1.bw"
-        self.config["panel"] = "Epileptic encephalopathy"
-        self.config["panel_version"] = "0.2"
-        self.config["exon_padding"] = 0
-        runner = GelCoverageRunner(
-            config=self.config
-        )
-        output, bed = runner.run()
-        # Writes the JSON
-        with open('../resources/test/sample_output_1.json', 'w') as fp:
-            json.dump(output, fp)
+        """
+        Generates a bed file for all genes in Cellbase
+        :return:
+        """
+        runner = BedMaker(config=self.config)
+        bed = runner.run()
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_1.bed')
-        # Runs verifications on output JSON
-        self.verify_output(output, expected_gene_list)
+        bed.saveas('../resources/test/sample_output_bedmaker_1.bed')
+        observed_genes = observed_genes = self._get_genes_from_bed(bed)
+        self.assertEqual(len(observed_genes), 20760)
+
+    def test2(self):
+        """
+        Generates a bed file for all genes in Cellbase
+        :return:
+        """
+        expected_genes = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config['gene_list'] = expected_genes
+        runner = BedMaker(config=self.config)
+        bed = runner.run()
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_bedmaker_2.bed')
+        observed_genes = self._get_genes_from_bed(bed)
+        self.assertEqual(len(observed_genes), len(expected_genes))
+        self.assertEqual(set(observed_genes), set(expected_genes))
+
+    def _get_genes_from_bed(self, bed):
+        genes = set()
+        for interval in bed:
+            # Reads data from BED entry
+            chromosome, start, end, gene_name, transcript_id, \
+            exon_number, strand, gc_content = GelCoverageRunner._parse_bed_interval(interval)
+            genes.add(gene_name)
+        return list(genes)
 
 
 class GelCoverageRunnerTests(OutputVerifier):
@@ -64,7 +86,7 @@ class GelCoverageRunnerTests(OutputVerifier):
             "cellbase_species": "hsapiens",
             "cellbase_version": "latest",
             "cellbase_assembly": "grch37",
-            "cellbase_host": "10.5.8.201:8080/cellbase-4.5.0-rc",
+            "cellbase_host": "bio-test-cellbase-haproxy-01.gel.zone/cellbase",
             "cellbase_retries": -1,
             "panelapp_host": "bioinfo.extge.co.uk/crowdsourcing/WebServices",
             "panelapp_gene_confidence": "HighEvidence",
