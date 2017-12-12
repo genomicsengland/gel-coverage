@@ -39,7 +39,7 @@ class BedMakerTests(unittest.TestCase):
         # Saves the analysed region as a BED file
         bed.saveas('../resources/test/sample_output_bedmaker_1.bed')
         observed_genes = observed_genes = self._get_genes_from_bed(bed)
-        self.assertEqual(len(observed_genes), 20542)
+        self.assertEqual(len(observed_genes), 20567)
 
     def test2(self):
         """
@@ -485,6 +485,28 @@ class GelCoverageRunnerTests(OutputVerifier):
             caught_exception = True
         self.assertTrue(caught_exception, msg="It should have raised an exception as bed and bigwig are using"
                                               "different chromosome notations")
+
+    def test6_2(self):
+        """
+        Test 6.2: provided a small bed for the whole genome analysis
+        :return:
+        """
+        self.config["panel"] = None
+        self.config["panel_version"] = None
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["exon_padding"] = 0
+        self.config["coding_region_stats_enabled"] = False
+        self.config["wg_stats_enabled"] = True
+        self.config["wg_regions"] = "../resources/test/test1.bed"
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, _ = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_6_2.json', 'w') as fp:
+            json.dump(output, fp)
+        # Runs verifications on output JSON
+        self.verify_output(output, None)
 
     @unittest.skip("long running test")
     def test7(self):
