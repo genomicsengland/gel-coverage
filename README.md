@@ -136,3 +136,40 @@ Much more complex queries can be done. See https://robots.thoughtbot.com/jq-is-s
 **NOTE 1**: Beware that the JSONs for the coding region with coverage detail at exon level might be quite big and jq will be slow as it loads all data in memory.
 
 **NOTE 2**: jq is installed in `bio-pp9-01` at `/genomes/software/apps/jq-1.5`
+
+
+## Bed Maker
+
+The Bed Maker builds from a list of genes the BED file defining the coding regions that the Bigwig Analyser expects.
+
+### How to use it from commandline
+
+```
+bed_maker --config resources/bed_maker.config --output resources/test/deleteme.bed --gene-list SCN2A,SPTAN1,PLCB1,SLC25A22,SCN8A,STXBP1,PNKP
+```
+
+### How to use it from Python
+
+```
+#Create a dictionary with the configuration
+config = {
+    # Sets parameters from CLI
+    "gene_list": None,
+    "chr_prefix": False,
+    "log_level": 10,
+    "transcript_filtering_flags": "basic",
+    "transcript_filtering_biotypes": "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,"
+                                     "nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,"
+                                     "TR_V_gene",
+    "cellbase_species": "hsapiens",
+    "cellbase_version": "latest",
+    "cellbase_assembly": "grch37",
+    "cellbase_host": "bio-test-cellbase-haproxy-01.gel.zone/cellbase",
+    "cellbase_retries": -1,
+}
+
+bed_maker = BedMaker(config)
+bed = bed_maker.run()
+# Saves the analysed region as a BED file
+bed.saveas("my.bed")
+```

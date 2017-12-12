@@ -15,8 +15,6 @@ class BedMakerTests(unittest.TestCase):
             # Sets parameters from CLI
             "gene_list": None,
             "chr_prefix": False,
-            # Sets parameters from config file
-            'configuration_file': "whatever",
             "log_level": 10,
             "transcript_filtering_flags": "basic",
             "transcript_filtering_biotypes": "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,"
