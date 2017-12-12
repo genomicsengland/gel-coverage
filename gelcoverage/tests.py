@@ -101,6 +101,16 @@ class BedMakerTests(unittest.TestCase):
         return list(genes)
 
 
+PANELAPP_HOST = "panelapp.genomicsengland.co.uk/WebServices"  # "bio-test-panelapp.gel.zone/WebServices"
+ASSEMBLY = "GRCh37"
+SPECIES = "hsapiens"
+CELLBASE_VERSION = "latest"
+CELLBASE_HOST = "bio-test-cellbase-haproxy-01.gel.zone/cellbase"
+FILTER_BASIC_FLAG = ["basic"]
+FILTER_BIOTYPES = "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay," \
+                  "non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene"
+
+
 class GelCoverageRunnerTests(OutputVerifier):
 
     def setUp(self):
@@ -112,16 +122,17 @@ class GelCoverageRunnerTests(OutputVerifier):
             "panel": "Epileptic encephalopathy",
             "panel_version": "1.2",
             "coverage_threshold": 30,
-            "cellbase_species": "hsapiens",
-            "cellbase_version": "latest",
-            "cellbase_assembly": "grch37",
-            "cellbase_host": "bio-test-cellbase-haproxy-01.gel.zone/cellbase",
+            "cellbase_species": SPECIES,
+            "cellbase_version": CELLBASE_VERSION,
+            "cellbase_assembly": ASSEMBLY,
+            "cellbase_host": CELLBASE_HOST,
             "cellbase_retries": -1,
-            "panelapp_host": "panelapp.genomicsengland.co.uk/WebServices",
+            "panelapp_host": PANELAPP_HOST,
             "panelapp_gene_confidence": "HighEvidence",
             "panelapp_retries": -1,
-            "transcript_filtering_flags": "basic",
-            "transcript_filtering_biotypes": "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay,non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene",
+            "panelapp_assembly": ASSEMBLY,
+            "transcript_filtering_flags": FILTER_BASIC_FLAG,
+            "transcript_filtering_biotypes": FILTER_BIOTYPES,
             "wg_stats_enabled": False,
             "exon_padding": 15,
             "wg_regions": None,

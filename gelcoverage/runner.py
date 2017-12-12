@@ -39,7 +39,8 @@ class GelCoverageRunner:
         if self.is_panel_analysis:
             self.panelapp_helper = PanelappHelper(
                 host=self.config['panelapp_host'],
-                retries=self.config['panelapp_retries']
+                retries=self.config['panelapp_retries'],
+                assembly=self.config['panelapp_assembly']
             )
 
         self.coding_regions = self.config['coding_regions'] if 'coding_regions' in self.config else None
@@ -117,6 +118,8 @@ class GelCoverageRunner:
                 errors.append("'cellbase_host' field is mising")
         if "panelapp_host" not in self.config:
             errors.append("'panelapp_host' field is mising")
+        if "panelapp_assembly" not in self.config:
+            errors.append("'panelapp_assembly' field is mising")
         if "panelapp_gene_confidence" not in self.config:
             errors.append("'panelapp_gene_confidence' field is mising")
         if "transcript_filtering_flags" not in self.config:
@@ -222,6 +225,7 @@ class GelCoverageRunner:
             parameters["panel"] = self.config['panel']
             parameters["panel_version"] = self.config['panel_version']
             parameters["panel_gene_confidence"] = self.config['panelapp_gene_confidence']
+            parameters["panelapp_assembly"] = self.config['panelapp_assembly']
             parameters["gene_list"] = self.gene_list
         elif self.is_gene_list_analysis:
             parameters["gene_list"] = self.gene_list
