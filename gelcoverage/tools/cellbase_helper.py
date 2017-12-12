@@ -175,8 +175,6 @@ class CellbaseHelper:
         :return: pybedtools object
         """
         logging.info("Building gene annotations bed file from CellBase...")
-        if gene_list is None or len(gene_list) == 0:
-            raise SystemError("Input gene list is empty")
         number_genes = len(gene_list)
 
         # TODO: Verify that all genes in the list are present in the reference

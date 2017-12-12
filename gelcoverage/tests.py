@@ -58,7 +58,7 @@ class BedMakerTests(unittest.TestCase):
 
     def test3(self):
         """
-        Generates a bed file for all genes in Cellbase
+        Generates a bed file for some genes
         :return:
         """
         self.config['cellbase_assembly'] = "grch38"
@@ -74,9 +74,9 @@ class BedMakerTests(unittest.TestCase):
         self.assertEqual(len(observed_genes), len(expected_genes))
         self.assertEqual(set(observed_genes), set(expected_genes))
 
-    def test3(self):
+    def test4(self):
         """
-        Generates a bed file for all genes in Cellbase
+        Generates a bed file for some genes
         :return:
         """
         expected_genes = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
@@ -106,7 +106,7 @@ ASSEMBLY = "GRCh37"
 SPECIES = "hsapiens"
 CELLBASE_VERSION = "latest"
 CELLBASE_HOST = "bio-test-cellbase-haproxy-01.gel.zone/cellbase"
-FILTER_BASIC_FLAG = ["basic"]
+FILTER_BASIC_FLAG = "basic"
 FILTER_BIOTYPES = "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay," \
                   "non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene"
 
@@ -170,6 +170,54 @@ class GelCoverageRunnerTests(OutputVerifier):
         bed.saveas('../resources/test/sample_output_1.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
+
+    def test1_1(self):
+        """
+        Test 1: panel from PanelApp
+        :return:
+        """
+        expected_gene_list = [u'MBTPS2']
+        self.config["panel"] = "568e844522c1fc1c78b67156"
+        self.config["panel_version"] = "1.0"
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["exon_padding"] = 0
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_1_1.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_1_1.bed')
+        # Runs verifications on output JSON
+        #self.verify_output(output, expected_gene_list)
+
+    def test1_2(self):
+        """
+        Test 1: panel from PanelApp
+        :return:
+        """
+        expected_gene_list = []
+        self.config["panel"] = "5550b7bebb5a161bf644a3bc"
+        self.config["panel_version"] = "1.2"
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["exon_padding"] = 0
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_1_2.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_1_2.bed')
+        # Runs verifications on output JSON
+        #self.verify_output(output, expected_gene_list)
 
     def test2(self):
         """
