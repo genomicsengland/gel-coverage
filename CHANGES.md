@@ -1,3 +1,14 @@
+version 1.4.1 (12 December 2017)
+----------------------------
+
+* Major changes
+    - BED maker script to generate scripts from cellbase
+
+* Minor changes
+    - Avoiding failure when a panel analysis has no genes
+    - Avoiding failure when computing stats over empty dataset
+    - Fix error obtaining BED from cellbase of a list of more than 1000 genes
+
 version 1.4.0 (20 November 2017)
 ----------------------------
 

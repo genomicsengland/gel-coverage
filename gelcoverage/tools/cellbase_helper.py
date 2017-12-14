@@ -175,8 +175,6 @@ class CellbaseHelper:
         :return: pybedtools object
         """
         logging.info("Building gene annotations bed file from CellBase...")
-        if gene_list is None or len(gene_list) == 0:
-            raise SystemError("Input gene list is empty")
         number_genes = len(gene_list)
 
         # TODO: Verify that all genes in the list are present in the reference
@@ -187,7 +185,7 @@ class CellbaseHelper:
         all_exons = list()
         while gene_count < number_genes:
             limit = min(len(gene_list) - gene_count, gene_batch)
-            current_list = gene_list[gene_count: limit]
+            current_list = gene_list[gene_count: gene_count + limit]
             gene_count += limit
             # Query CellBase for a subset of genes
             cellbase_genes = self.__get_gene_info(current_list)
