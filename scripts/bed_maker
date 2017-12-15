@@ -21,6 +21,9 @@ def main():
                              ' just use all genes in th human genome.')
     parser.add_argument('--chr-prefix', dest='chr_prefix', action='store_true',
                         help='Outputs a bed file with chromosomes having a "chr" prefix')
+    parser.add_argument('--exon-padding', dest='exon_padding', default=0,
+                        help='The number of base pairs padding each exon up and downstream '
+                             '(no merge of exons is done when they overlap after padding)')
     parser.set_defaults(chr_prefix=True)
 
     args = parser.parse_args()
@@ -43,7 +46,8 @@ def main():
         'cellbase_species': config_parser.get('cellbase', 'species'),
         'cellbase_version': config_parser.get('cellbase', 'version'),
         'cellbase_assembly': config_parser.get('cellbase', 'assembly'),
-        'cellbase_retries': int(config_parser.get('cellbase', 'retries'))
+        'cellbase_retries': int(config_parser.get('cellbase', 'retries')),
+        'exon_padding': int(args.exon_padding)
     }
     # Calls the GEL coverage engine
     bed_maker = runner.BedMaker(config)
