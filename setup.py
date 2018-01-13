@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='gelcoverage',
-    version='1.4.1',
+    version='1.4.2',
     packages=find_packages(),
     scripts=['scripts/bigwig_analyser', 'scripts/bed_maker'],
     url='',

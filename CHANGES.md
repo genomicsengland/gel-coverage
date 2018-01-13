@@ -1,3 +1,9 @@
+version 1.4.2 (15 December 2017)
+----------------------------
+
+* Minor changes
+    - `--exon-padding` option
+
 version 1.4.1 (12 December 2017)
 ----------------------------
 
