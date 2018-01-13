@@ -5,3 +5,4 @@ ujson==1.35
 pandas==0.20.3
 --extra-index-url https://pypi.gel.zone/genomics/dev
 pycellbase==0.3.3
+GelReportModels==6.0.0

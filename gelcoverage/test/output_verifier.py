@@ -227,15 +227,9 @@ class OutputVerifier(unittest.TestCase):
         :param exon:
         :return: start and end positions
         """
-        start = None
-        end = None
-        if self.__is_padding_enabled():
-            start = exon[constants.EXON_PADDED_START]
-            end = exon[constants.EXON_PADDED_END]
-        else:
-            start = exon[constants.EXON_START]
-            end = exon[constants.EXON_END]
-        return (start, end)
+        start = exon[constants.EXON_START]
+        end = exon[constants.EXON_END]
+        return start, end
 
     def __is_padding_enabled(self):
         return self.config["exon_padding"] > 0
@@ -279,17 +273,6 @@ class OutputVerifier(unittest.TestCase):
             self._verify_dict_field(exon, constants.EXON_END, int)
             self.assertTrue(exon[constants.EXON_END] >= 0)
             self.assertTrue(exon[constants.EXON_END] >= exon[constants.EXON_START], msg="End < start")
-            if self.__is_padding_enabled():
-                self._verify_dict_field(exon, constants.EXON_PADDED_START, int)
-                self.assertTrue(exon[constants.EXON_PADDED_START] >= 0)
-                self._verify_dict_field(exon, constants.EXON_PADDED_END, int)
-                self.assertTrue(exon[constants.EXON_PADDED_END] >= 0)
-                self.assertTrue(exon[constants.EXON_PADDED_END] > exon[constants.EXON_PADDED_START],
-                                msg="Padded end <= padded start")
-                self.assertTrue(exon[constants.EXON_START] - exon[constants.EXON_PADDED_START] == self.config["exon_padding"],
-                                msg="Incorrect start coordinate padding")
-                self.assertTrue(exon[constants.EXON_PADDED_END] - exon[constants.EXON_END] == self.config["exon_padding"],
-                                msg="Incorrect end coordinate padding")
             self._verify_dict_field(exon, constants.EXON, str)
             self.assertTrue(str(exon[constants.EXON]).startswith(constants.EXON),
                             msg="Exon number is not well formed")

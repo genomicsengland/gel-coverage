@@ -59,9 +59,7 @@ class GelCoverageRunner:
             )
 
         # Gets the list of genes to analyse
-        requires_gene_list = self.is_panel_analysis or \
-                             self.is_gene_list_analysis or \
-                             self.is_coding_region_stats_enabled
+        requires_gene_list = self.is_panel_analysis or self.is_gene_list_analysis or self.is_coding_region_stats_enabled
         self.gene_list = []
         if requires_gene_list:
             self.gene_list = self.get_gene_list()
@@ -73,7 +71,7 @@ class GelCoverageRunner:
             else:
                 logging.info("%s genes to analyse" % str(len(self.gene_list)))
 
-        # Opens the bigwig reader
+        # Opens the bed reader
         if self.is_wg_stats_enabled:
             self.wg_regions = self.config["wg_regions"]
             self.bed_reader = BedReader(self.wg_regions)
@@ -147,7 +145,6 @@ class GelCoverageRunner:
             raise GelCoverageInputError('Both modes gene list and custom coding region are not allowed, please'
                                         ' provide either "gene-list" or "coding-regions"')
 
-
     def __sanity_checks(self):
         """
         Checks on the configuration data to raise errors before starting long computations.
@@ -196,7 +193,7 @@ class GelCoverageRunner:
         gene_list = set()
         bedfile_handler = open(self.coding_regions, 'r')
         for line in bedfile_handler:
-             gene_list.add(BedInterval(line).name.split('|')[0])
+            gene_list.add(BedInterval(line).name.split('|')[0])
         bedfile_handler.close()
         return list(gene_list)
 
@@ -281,7 +278,7 @@ class GelCoverageRunner:
         }
 
     @staticmethod
-    def __initialize_exon_dict(exon_number, start, end, padded_start, padded_end):
+    def __initialize_exon_dict(exon_number, start, end):
         """
         Returns the dictionary that will store exon information
         :param exon_number: the exon number
@@ -296,9 +293,6 @@ class GelCoverageRunner:
             constants.EXON_START: start,
             constants.EXON_END: end
         }
-        if padded_start is not None and padded_start != start:
-            exon[constants.EXON_PADDED_START] = padded_start
-            exon[constants.EXON_PADDED_END] = padded_end
         return exon
 
     def __create_exon(self, chromosome, start, end, exon_idx, gc_content=None):
@@ -314,10 +308,8 @@ class GelCoverageRunner:
         exon_number = "exon%s" % exon_idx if type(exon_idx) == int else exon_idx
         exon = GelCoverageRunner.__initialize_exon_dict(
             exon_number,
-            start=start,
-            end=end,
-            padded_start=start - self.config["exon_padding"] if self.is_exon_padding else None,
-            padded_end=end + self.config["exon_padding"] if self.is_exon_padding else None
+            start=start - self.config["exon_padding"] if self.is_exon_padding else start,
+            end=end + self.config["exon_padding"] if self.is_exon_padding else end
         )
         # Read from the bigwig file
         coverages = self.bigwig_reader.read_bigwig_coverages(
@@ -362,20 +354,15 @@ class GelCoverageRunner:
         all_exons.sort(key=lambda x: x[constants.EXON_START])
         union_exons = []
         first_exon = all_exons[0]
-        current_padded_end = first_exon[constants.EXON_PADDED_END] if self.is_exon_padding \
-            else first_exon[constants.EXON_END]
         current_start = first_exon[constants.EXON_START]
         current_end = first_exon[constants.EXON_END]
         # TODO: consider strand when assigning exon indices
         exon_idx = 1
         for exon in all_exons[1:]:
-            padded_start = exon[constants.EXON_PADDED_START] if self.is_exon_padding else exon[constants.EXON_START]
-            padded_end = exon[constants.EXON_PADDED_END] if self.is_exon_padding else exon[constants.EXON_END]
             start = exon[constants.EXON_START]
             end = exon[constants.EXON_END]
-            if padded_start <= current_padded_end:
+            if start <= current_end:
                 # Exons overlaps, we join them
-                current_padded_end = max(current_padded_end, padded_end)
                 current_end = max(current_end, end)
             else:
                 # Exons do not overlap, they are different exons in the union transcript
@@ -385,9 +372,9 @@ class GelCoverageRunner:
                     current_end,
                     exon_idx
                 )
-                # Saves current exon and stores the next
+                # Saves current exon
                 union_exons.append(current_exon)
-                current_padded_end = padded_end
+                # Initialise values for next exon
                 current_start = start
                 current_end = end
                 exon_idx += 1

@@ -333,8 +333,6 @@ class GelCoverageRunnerTests(OutputVerifier):
             return {
                 constants.EXON_START: start,
                 constants.EXON_END: end,
-                constants.EXON_PADDED_START: start - self.config["exon_padding"],
-                constants.EXON_PADDED_END: end + self.config["exon_padding"],
                 constants.EXON: exon_number
             }
         # Interval covered in the input file SCN2A: 2: 165,995,882-166,349,242
