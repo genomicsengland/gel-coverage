@@ -31,15 +31,15 @@ def find_gaps(coverages, start_position, coverage_threshold, gap_length_threshol
         elif value >= coverage_threshold and open_gap:
             open_gap = False
             current_gap[constants.GAP_END] = start_position + idx
-            current_gap[constants.GAP_LENGTH] = current_gap[constants.GAP_END] - current_gap[constants.GAP_START]
-            if current_gap[constants.GAP_LENGTH] >= gap_length_threshold:
+            length = current_gap[constants.GAP_END] - current_gap[constants.GAP_START]
+            if length >= gap_length_threshold:
                 gaps.append(current_gap)
             current_gap = {}
     # Closes the last gap when it extends until the last position
     if open_gap:
         current_gap[constants.GAP_END] = end
-        current_gap[constants.GAP_LENGTH] = current_gap[constants.GAP_END] - current_gap[constants.GAP_START] + 1
-        if current_gap[constants.GAP_LENGTH] >= gap_length_threshold:
+        length = current_gap[constants.GAP_END] - current_gap[constants.GAP_START] + 1
+        if length >= gap_length_threshold:
             gaps.append(current_gap)
 
     return gaps

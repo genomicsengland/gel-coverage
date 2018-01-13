@@ -294,8 +294,7 @@ class GelCoverageRunner:
         exon = {
             constants.EXON: exon_number,
             constants.EXON_START: start,
-            constants.EXON_END: end,
-            constants.EXON_LENGTH: end - start + 1
+            constants.EXON_END: end
         }
         if padded_start is not None and padded_start != start:
             exon[constants.EXON_PADDED_START] = padded_start
@@ -320,8 +319,6 @@ class GelCoverageRunner:
             padded_start=start - self.config["exon_padding"] if self.is_exon_padding else None,
             padded_end=end + self.config["exon_padding"] if self.is_exon_padding else None
         )
-        # Update length
-        exon[constants.EXON_LENGTH] = end - start + 1
         # Read from the bigwig file
         coverages = self.bigwig_reader.read_bigwig_coverages(
             chromosome,
