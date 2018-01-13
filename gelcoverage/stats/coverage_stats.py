@@ -7,12 +7,13 @@ from gelcoverage.tools.bigwig_reader import BigWigReader
 import gelcoverage.constants as constants
 
 
-def find_gaps(coverages, start_position, coverage_threshold):
+def find_gaps(coverages, start_position, coverage_threshold, gap_length_threshold):
     """
     Find continuous genomic positions under a given threshold coverage_threshold.
     :param coverages: list of depth of coverage values
-    :param start_position: starting position of the coverages sequence
+    :param start_position: starting position of the coverages sequence (0-based)
     :param coverage_threshold: the coverage threshold to determine gaps
+    :param gap_length_threshold: the gap length threshold, every gap under this length will be discarded
     :return: the gaps start and end genomic coordinates in JSON-friendly format.
     Chromosome is not set as this information
     will be embedded within an exon-transcript-gene where the chromosome is available.
@@ -29,15 +30,17 @@ def find_gaps(coverages, start_position, coverage_threshold):
             current_gap[constants.GAP_START] = start_position + idx
         elif value >= coverage_threshold and open_gap:
             open_gap = False
-            current_gap[constants.GAP_END] = start_position + idx - 1
-            current_gap[constants.GAP_LENGTH] = current_gap[constants.GAP_END] - current_gap[constants.GAP_START] + 1
-            gaps.append(current_gap)
+            current_gap[constants.GAP_END] = start_position + idx
+            current_gap[constants.GAP_LENGTH] = current_gap[constants.GAP_END] - current_gap[constants.GAP_START]
+            if current_gap[constants.GAP_LENGTH] >= gap_length_threshold:
+                gaps.append(current_gap)
             current_gap = {}
     # Closes the last gap when it extends until the last position
     if open_gap:
         current_gap[constants.GAP_END] = end
         current_gap[constants.GAP_LENGTH] = current_gap[constants.GAP_END] - current_gap[constants.GAP_START] + 1
-        gaps.append(current_gap)
+        if current_gap[constants.GAP_LENGTH] >= gap_length_threshold:
+            gaps.append(current_gap)
 
     return gaps
 

@@ -9,9 +9,9 @@ from gelcoverage.runner import GelCoverageRunner
 
 def main():
 
-    parser = argparse.ArgumentParser(description = 'Coverage summary. Provide a panel name and version, a gene list '
-                                                   'or none of thee previous to run whole exome coverage analysis')
-    parser.add_argument('--bw', metavar='bw', help = 'This coverage bigwig file [required]', required = True)
+    parser = argparse.ArgumentParser(description='Coverage summary. Provide a panel name and version, a gene list '
+                                                 'or none of thee previous to run whole exome coverage analysis')
+    parser.add_argument('--bw', metavar='bw', help='This coverage bigwig file [required]', required = True)
     parser.add_argument('--output', metavar='output',
                         help='The file to which write the results [required]',
                         required=True)
@@ -19,16 +19,15 @@ def main():
                         help='The configuration file [required]',
                         required=True)
     parser.add_argument('--panel', metavar = 'panel',
-                        help = 'The PanelApp panel name or identifier /'
-                             '(see https://bioinfo.extge.co.uk/crowdsourcing/WebServices/list_panels)',
-                        default = None)
+                        help='The PanelApp panel name or identifier '
+                             '(see https://panelapp.genomicsengland.co.uk/WebServices/list_panels/)',
+                        default=None)
     parser.add_argument('--panel-version', metavar = 'panel_version',
                         help='The PanelApp panel version',
-                        default = None)
+                        default=None)
     parser.add_argument('--gene-list', metavar = 'gene_list',
-                        default = None,
-                        help = 'Comma separated list of genes (HGNC gene symbols) to analyse. Will be masked by a '
-                               'panel')
+                        default=None,
+                        help='Comma separated list of genes (HGNC gene symbols) to analyse. Will be masked by a panel')
     parser.add_argument('--coding-regions', dest='coding_regions', metavar='coding_regions',
                         help='BED file containing the coding region to analyse and the corresponding annotations. '
                              'If provided skips cellbase connection. The BED file has to be sorted by transcript.',
@@ -48,9 +47,14 @@ def main():
                              'analysis on whole exome to minimise the space taken by the output JSON.')
     parser.set_defaults(exon_stats_enabled=True)
     parser.add_argument('--coverage-threshold', metavar='coverage_threshold',
-                        help='The coverage threshold used to compute continuous gaps with low coverage '
+                        help='The coverage threshold used to compute gaps '
+                             '(i.e.: contiguous positions with low coverage)'
                              '(0 = disabled) [default:15]',
                         default=15)
+    parser.add_argument('--gap-length-threshold', metavar='gap_length_threshold',
+                        help='The minimum length of contiguous positions with low coverage to consider a gap'
+                             '(1 = report all gaps) [default:5]',
+                        default=5)
 
     args = parser.parse_args()
 
@@ -66,6 +70,7 @@ def main():
         "panel_version": args.panel_version,
         "gene_list": args.gene_list,
         "coverage_threshold": args.coverage_threshold,
+        "gap_length_threshold": args.gap_length_threshold,
         "coding_regions": args.coding_regions,
         "wg_stats_enabled": args.wg_stats_enabled,
         "wg_regions": args.wg_regions,

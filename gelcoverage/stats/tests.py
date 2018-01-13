@@ -26,6 +26,7 @@ class CoverageStatsTests(OutputVerifier):
 
         self.start_position = 1234
         self.coverage_threshold = 30
+        self.gap_length_threshold = 1
         self.gc_content = 0.59
 
         self.bw = "../../resources/test/test1.bw"
@@ -38,7 +39,7 @@ class CoverageStatsTests(OutputVerifier):
         Tests find_gaps(coverages, start_position, coverage_threshold)
         :return:
         """
-        gaps = coverage_stats.find_gaps(self.coverages, self.start_position, self.coverage_threshold)
+        gaps = coverage_stats.find_gaps(self.coverages, self.start_position, self.coverage_threshold, self.gap_length_threshold)
         self.assertEqual(type(gaps), list)
         self.assertEqual(len(gaps), 3)
         for gap in gaps:

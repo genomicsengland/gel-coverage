@@ -104,6 +104,9 @@ class GelCoverageRunner:
             # case or we want to get rid of it unless it is specified
         if "coverage_threshold" not in self.config:
             errors.append("'coverage_threshold' field is mising")
+        if "gap_length_threshold" not in self.config:
+            # sets the default value to 1, when not provided
+            self.config['gap_length_threshold'] = 5
         if "coding_regions" not in self.config or not self.config['coding_regions']:
             if "cellbase_retries" not in self.config:
                 # setting default value, infinite retries
@@ -204,6 +207,7 @@ class GelCoverageRunner:
         """
         parameters = {
             "gap_coverage_threshold": self.config["coverage_threshold"],
+            "gap_length_threshold": self.config["gap_length_threshold"],
             "input_file": self.config["bw"],
             "transcript_filtering_flags": self.config['transcript_filtering_flags'],
             "transcript_filtering_biotypes": self.config['transcript_filtering_biotypes'],
@@ -330,7 +334,8 @@ class GelCoverageRunner:
             exon[constants.GAPS] = coverage_stats.find_gaps(
                 coverages,
                 start,
-                self.config['coverage_threshold']
+                self.config['coverage_threshold'],
+                self.config['gap_length_threshold']
             )
         # logging.debug("Created exon %s" % exon_number)
         return exon

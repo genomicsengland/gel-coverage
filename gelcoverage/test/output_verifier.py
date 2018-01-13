@@ -65,6 +65,7 @@ class OutputVerifier(unittest.TestCase):
     def _verify_parameters(self, parameters):
         try:
             self._verify_dict_field(parameters, "gap_coverage_threshold", int)
+            self._verify_dict_field(parameters, "gap_length_threshold", int)
             self._verify_dict_field(parameters, "input_file", str)
             self._verify_dict_field(parameters, "species", str)
             self._verify_dict_field(parameters, "assembly", str)

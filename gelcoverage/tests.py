@@ -771,3 +771,33 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Verify that content in parameters is correct
         self._verify_dict_field(output, "parameters", dict)
         self._verify_parameters(output["parameters"])
+
+    def test15(self):
+        """
+        Test panel with gap length threshold set to 10
+        :return:
+        """
+        expected_gene_list = None  # too big to set here
+        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["panel"] = "5763f2ea8f620350a1996048"
+        self.config["panel_version"] = "1.0"
+        self.config["exon_padding"] = 15
+        self.config["gap_length_threshold"] = 10
+        runner = GelCoverageRunner(
+            config=self.config
+        )
+        output, bed = runner.run()
+        # Writes the JSON
+        with open('../resources/test/sample_output_15.json', 'w') as fp:
+            json.dump(output, fp)
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_15.bed')
+        # Runs verifications on output JSON
+        self.expected_gene_list = expected_gene_list
+        self.assertEqual(type(output), dict)
+        # Verify that content in parameters is correct
+        self._verify_dict_field(output, "parameters", dict)
+        self._verify_parameters(output["parameters"])
+        self.assertEqual(output["parameters"]["gap_length_threshold"], 10)
