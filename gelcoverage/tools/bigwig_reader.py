@@ -33,26 +33,18 @@ class BigWigReader:
         if start == end:  # do we really need this?
             end += 1
         # Read from the bigwig file
-        if strict:
-            try:
-                coverages = self.reader.values(chromosome, start, end)
-            except RuntimeError:
+        try:
+            coverages = self.reader.values(chromosome, start, end, numpy=True)
+        except RuntimeError:
+            if strict:
                 # When the queried interval is not present in the bigwig file it returns all 0s coverage and logs it
-                logging.debug("Missing interval in bigwig %s:%s-%s" % (chromosome, start, end))
+                # logging.debug("Missing interval in bigwig %s:%s-%s" % (chromosome, start, end))
                 raise UncoveredIntervalException()
-        else:
-            # By using the function intervals we make sure that we are not querying coordinates not present in the
-            # bigwig file
-            try:
-                intervals = self.reader.intervals(chromosome, start, end)
-                if intervals is None:
-                    intervals = []
-                coverages = [coverage for _, _, coverage in intervals]
-            except RuntimeError:
-                if chromosome not in self.reported_unexisting_chr:
-                    logging.debug("Missing chromosome in bigwig %s" % chromosome)
-                    self.reported_unexisting_chr.append(chromosome)
-                coverages = [0] * (end - start)
+            else:
+                # if chromosome not in self.reported_unexisting_chr:
+                #     logging.debug("Missing chromosome in bigwig %s" % chromosome)
+                #     self.reported_unexisting_chr.append(chromosome)
+                coverages = None
         return coverages
 
     def get_chromosome_lengths(self):
