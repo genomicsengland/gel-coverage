@@ -1,5 +1,6 @@
 import pyBigWig
 import logging
+import numpy as np
 
 
 class UncoveredIntervalException(Exception):
@@ -28,22 +29,15 @@ class BigWigReader:
         :param strict: when true if a position not present in the bigwig is queried it will raise an error
         :return: the sequence of coverages (one integer per position)
         """
-        logging.debug("Queries bigwig for %s:%s-%s in %s mode" %
-                      (chromosome, str(start), str(end), "strict" if strict else "non strict"))
-        if start == end:  # do we really need this?
-            end += 1
         # Read from the bigwig file
         try:
             coverages = self.reader.values(chromosome, start, end, numpy=True)
         except RuntimeError:
             if strict:
                 # When the queried interval is not present in the bigwig file it returns all 0s coverage and logs it
-                # logging.debug("Missing interval in bigwig %s:%s-%s" % (chromosome, start, end))
-                raise UncoveredIntervalException()
+                coverages = np.array([0] * (end - start))
+                logging.debug("Missing interval in bigwig %s:%s-%s" % (chromosome, start, end))
             else:
-                # if chromosome not in self.reported_unexisting_chr:
-                #     logging.debug("Missing chromosome in bigwig %s" % chromosome)
-                #     self.reported_unexisting_chr.append(chromosome)
                 coverages = None
         return coverages
 

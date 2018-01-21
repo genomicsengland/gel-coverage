@@ -73,15 +73,28 @@ def compute_exon_level_statistics(coverages, gc_content):
 
     bases_gte15 = bases_gte15_lt30 + bases_gte30_lt50 + bases_gte50
     bases_gte30 = bases_gte30_lt50 + bases_gte50
-    mean_coverage = round(float(accum_coverage) / bases, 3) if bases > 0 else 0.0
-    lt_15x = round(float(bases_lt15) / bases, 5) if bases > 0 else 0.0
-    gte_15x = round(float(bases_gte15) / bases, 5) if bases > 0 else 0.0
-    gte_30x = round(float(bases_gte30) / bases, 5) if bases > 0 else 0.0
-    gte_50x = round(float(bases_gte50) / bases, 5) if bases > 0 else 0.0
-    median_coverage = round(float(np.median(coverages)), 3) if coverages else 0.0
-    pct75 = round(float(np.percentile(coverages, 75)), 3) if coverages else 0.0
-    pct25 = round(float(np.percentile(coverages, 25)), 3) if coverages else 0.0
-    sd = round(float(np.std(coverages)), 3) if coverages else 0.0
+    if bases > 0:
+        mean_coverage = round(float(accum_coverage) / bases, 3)
+        lt_15x = round(float(bases_lt15) / bases, 5)
+        gte_15x = round(float(bases_gte15) / bases, 5)
+        gte_30x = round(float(bases_gte30) / bases, 5)
+        gte_50x = round(float(bases_gte50) / bases, 5)
+    else:
+        mean_coverage = 0.0
+        lt_15x = 0.0
+        gte_15x = 0.0
+        gte_30x = 0.0
+        gte_50x = 0.0
+    if getattr(coverages, "size", 0) > 0:   # gets the size of the numpy array, if None returns 0
+        median_coverage = round(float(np.median(coverages)), 3)
+        pct75 = round(float(np.percentile(coverages, 75)), 3)
+        pct25 = round(float(np.percentile(coverages, 25)), 3)
+        sd = round(float(np.std(coverages)), 3)
+    else:
+        median_coverage = 0.0
+        pct75 = 0.0
+        pct25 = 0.0
+        sd = 0.0
 
     stats = {
         constants.BASES: bases,
@@ -158,15 +171,26 @@ def compute_transcript_level_statistics(exons):
                 accum_weighted_gc_content += exon_stats[constant_gc_content] * exon_stats[constant_bases]
 
     mean = round(float(accum_mean) / exon_count, 3) if exon_count > 0 else 0.0  # the mean of the means
-    lt_15x = round(float(bases_lt15) / bases, 5) if bases > 0 else 0.0
-    gte_15x = round(float(bases_gte15) / bases, 5) if bases > 0 else 0.0
-    gte_30x = round(float(bases_gte30) / bases, 5) if bases > 0 else 0.0
-    gte_50x = round(float(bases_gte50) / bases, 5) if bases > 0 else 0.0
-    median = round(float(accum_weighted_median) / bases, 3) if bases > 0 else float(0.0)
-    pct75 = round(float(accum_weighted_pct75) / bases, 3) if bases > 0 else float(0.0)
-    pct25 = round(float(accum_weighted_pct25) / bases, 3) if bases > 0 else float(0.0)
-    sd = round(float(accum_weighted_sd) / bases, 3) if bases > 0 else float(0.0)
-    gc_content = round(float(accum_weighted_gc_content) / bases, 5) if bases > 0 else float(0.0)
+    if bases > 0:
+        lt_15x = round(float(bases_lt15) / bases, 5)
+        gte_15x = round(float(bases_gte15) / bases, 5)
+        gte_30x = round(float(bases_gte30) / bases, 5)
+        gte_50x = round(float(bases_gte50) / bases, 5)
+        median = round(float(accum_weighted_median) / bases, 3)
+        pct75 = round(float(accum_weighted_pct75) / bases, 3)
+        pct25 = round(float(accum_weighted_pct25) / bases, 3)
+        sd = round(float(accum_weighted_sd) / bases, 3)
+        gc_content = round(float(accum_weighted_gc_content) / bases, 5)
+    else:
+        lt_15x = 0.0
+        gte_15x = 0.0
+        gte_30x = 0.0
+        gte_50x = 0.0
+        median = 0.0
+        pct75 = 0.0
+        pct25 = 0.0
+        sd = 0.0
+        gc_content = 0.0
 
     stats = {
         constant_bases: bases,
@@ -292,7 +316,7 @@ def compute_coding_region_statistics(genes):
                 accum_weighted_pct75_by_chromosome[chromosome] += gene_stats[constant_pct75] * gene_stats[constant_bases]
                 accum_weighted_pct25_by_chromosome[chromosome] += gene_stats[constant_pct25] * gene_stats[constant_bases]
                 accum_weighted_sd_by_chromosome[chromosome] += gene_stats[constant_sd] * gene_stats[constant_bases]
-                if constants.GC_CONTENT in gene_stats:
+                if constant_gc_content in gene_stats:
                     accum_weighted_gc_content_by_chromosome[chromosome] += gene_stats[constant_gc_content] * gene_stats[constant_bases]
             else:
                 observed_chromosomes.append(chromosome)
@@ -307,7 +331,8 @@ def compute_coding_region_statistics(genes):
                 accum_weighted_pct75_by_chromosome[chromosome] = gene_stats[constant_pct75] * gene_stats[constant_bases]
                 accum_weighted_pct25_by_chromosome[chromosome] = gene_stats[constant_pct25] * gene_stats[constant_bases]
                 accum_weighted_sd_by_chromosome[chromosome] = gene_stats[constant_sd] * gene_stats[constant_bases]
-                accum_weighted_gc_content_by_chromosome[chromosome] = gene_stats[constant_gc_content] * gene_stats[constant_bases]
+                if constant_gc_content in gene_stats:
+                    accum_weighted_gc_content_by_chromosome[chromosome] = gene_stats[constant_gc_content] * gene_stats[constant_bases]
 
             # aggregates data for autosomes
             if chromosome in constants.AUTOSOME_IDS:
@@ -373,7 +398,7 @@ def compute_coding_region_statistics(genes):
         sd_by_chromosome = round(float(accum_weighted_sd_by_chromosome[chromosome]) / bases_by_chromosome[chromosome], 3) \
             if bases_by_chromosome[chromosome] > 0 else float(0.0)
         gc_content_by_chromosome = round(
-            float(accum_weighted_gc_content_by_chromosome[chromosome]) / bases_by_chromosome[chromosome], 5) \
+            float(accum_weighted_gc_content_by_chromosome.get(chromosome, 0.0)) / bases_by_chromosome[chromosome], 5) \
             if bases_by_chromosome[chromosome] > 0 else float(0.0)
         stats = {
             constant_chromosome: chromosome,
@@ -529,20 +554,24 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader=None, chunk_size=1
 
                     # compute statistics for the chunk
                     chunk_mean = round(float(chunk_accum_coverage) / chunk_bases, 3) if chunk_bases > 0 else 0.0
-                    chunk_weighted_median = round((float(np.median(coverages))) * chunk_bases, 3) if coverages else 0.0
-                    chunk_weighted_pct75 = round((float(np.percentile(coverages, 75))) * chunk_bases, 3) \
-                        if coverages else 0.0
-                    chunk_weighted_pct25 = round((float(np.percentile(coverages, 25))) * chunk_bases, 3) \
-                        if coverages else 0.0
-                    chunk_weighted_sd = round(float(np.std(coverages)) * chunk_bases, 3) if coverages else 0.0
-                    if chunk_mean == 0:
-                        # As coverage values are positive values we infer that all values are zero
-                        # this may speed up things for missing long regions in the bigwig file, if any
-                        chunk_rmsd = 0
+                    if getattr(coverages, "size", 0) > 0:  # gets the size of the numpy array, if None returns 0
+                        chunk_weighted_median = round((float(np.median(coverages))) * chunk_bases, 3)
+                        chunk_weighted_pct75 = round((float(np.percentile(coverages, 75))) * chunk_bases, 3)
+                        chunk_weighted_pct25 = round((float(np.percentile(coverages, 25))) * chunk_bases, 3)
+                        chunk_weighted_sd = round(float(np.std(coverages)) * chunk_bases, 3)
+                        if chunk_mean == 0:
+                            # As coverage values are positive values we infer that all values are zero
+                            # this may speed up things for missing long regions in the bigwig file, if any
+                            chunk_rmsd = 0
+                        else:
+                            # Gets the squared root sum of squares of the deviation from the mean
+                            chunk_rmsd = np.sqrt((np.sum([(x - chunk_mean) ** 2 for x in coverages])) / length)
                     else:
-                        # Gets the squared root sum of squares of the deviation from the mean
-                        chunk_rmsd = np.sqrt((np.sum([(x - chunk_mean) ** 2 for x in coverages]) if coverages else 0)
-                                             / length)
+                        chunk_weighted_median = 0.0
+                        chunk_weighted_pct75 = 0.0
+                        chunk_weighted_pct25 = 0.0
+                        chunk_weighted_sd = 0.0
+                        chunk_rmsd = 0
 
                 count_chunks += 1
                 chr_bases += chunk_bases
@@ -565,20 +594,37 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader=None, chunk_size=1
                 current_end = min(current_start + chunk_size, end)
 
         # Computes the statistics per chromosome
+        if chr_bases > 0:
+            chr_lt15x = round(float(chr_bases_lt15x) / chr_bases, 5)
+            chr_gte15x = round(float(chr_bases_gte15x) / chr_bases, 5)
+            chr_gte30x = round(float(chr_bases_gte30x) / chr_bases, 5)
+            chr_gte50x = round(float(chr_bases_gte50x) / chr_bases, 5)
+            chr_median = round(float(chr_accum_median) / chr_bases, 3)
+            chr_pct25 = round(float(chr_accum_pct25) / chr_bases, 3)
+            chr_pct75 = round(float(chr_accum_pct75) / chr_bases, 3)
+            chr_sd = round(float(chr_accum_sd) / chr_bases, 3)
+        else:
+            chr_lt15x = 0.0
+            chr_gte15x = 0.0
+            chr_gte30x = 0.0
+            chr_gte50x = 0.0
+            chr_median = 0.0
+            chr_pct25 = 0.0
+            chr_pct75 = 0.0
+            chr_sd = 0.0
         chromosome_stats = {
             constant_chromosome: chromosome,
             constant_rmsd: round(float(np.median(chr_list_rmsd)), 3) if chr_list_rmsd else 0.0,
             constant_average: round(float(chr_accum_mean) / count_chunks, 3) if count_chunks > 0 else 0.0,
             constant_bases: chr_bases,
-            constant_lt15x: round(float(chr_bases_lt15x) / chr_bases, 5) if chr_bases > 0 else 0.0,
-            constant_gte15x: round(float(chr_bases_gte15x) / chr_bases, 5) if chr_bases > 0 else 0.0,
-            constant_gte30x: round(float(chr_bases_gte30x) / chr_bases, 5) if chr_bases > 0 else 0.0,
-            constant_gte50x: round(float(chr_bases_gte50x) / chr_bases, 5) if chr_bases > 0 else 0.0,
-            # TODO: confirm this is the proper median estimation. Should not we divide by number of chunks?
-            constant_median: round(float(chr_accum_median) / chr_bases, 3) if chr_bases > 0 else 0.0,
-            constant_pct25: round(float(chr_accum_pct25) / chr_bases, 3) if chr_bases > 0 else 0.0,
-            constant_pct75: round(float(chr_accum_pct75) / chr_bases, 3) if chr_bases > 0 else 0.0,
-            constant_sd: round(float(chr_accum_sd) / chr_bases, 3) if chr_bases > 0 else 0.0,
+            constant_lt15x: chr_lt15x,
+            constant_gte15x: chr_gte15x,
+            constant_gte30x: chr_gte30x,
+            constant_gte50x: chr_gte50x,
+            constant_median: chr_median,
+            constant_pct25: chr_pct25,
+            constant_pct75: chr_pct75,
+            constant_sd: chr_sd,
         }
         results[constant_chromosomes].append(chromosome_stats)
         if chromosome in constants.AUTOSOME_IDS:
@@ -598,6 +644,7 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader=None, chunk_size=1
 
     logging.info("Whole genome statistics computed!")
     return results
+
 
 def aggregate_chromosomes(stats):
     """

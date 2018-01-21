@@ -75,7 +75,7 @@ class GelCoverageRunner:
         if self.is_wg_stats_enabled:
             self.wg_regions = self.config["wg_regions"]
             self.bed_reader = BedReader(self.wg_regions)
-        self.uncovered_genes = {}
+        self.uncovered_genes = []
         self.__sanity_checks()
 
     def __config_sanity_checks(self):
@@ -295,7 +295,7 @@ class GelCoverageRunner:
         }
         return exon
 
-    def __create_exon(self, chromosome, start, end, exon_idx, gc_content=None):
+    def __create_exon(self, chromosome, start, end, exon_idx, gc_content=None, padding=True):
         """
         Creates an exon data structure, computes the coverage statistics and find gaps
         :param chromosome: the chromosome
@@ -303,19 +303,23 @@ class GelCoverageRunner:
         :param end: the padded end position
         :param exon_idx: the exon index (two possible formats: int or str like exonN)
         :param gc_content: the GC content for the exon
+        :param padding: indicates if padding is to be added or it is included in the coordinates
         :return: the exon data structure
         """
-        exon_number = "exon%s" % exon_idx if type(exon_idx) == int else exon_idx
+        if self.is_exon_padding and padding:
+            start = start - self.config["exon_padding"]
+            end = end + self.config["exon_padding"]
         exon = GelCoverageRunner.__initialize_exon_dict(
-            exon_number,
-            start=start - self.config["exon_padding"] if self.is_exon_padding else start,
-            end=end + self.config["exon_padding"] if self.is_exon_padding else end
+            exon_idx,
+            start=start,
+            end=end
         )
         # Read from the bigwig file
         coverages = self.bigwig_reader.read_bigwig_coverages(
             chromosome,
             start,
-            end)
+            end
+        )
         # Compute statistics at exon level (no GC content information)
         exon[constants.STATISTICS] = coverage_stats.compute_exon_level_statistics(coverages, gc_content)
         # Compute gaps
@@ -370,7 +374,8 @@ class GelCoverageRunner:
                     gene[constants.CHROMOSOME],
                     current_start,
                     current_end,
-                    exon_idx
+                    exon_idx,
+                    padding=False
                 )
                 # Saves current exon
                 union_exons.append(current_exon)
@@ -383,7 +388,8 @@ class GelCoverageRunner:
             gene[constants.CHROMOSOME],
             current_start,
             current_end,
-            exon_idx
+            exon_idx,
+            padding=False
         )
         # Saves current exon and stores the next
         union_exons.append(last_exon)
@@ -463,17 +469,23 @@ class GelCoverageRunner:
                     current_gene_name = gene_name
                     current_chromosome = chromosome
             # Store exon in data structure
-            try:
-                exon = self.__create_exon(
-                    chromosome,
-                    start,
-                    end,
-                    exon_number,
-                    gc_content
-                )
-                current_exons.append(exon)
-            except UncoveredIntervalException:
-                self.uncovered_genes[gene_name] = chromosome
+            exon = self.__create_exon(
+                chromosome,
+                start,
+                end,
+                exon_number,
+                gc_content
+            )
+            current_exons.append(exon)
+            # Logs every gene having an exon with average coverage of 0.0 as uncovered
+            if exon[constants.STATISTICS][constants.AVERAGE] == 0.0:
+                self.uncovered_genes.append({
+                    constants.GENE_NAME: gene_name,
+                    constants.CHROMOSOME: chromosome,
+                    constants.EXON_START: start,
+                    constants.EXON_END: end
+                })
+
         # Adds last ocurrences
         if len(current_exons) > 0:
             transcript = self.__create_transcript(current_transcript_id, current_exons)
@@ -515,9 +527,7 @@ class GelCoverageRunner:
                 results[constants.GENES]
             )
             # Add uncovered genes
-            results["uncovered_genes"] = [
-                {constants.GENE_NAME: k, constants.CHROMOSOME: v} for k, v in self.uncovered_genes.iteritems()
-            ]
+            results["uncovered_genes"] = self.uncovered_genes
             results = self.__delete_unnecessary_info_from_genes(results, constants)
         else:
             logging.info("Coding region analysis disabled")

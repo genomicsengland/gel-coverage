@@ -98,13 +98,9 @@ class OutputVerifier(unittest.TestCase):
     def __verify_uncovered_genes(self, results):
 
         self._verify_dict_field(results, "uncovered_genes", list)
-        observed_genes = []
         for uncovered_gene in results["uncovered_genes"]:
             self._verify_dict_field(uncovered_gene, constants.CHROMOSOME, str)
             self._verify_dict_field(uncovered_gene, constants.GENE_NAME, str)
-            self.assertTrue(uncovered_gene[constants.GENE_NAME] not in observed_genes,
-                                msg="Duplicated gene '%s'" % uncovered_gene[constants.GENE_NAME])
-            observed_genes.append(uncovered_gene[constants.GENE_NAME])
 
     def __verify_genes(self, results, exon_stats_enabled):
         # Verify every gene
@@ -273,9 +269,7 @@ class OutputVerifier(unittest.TestCase):
             self._verify_dict_field(exon, constants.EXON_END, int)
             self.assertTrue(exon[constants.EXON_END] >= 0)
             self.assertTrue(exon[constants.EXON_END] >= exon[constants.EXON_START], msg="End < start")
-            self._verify_dict_field(exon, constants.EXON, str)
-            self.assertTrue(str(exon[constants.EXON]).startswith(constants.EXON),
-                            msg="Exon number is not well formed")
+            #self._verify_dict_field(exon, constants.EXON, int)
             self.__verify_exon_statistics(exon, has_gc)
         except AssertionError, e:
             logging.error("Error verifying exon at %s:%s" % (gene_name, transcript_id))
@@ -325,9 +319,6 @@ class OutputVerifier(unittest.TestCase):
             self._verify_dict_field(gap, constants.GAP_END, int)
             self.assertTrue(gap[constants.GAP_END] >= start and gap[constants.GAP_START] <= end and
                             gap[constants.GAP_END] >= gap[constants.GAP_START])
-            self._verify_dict_field(gap, constants.GAP_LENGTH, int)
-            self.assertTrue(gap[constants.GAP_LENGTH] >= 1 and gap[constants.GAP_LENGTH] <=
-                            gap[constants.GAP_END] - gap[constants.GAP_START] + 1)
         except AssertionError, e:
             logging.error("Error verifying gap")
             logging.error(json.dumps(gap, indent=4))

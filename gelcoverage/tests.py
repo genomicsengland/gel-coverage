@@ -123,7 +123,8 @@ PANELAPP_HOST = "panelapp.genomicsengland.co.uk/WebServices"  # "bio-test-panela
 ASSEMBLY = "GRCh37"
 SPECIES = "hsapiens"
 CELLBASE_VERSION = "latest"
-CELLBASE_HOST = "bio-test-cellbase-haproxy-01.gel.zone/cellbase"
+CELLBASE_HOST = "https://bio-test-cellbase.gel.zone/cellbase"
+#CELLBASE_HOST = "https://cellbase.gel.zone/cellbase"
 FILTER_BASIC_FLAG = "basic"
 FILTER_BIOTYPES = "IG_C_gene,IG_D_gene,IG_J_gene,IG_V_gene,IG_V_gene,protein_coding,nonsense_mediated_decay," \
                   "non_stop_decay,TR_C_gene,TR_D_gene,TR_J_gene,TR_V_gene"
@@ -384,56 +385,9 @@ class GelCoverageRunnerTests(OutputVerifier):
             ]
         }
         union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_15bp_padding)
-        self.assertEqual(len(union_transcript[constants.EXONS]), 1)
+        self.assertEqual(len(union_transcript[constants.EXONS]), 8)
         gene_15bp_padding[constants.UNION_TRANSCRIPT] = union_transcript
         self.verify_union_transcript(gene_15bp_padding, True)
-        # Runs union transcript with exon padding 0bp
-        self.config["exon_padding"] = 0
-        gene_0bp_padding = {
-            constants.CHROMOSOME: "chr2",
-            constants.GENE_NAME: "TEST",
-            constants.TRANSCRIPTS: [
-                {
-                    constants.TRANSCRIPT_ID: "1",
-                    constants.EXONS: [
-                        create_test_exon(offset + 10, offset + 15, 1),
-                        create_test_exon(offset + 20, offset + 25, 2),
-                        create_test_exon(offset + 30, offset + 35, 3),
-                        create_test_exon(offset + 40, offset + 45, 4),
-                        create_test_exon(offset + 50, offset + 55, 5),
-                        create_test_exon(offset + 60, offset + 65, 6)
-                    ]
-                },
-                {
-                    constants.TRANSCRIPT_ID: "2",
-                    constants.EXONS: [
-                        create_test_exon(offset + 10, offset + 15, 1),
-                        create_test_exon(offset + 20, offset + 25, 2),
-                        create_test_exon(offset + 30, offset + 35, 3),
-                        create_test_exon(offset + 40, offset + 45, 4),
-                        create_test_exon(offset + 50, offset + 55, 5),
-                        create_test_exon(offset + 60, offset + 65, 6),
-                        create_test_exon(offset + 70, offset + 75, 7)
-                    ]
-                },
-                {
-                    constants.TRANSCRIPT_ID: "3",
-                    constants.EXONS: [
-                        create_test_exon(offset + 0, offset + 5, 1),
-                        create_test_exon(offset + 10, offset + 15, 2),
-                        create_test_exon(offset + 20, offset + 25, 3),
-                        create_test_exon(offset + 30, offset + 35, 4),
-                        create_test_exon(offset + 40, offset + 45, 5),
-                        create_test_exon(offset + 50, offset + 55, 6),
-                        create_test_exon(offset + 60, offset + 65, 7)
-                    ]
-                }
-            ]
-        }
-        union_transcript = runner._GelCoverageRunner__create_union_transcript(gene_0bp_padding)
-        self.assertEqual(len(union_transcript[constants.EXONS]), 8)
-        gene_0bp_padding[constants.UNION_TRANSCRIPT] = union_transcript
-        self.verify_union_transcript(gene_0bp_padding, True)
 
     @unittest.skip("long running test")
     def test6(self):
@@ -646,8 +600,8 @@ class GelCoverageRunnerTests(OutputVerifier):
         # Saves the analysed region as a BED file
         bed.saveas('../resources/test/sample_output_10.bed')
         # Runs verifications on output JSON
-        self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
-                         msg="Uncovered genes should be of length 1")
+        self.assertEqual(len(output["results"]["uncovered_genes"]), 9,
+                         msg="Uncovered genes should be of length 9")
         self.assertEqual(output["results"]["uncovered_genes"][0][constants.GENE_NAME], "PTEN")
 
     @unittest.skip("long running test")
