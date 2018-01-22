@@ -570,8 +570,6 @@ class GelCoverageRunnerTests(OutputVerifier):
         bed.saveas('../resources/test/sample_output_9.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
-        self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
-                         msg="Uncovered genes should be of length 1")
         self.assertEqual(output["results"]["uncovered_genes"][0][constants.GENE_NAME], "PTEN")
 
     def test10(self):
