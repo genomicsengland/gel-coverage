@@ -13,7 +13,7 @@ class GelCoverageInputError(Exception):
     pass
 
 
-class GelCoverageRunner:
+class GelCoverageRunner(object):
 
     def __init__(self, config):
         self.config = config
@@ -353,7 +353,7 @@ class GelCoverageRunner:
         :param gene: the gene data structure containing all exons
         :return: the data structure for the union transcript
         """
-        logging.debug("Creating union transcript for gene %s" % gene[constants.GENE_NAME])
+        # logging.debug("Creating union transcript for gene %s" % gene[constants.GENE_NAME])
         all_exons = sum([transcript[constants.EXONS] for transcript in gene[constants.TRANSCRIPTS]], [])
         all_exons.sort(key=lambda x: x[constants.EXON_START])
         union_exons = []
@@ -398,7 +398,7 @@ class GelCoverageRunner:
             constants.EXONS: union_exons,
             constants.STATISTICS: coverage_stats.compute_transcript_level_statistics(union_exons)
         }
-        logging.debug("Built union transcript for gene %s" % gene[constants.GENE_NAME])
+        # logging.debug("Built union transcript for gene %s" % gene[constants.GENE_NAME])
         return union_transcript
 
     def __create_gene(self, gene_name, chromosome, transcripts):
@@ -449,7 +449,7 @@ class GelCoverageRunner:
                     if len(current_exons) > 0:
                         transcript = self.__create_transcript(current_transcript_id, current_exons)
                         current_transcripts.append(transcript)
-                        logging.info("Processed transcript %s of gene %s" % (current_transcript_id, current_gene_name))
+                        # logging.info("Processed transcript %s of gene %s" % (current_transcript_id, current_gene_name))
                     # Create a new data structure for new gene
                     current_transcript_id = transcript_id
                     current_exons = []
