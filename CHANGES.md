@@ -1,4 +1,4 @@
-version 2.0.0 (15 January 2017)
+version 1.5.0 (23 January 2017)
 ----------------------------
 
 * Major changes
