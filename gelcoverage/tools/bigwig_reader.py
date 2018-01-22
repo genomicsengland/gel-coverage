@@ -31,7 +31,7 @@ class BigWigReader:
         """
         # Read from the bigwig file
         try:
-            coverages = self.reader.values(chromosome, start, end, numpy=True)
+            coverages = self.reader.values(chromosome, start, end)
         except RuntimeError:
             if strict:
                 # When the queried interval is not present in the bigwig file it returns all 0s coverage and logs it

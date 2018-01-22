@@ -7,15 +7,10 @@ version 2.0.0 (15 January 2017)
         - Remove redundant field `length` from gaps and exons
         - Remove redundant fields of padded coordinates from exons. When padding is enabled, the coordinates are padded
         - Exon names were composed as `exon` + index of the exon, they are now just referred by the index of the exon
-    - Reduce execution time:
-        - Overall performance of statistics calculation has been improved by tuning data processing
-        - Improved performance by reading coverage data into numpy data structure
-        - Whole genome statistics were read in chunks of 100000 bp by default, this has been increased to 10000000 bp
 * Bugfixes
     - Coding region coverage statistics were not calculated over the padded exons even if coordinates were padded
 * Uncovered genes are now a list of coding regions (i.e.: exons) with an average coverage of 0.0
 * Tool to generate mocked data for the coding region analysis
- 
 
 
 version 1.4.2 (15 December 2017)
