@@ -15,7 +15,7 @@ setup(
         'pandas==0.20.3',
         'pybedtools==0.7.8',
         'ujson==1.35',
-        'pyBigWig==0.3.4',
+        'pyBigWig==0.3.10',
         'numpy==1.11.2',
         'pycellbase==0.3.3'
     ]
