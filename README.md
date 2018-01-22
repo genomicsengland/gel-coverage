@@ -174,3 +174,10 @@ bed = bed_maker.run()
 # Saves the analysed region as a BED file
 bed.saveas("my.bed")
 ```
+
+## Mocked data
+
+Generate mocked data for the coding region analysis using this:
+```
+mocked_bigwig_analyser --bw resources/test/test1.bw --output resources/test/mocked_test.json --config resources/bigwig_analyser.GRCh38.config --coding-regions resources/coding_regions.GRCh38.bed
+```
