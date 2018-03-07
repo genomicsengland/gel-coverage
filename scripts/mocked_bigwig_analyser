@@ -50,15 +50,15 @@ def main():
                         help='Disable the calculation of exon statistics. Use this flag when running a coverage '
                              'analysis on whole exome to minimise the space taken by the output JSON.')
     parser.set_defaults(exon_stats_enabled=True)
-    # parser.add_argument('--coverage-threshold', metavar='coverage_threshold',
-    #                     help='The coverage threshold used to compute gaps '
-    #                          '(i.e.: contiguous positions with low coverage)'
-    #                          '(0 = disabled) [default:15]',
-    #                     default=15)
-    # parser.add_argument('--gap-length-threshold', metavar='gap_length_threshold',
-    #                     help='The minimum length of contiguous positions with low coverage to consider a gap'
-    #                          '(1 = report all gaps) [default:5]',
-    #                     default=5)
+    parser.add_argument('--coverage-threshold', metavar='coverage_threshold',
+                        help='The coverage threshold used to compute gaps '
+                             '(i.e.: contiguous positions with low coverage)'
+                             '(0 = disabled) [default:15]',
+                        default=15)
+    parser.add_argument('--gap-length-threshold', metavar='gap_length_threshold',
+                        help='The minimum length of contiguous positions with low coverage to consider a gap'
+                             '(1 = report all gaps) [default:5]',
+                        default=5)
 
     args = parser.parse_args()
 
@@ -79,8 +79,8 @@ def main():
         "panel": args.panel,
         "panel_version": args.panel_version,
         "gene_list": args.gene_list,
-        "coverage_threshold": 15,
-        "gap_length_threshold": 5,
+        "coverage_threshold": args.coverage_threshold,
+        "gap_length_threshold": args.gap_length_threshold,
         "coding_regions": args.coding_regions,
         "wg_stats_enabled": False,      # TODO
         "wg_regions": None,             # TODO

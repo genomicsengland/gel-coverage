@@ -3,7 +3,6 @@ from mock import patch, Mock
 from gelcoverage.runner import GelCoverageRunner
 import gelcoverage.tools.bigwig_reader
 import gelcoverage.constants as constants
-
 import protocols.coverage_0_1_0
 from protocols.util.factories.avro_factory import GenericFactoryAvro, FactoryAvro
 
@@ -74,16 +73,25 @@ def mocked_compute_coding_region_statistics(genes):
 
 
 def mocked_find_gaps(coverages, start_position, coverage_threshold, gap_length_threshold):
+    """
+    Creates between 0 and 3 gaps of length between length threshold and 50bp
+    :param coverages:
+    :param start_position:
+    :param coverage_threshold:
+    :param gap_length_threshold:
+    :return:
+    """
     gap_factory = GenericFactoryAvro.get_factory_avro(
         protocols.coverage_0_1_0.CoverageGap,
         version='6.0.0'
     )
-    gaps = gap_factory.create_batch(3)
+    gaps = gap_factory.create_batch(factory.fuzzy.FuzzyInteger(0, 3).fuzz())
     gap_dicts = []
     for gap in gaps:
         gap_dict = gap.toJsonDict()
         del gap_dict["l"]  # removes length from gaps
-        gap_dict["e"] = gap_dict["s"] + factory.fuzzy.FuzzyInteger(5, 50).fuzz()
+        gap_dict["e"] = gap_dict["s"] + factory.fuzzy.FuzzyInteger(
+            gap_length_threshold, max(gap_length_threshold + 1, 50)).fuzz()
         gap_dicts.append(gap_dict)
     return gap_dicts
 
@@ -108,8 +116,6 @@ class GelCoverageMocker(GelCoverageRunner):
             protocols.coverage_0_1_0.CoverageGap, CoverageGapFactory, version="6.0.0"
         )
 
-    # FIXME: this mock does not work :S
-    #@patch.object(gelcoverage.tools.bigwig_reader.BigWigReader, '__init_', lambda x: None)
     @patch.object(gelcoverage.tools.bigwig_reader.BigWigReader, 'read_bigwig_coverages', lambda x, y, z, w: None)
     @patch('gelcoverage.stats.coverage_stats.compute_exon_level_statistics', mocked_compute_statistics)
     @patch('gelcoverage.stats.coverage_stats.compute_transcript_level_statistics', mocked_compute_statistics)
