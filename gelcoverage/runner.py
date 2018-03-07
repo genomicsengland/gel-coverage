@@ -579,6 +579,7 @@ class GelCoverageRunner(object):
             del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE30X]
             del gene[constants.UNION_TRANSCRIPT][constants.STATISTICS][constants.BASES_GTE50X]
             for exon in gene[constants.UNION_TRANSCRIPT][constants.EXONS]:
+                del exon[constants.STATISTICS][constants.BASES]
                 del exon[constants.STATISTICS][constants.BASES_LT15X]
                 del exon[constants.STATISTICS][constants.BASES_GTE15X]
                 del exon[constants.STATISTICS][constants.BASES_GTE30X]
@@ -589,6 +590,7 @@ class GelCoverageRunner(object):
                 del transcript[constants.STATISTICS][constants.BASES_GTE30X]
                 del transcript[constants.STATISTICS][constants.BASES_GTE50X]
                 for exon in transcript[constants.EXONS]:
+                    del exon[constants.STATISTICS][constants.BASES]
                     del exon[constants.STATISTICS][constants.BASES_LT15X]
                     del exon[constants.STATISTICS][constants.BASES_GTE15X]
                     del exon[constants.STATISTICS][constants.BASES_GTE30X]
