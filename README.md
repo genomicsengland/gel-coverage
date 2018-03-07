@@ -177,7 +177,10 @@ bed.saveas("my.bed")
 
 ## Mocked data
 
-Generate mocked data for the coding region analysis using this:
+Generate mocked results for the coding region analysis using this:
 ```
-mocked_bigwig_analyser --bw resources/test/test1.bw --output resources/test/mocked_test.json --config resources/bigwig_analyser.GRCh38.config --coding-regions resources/coding_regions.GRCh38.bed
+mocked_bigwig_analyser --output-folder mocked --config resources/bigwig_analyser.GRCh38.config --coding-regions resources/coding_regions.GRCh38.bed
 ```
+
+This script can be used also with panels using `--panel` and `--panel-version` or with gene lists using `--gene-list`.
+Generate multiple results in the same call using `--number-results`.

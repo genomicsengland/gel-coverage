@@ -1,7 +1,5 @@
 import factory.fuzzy
-from mock import patch
-
-from gelcoverage.tools.bigwig_reader import BigWigReader
+from mock import patch, Mock
 from gelcoverage.runner import GelCoverageRunner
 import gelcoverage.tools.bigwig_reader
 import gelcoverage.constants as constants
@@ -90,11 +88,6 @@ def mocked_find_gaps(coverages, start_position, coverage_threshold, gap_length_t
     return gap_dicts
 
 
-def mock_read_bigwig_coverages(self, chromosome, start, end):
-    # we don't want the bw reader to return anything as there is no coverage to read
-    return None
-
-
 class GelCoverageMocker(GelCoverageRunner):
 
     def __init__(self, config):
@@ -115,7 +108,9 @@ class GelCoverageMocker(GelCoverageRunner):
             protocols.coverage_0_1_0.CoverageGap, CoverageGapFactory, version="6.0.0"
         )
 
-    @patch.object(gelcoverage.tools.bigwig_reader.BigWigReader, 'read_bigwig_coverages', mock_read_bigwig_coverages)
+    # FIXME: this mock does not work :S
+    #@patch.object(gelcoverage.tools.bigwig_reader.BigWigReader, '__init_', lambda x: None)
+    @patch.object(gelcoverage.tools.bigwig_reader.BigWigReader, 'read_bigwig_coverages', lambda x, y, z, w: None)
     @patch('gelcoverage.stats.coverage_stats.compute_exon_level_statistics', mocked_compute_statistics)
     @patch('gelcoverage.stats.coverage_stats.compute_transcript_level_statistics', mocked_compute_statistics)
     @patch('gelcoverage.stats.coverage_stats.compute_coding_region_statistics', mocked_compute_coding_region_statistics)

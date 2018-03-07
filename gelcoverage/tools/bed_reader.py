@@ -4,14 +4,21 @@ import logging
 
 class BedInterval:
 
-    def __init__(self, bedline):
-        self.bedline = bedline.rstrip('\n').split('\t')
-        self.chrom = self.bedline[0]
-        self.start = self.bedline[1]
-        self.end = self.bedline[2]
-        self.name = self.bedline[3]
-        self.score = self.bedline[4]
-        self.strand = self.bedline[5]
+    def __init__(self, bed_row):
+        self.bedline = bed_row.rstrip('\n').split('\t')
+        try:
+            self.chrom = self.bedline[0]
+            self.start = self.bedline[1]
+            self.end = self.bedline[2]
+            self.name = self.bedline[3]
+            self.score = self.bedline[4]
+            self.strand = self.bedline[5]
+        except IndexError, e:
+            logging.info("Expected something like "
+                         "'chr17   69327052        69327101        ABCA5|ENST00000392676|exon1     0.68    -'")
+            logging.error("Bad BED row '{}'".format(bed_row))
+            raise e
+
 
 class BedReader:
 

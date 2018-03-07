@@ -1,18 +1,24 @@
 #!/usr/bin/env python
+import os
+import time
 import ConfigParser
 import argparse
 import ujson
 import codecs
+import pyBigWig
 from gelcoverage.mocked.mocker import GelCoverageMocker
 
 
 def main():
 
     parser = argparse.ArgumentParser(description='Generates mocked results for coverage coding region analysis')
-    parser.add_argument('--bw', metavar='bw', help='This coverage bigwig file [required]', required=True)
-    parser.add_argument('--output', metavar='output',
-                        help='The file to which write the results [required]',
+    parser.add_argument('--output-folder', metavar='output_folder',
+                        help='The folder to write the mocked results. Files will follow the pattern '
+                             '"mocked_coverage_$i.json" [required]',
                         required=True)
+    parser.add_argument('--number-results', metavar='number_results',
+                        help='The number of mocked results to generate',
+                        default=1)
     parser.add_argument('--config', metavar='config',
                         help='The configuration file [required]',
                         required=True)
@@ -60,10 +66,16 @@ def main():
     config_parser = ConfigParser.ConfigParser()
     config_parser.readfp(open(args.config))
 
+    # Mocks a bigwig file
+    input_bigwig = ".mocked.bw"
+    bw = pyBigWig.open(".mocked.bw", "w")
+    bw.addHeader([("chr1", 1000000), ("chr2", 1500000)])
+    bw.close()
+
     # Creates a data structure with all config parameters
     config = {
         # Sets parameters from CLI
-        "bw": args.bw,
+        "bw": input_bigwig,
         "panel": args.panel,
         "panel_version": args.panel_version,
         "gene_list": args.gene_list,
@@ -92,19 +104,28 @@ def main():
     }
     # Calls the GEL coverage engine
     gel_coverage_engine = GelCoverageMocker(config)
-    (results, bed) = gel_coverage_engine.run()
-    # Prints output to stdout
-    # TODO: we may want to write it to a file. Check that
-    with codecs.open(args.output, 'w', 'utf8') as output_file:
-        output_file.write(
-            ujson.dumps(
-                results,
-                ensure_ascii=False
+    output_folder = args.output_folder
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+    timestamp = int(time.time())
+    for i in xrange(int(args.number_results)):
+        (results, bed) = gel_coverage_engine.run()
+        # Prints output to stdout
+        # TODO: we may want to write it to a file. Check that
+        with codecs.open(os.path.join(output_folder, "mocked_coverage_{}_{}.json".format(timestamp, i)), 'w', 'utf8') \
+                as output_file:
+            output_file.write(
+                ujson.dumps(
+                    results,
+                    ensure_ascii=False
+                )
             )
-        )
-    # Saves the analysed region as a BED file
-    if bed is not None and not args.coding_regions:
-        bed.saveas(args.output + ".bed")
+        # Saves the analysed region as a BED file
+        if bed is not None and not args.coding_regions:
+            bed.saveas(os.path.join(output_folder, "mocked_coverage_{}_{}.bed".format(timestamp, i)))
+
+    # Removes the mocked bigwig from the file system
+    os.remove(input_bigwig)
 
 if __name__ == '__main__':
     main()
