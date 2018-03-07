@@ -81,18 +81,19 @@ def mocked_find_gaps(coverages, start_position, coverage_threshold, gap_length_t
     :param gap_length_threshold:
     :return:
     """
-    gap_factory = GenericFactoryAvro.get_factory_avro(
-        protocols.coverage_0_1_0.CoverageGap,
-        version='6.0.0'
-    )
-    gaps = gap_factory.create_batch(factory.fuzzy.FuzzyInteger(0, 3).fuzz())
     gap_dicts = []
-    for gap in gaps:
-        gap_dict = gap.toJsonDict()
-        del gap_dict["l"]  # removes length from gaps
-        gap_dict["e"] = gap_dict["s"] + factory.fuzzy.FuzzyInteger(
-            gap_length_threshold, max(gap_length_threshold + 1, 50)).fuzz()
-        gap_dicts.append(gap_dict)
+    if coverage_threshold > 0:
+        gap_factory = GenericFactoryAvro.get_factory_avro(
+            protocols.coverage_0_1_0.CoverageGap,
+            version='6.0.0'
+        )
+        gaps = gap_factory.create_batch(factory.fuzzy.FuzzyInteger(0, 3).fuzz())
+        for gap in gaps:
+            gap_dict = gap.toJsonDict()
+            del gap_dict["l"]  # removes length from gaps
+            gap_dict["e"] = gap_dict["s"] + factory.fuzzy.FuzzyInteger(
+                gap_length_threshold, max(gap_length_threshold + 1, 50)).fuzz()
+            gap_dicts.append(gap_dict)
     return gap_dicts
 
 
