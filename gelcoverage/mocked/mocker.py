@@ -7,6 +7,19 @@ import protocols.coverage_0_1_0
 from protocols.util.factories.avro_factory import GenericFactoryAvro, FactoryAvro
 
 
+class FuzzyFloatWithPrecision(factory.fuzzy.FuzzyFloat):
+    """Random float within a given range."""
+
+    def __init__(self, low, high=None, precision=3, **kwargs):
+
+        self.precision = precision
+
+        super(FuzzyFloatWithPrecision, self).__init__(low, high, **kwargs)
+
+    def fuzz(self):
+        return round(super(FuzzyFloatWithPrecision, self).fuzz(), self.precision)
+
+
 class RegionStatisticsFactory(FactoryAvro):
     def __init__(self, *args, **kwargs):
         super(RegionStatisticsFactory, self).__init__(*args, **kwargs)
@@ -16,22 +29,22 @@ class RegionStatisticsFactory(FactoryAvro):
 
     _version = '6.0.0'
 
-    avg = factory.fuzzy.FuzzyFloat(0, 100)
-    med = factory.fuzzy.FuzzyFloat(0, 100)
-    sd = factory.fuzzy.FuzzyFloat(0, 100)
-    gc = factory.fuzzy.FuzzyFloat(0, 100)
-    pct75 = factory.fuzzy.FuzzyFloat(0, 100)
-    pct25 = factory.fuzzy.FuzzyFloat(0, 100)
+    avg = FuzzyFloatWithPrecision(0, 100)
+    med = FuzzyFloatWithPrecision(0, 100)
+    sd = FuzzyFloatWithPrecision(0, 100)
+    gc = FuzzyFloatWithPrecision(0, 100)
+    pct75 = FuzzyFloatWithPrecision(0, 100)
+    pct25 = FuzzyFloatWithPrecision(0, 100)
     bases = factory.fuzzy.FuzzyInteger(0, 100)
-    gte50x = factory.fuzzy.FuzzyFloat(0, 1)
-    gte30x = factory.fuzzy.FuzzyFloat(0, 1)
-    gte15x = factory.fuzzy.FuzzyFloat(0, 1)
-    lt15x = factory.fuzzy.FuzzyFloat(0, 1)
-    rmsd = factory.fuzzy.FuzzyFloat(0, 100)
+    gte50x = FuzzyFloatWithPrecision(0, 1, precision=5)
+    gte30x = FuzzyFloatWithPrecision(0, 1, precision=5)
+    gte15x = FuzzyFloatWithPrecision(0, 1, precision=5)
+    lt15x = FuzzyFloatWithPrecision(0, 1, precision=5)
+    rmsd = FuzzyFloatWithPrecision(0, 100)
     bases_gte_50x = factory.fuzzy.FuzzyInteger(50, 200)
-    bases_gte_30x = factory.fuzzy.FuzzyFloat(50, 200)
-    bases_gte_15x = factory.fuzzy.FuzzyFloat(50, 200)
-    bases_lt_15x = factory.fuzzy.FuzzyFloat(50, 200)
+    bases_gte_30x = FuzzyFloatWithPrecision(50, 200)
+    bases_gte_15x = FuzzyFloatWithPrecision(50, 200)
+    bases_lt_15x = FuzzyFloatWithPrecision(50, 200)
 
 
 class CoverageGapFactory(FactoryAvro):
