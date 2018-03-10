@@ -17,6 +17,7 @@ setup(
         'ujson==1.35',
         'pyBigWig==0.3.10',
         'numpy==1.11.2',
-        'pycellbase==0.3.3'
+        'pycellbase==0.3.3',
+        'mock'
     ]
 )
