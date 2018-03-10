@@ -679,7 +679,7 @@ class BedMaker:
         """
         # Gets list of genes to analyse
         gene_list = self.cellbase_helper.get_all_gene_names()
-        return gene_list
+        return list(set(gene_list))     # NOTE: removes duplicated genes
 
     def run(self):
         """

@@ -9,6 +9,7 @@ version 1.5.0 (23 January 2017)
         - Exon names were composed as `exon` + index of the exon, they are now just referred by the index of the exon
 * Bugfixes
     - Coding region coverage statistics were not calculated over the padded exons even if coordinates were padded
+    - When fetching the list of genes from CellBase there were very few genes repeated, this caused redundancy in results. They were too few genes to affect JSON size greatly.
 * Uncovered genes are now a list of coding regions (i.e.: exons) with an average coverage of 0.0
 * Tool to generate mocked data for the coding region analysis
 
