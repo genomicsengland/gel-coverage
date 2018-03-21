@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+    #!/home/priesgo/src/gel/gel-coverage/.env/bin/python
 import os
 import time
 import ConfigParser
@@ -59,6 +59,24 @@ def main():
                         help='The minimum length of contiguous positions with low coverage to consider a gap'
                              '(1 = report all gaps) [default:5]',
                         default=5)
+    parser.add_argument('--lower-coverage-genes', metavar='lower_coverage_genes',
+                        default=None,
+                        help='Comma separated list of genes to mock with a lower coverage')
+    parser.add_argument('--lower-coverage-mean', metavar='lower_coverage_mean',
+                        help='The new lower coverage mean [default:20]',
+                        default=20)
+    parser.add_argument('--lower-coverage-sd', metavar='lower_coverage_sd',
+                        help='The new lower coverage standard deviation [default:20]',
+                        default=20)
+    parser.add_argument('--higher-coverage-genes', metavar='higher_coverage_genes',
+                        default=None,
+                        help='Comma separated list of genes to mock with a higher coverage')
+    parser.add_argument('--higher-coverage-mean', metavar='higher_coverage_mean',
+                        help='The new higher coverage mean [default:80]',
+                        default=20)
+    parser.add_argument('--higher-coverage-sd', metavar='higher_coverage_sd',
+                        help='The new higher coverage standard deviation [default:20]',
+                        default=20)
 
     args = parser.parse_args()
 
@@ -102,8 +120,16 @@ def main():
         'cellbase_assembly': config_parser.get('cellbase', 'assembly'),
         'cellbase_retries': int(config_parser.get('cellbase', 'retries'))
     }
+    mocking_config = {
+        'lower_coverage_genes': args.lower_coverage_genes,
+        'lower_coverage_mean': args.lower_coverage_mean,
+        'lower_coverage_sd': args.lower_coverage_sd,
+        'higher_coverage_genes': args.higher_coverage_genes,
+        'higher_coverage_mean': args.higher_coverage_mean,
+        'higher_coverage_sd': args.higher_coverage_sd
+    }
     # Calls the GEL coverage engine
-    gel_coverage_engine = GelCoverageMocker(config)
+    gel_coverage_engine = GelCoverageMocker(config, mocking_config)
     output_folder = args.output_folder
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)

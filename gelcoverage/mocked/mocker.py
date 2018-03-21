@@ -1,4 +1,5 @@
 import factory.fuzzy
+import numpy.random
 from mock import patch, Mock
 from gelcoverage.runner import GelCoverageRunner
 import gelcoverage.tools.bigwig_reader
@@ -29,22 +30,22 @@ class RegionStatisticsFactory(FactoryAvro):
 
     _version = '6.0.0'
 
-    avg = FuzzyFloatWithPrecision(0, 100)
-    med = FuzzyFloatWithPrecision(0, 100)
-    sd = FuzzyFloatWithPrecision(0, 100)
-    gc = FuzzyFloatWithPrecision(0, 100)
-    pct75 = FuzzyFloatWithPrecision(0, 100)
-    pct25 = FuzzyFloatWithPrecision(0, 100)
-    bases = factory.fuzzy.FuzzyInteger(0, 100)
-    gte50x = FuzzyFloatWithPrecision(0, 1, precision=5)
-    gte30x = FuzzyFloatWithPrecision(0, 1, precision=5)
-    gte15x = FuzzyFloatWithPrecision(0, 1, precision=5)
-    lt15x = FuzzyFloatWithPrecision(0, 1, precision=5)
+    avg = 0
+    med = 0
+    sd = 0
+    gc = 0
+    pct75 = 0
+    pct25 = 0
+    bases = factory.fuzzy.FuzzyInteger(400, 2000)
+    gte50x = 0
+    gte30x = 0
+    gte15x = 0
+    lt15x = 0
     rmsd = FuzzyFloatWithPrecision(0, 100)
-    bases_gte_50x = factory.fuzzy.FuzzyInteger(50, 200)
-    bases_gte_30x = FuzzyFloatWithPrecision(50, 200)
-    bases_gte_15x = FuzzyFloatWithPrecision(50, 200)
-    bases_lt_15x = FuzzyFloatWithPrecision(50, 200)
+    bases_gte_50x = 0
+    bases_gte_30x = 0
+    bases_gte_15x = 0
+    bases_lt_15x = 0
 
 
 class CoverageGapFactory(FactoryAvro):
@@ -60,12 +61,27 @@ class CoverageGapFactory(FactoryAvro):
     e = factory.fuzzy.FuzzyInteger(10000, 50000000)
 
 
-def mocked_compute_statistics(*args):
+def mocked_compute_statistics(mean, sd):
     region_statistics_factory = GenericFactoryAvro.get_factory_avro(
         protocols.coverage_0_1_0.RegionStatistics,
         version='6.0.0'
     )
     region_statistics = region_statistics_factory.create()
+    coverages = numpy.random.normal(loc=mean, scale=sd, size=region_statistics.bases)
+    region_statistics.avg = numpy.mean(coverages)
+    region_statistics.med = numpy.median(coverages)
+    region_statistics.sd = numpy.std(coverages)
+    region_statistics.pct75 = numpy.percentile(coverages, 75)
+    region_statistics.pct25 = numpy.percentile(coverages, 25)
+    region_statistics.bases_gte_50x = numpy.sum([1 for x in coverages if x >= 50])
+    region_statistics.bases_gte_30x = numpy.sum([1 for x in coverages if x >= 30])
+    region_statistics.bases_gte_15x = numpy.sum([1 for x in coverages if x >= 15])
+    region_statistics.bases_lt_15x = numpy.sum([1 for x in coverages if x < 15])
+    region_statistics.gte50x = float(region_statistics.bases_gte_50x) / region_statistics.bases
+    region_statistics.gte30x = float(region_statistics.bases_gte_30x) / region_statistics.bases
+    region_statistics.gte15x = float(region_statistics.bases_gte_15x) / region_statistics.bases
+    region_statistics.gte15x = float(region_statistics.bases_lt_15x) / region_statistics.bases
+    region_statistics.gc = float(numpy.random.normal(loc=50, scale=20))/100
     return region_statistics.toJsonDict()
 
 
@@ -112,11 +128,17 @@ def mocked_find_gaps(coverages, start_position, coverage_threshold, gap_length_t
 
 class GelCoverageMocker(GelCoverageRunner):
 
-    def __init__(self, config):
+    def __init__(self, config, mocking_config):
 
         # mock everything that needs mocking
         GelCoverageMocker.prepare_mockers()
         super(GelCoverageMocker, self).__init__(config)
+        self.lower_coverage_genes = mocking_config['lower_coverage_genes']
+        self.lower_coverage_mean = mocking_config['lower_coverage_mean']
+        self.lower_coverage_sd = mocking_config['lower_coverage_sd']
+        self.higher_coverage_genes = mocking_config['higher_coverage_genes']
+        self.higher_coverage_mean = mocking_config['higher_coverage_mean']
+        self.higher_coverage_sd = mocking_config['higher_coverage_sd']
 
     @staticmethod
     def prepare_mockers():
@@ -130,10 +152,23 @@ class GelCoverageMocker(GelCoverageRunner):
             protocols.coverage_0_1_0.CoverageGap, CoverageGapFactory, version="6.0.0"
         )
 
+    def set_differential_coverage_genes(self, results):
+        if self.lower_coverage_genes is not None or self.higher_coverage_genes is not None:
+            for gene in results["results"]["genes"]:
+                if gene["name"] in self.lower_coverage_genes:
+                    gene["union_tr"]["stats"] = mocked_compute_statistics(
+                        mean=self.lower_coverage_mean, sd=self.lower_coverage_sd)
+                if gene["name"] in self.higher_coverage_genes:
+                    gene["union_tr"]["stats"] = mocked_compute_statistics(
+                        mean=self.higher_coverage_mean, sd=self.higher_coverage_sd)
+        return results
+
     @patch.object(gelcoverage.tools.bigwig_reader.BigWigReader, 'read_bigwig_coverages', lambda x, y, z, w: None)
     @patch('gelcoverage.stats.coverage_stats.compute_exon_level_statistics', mocked_compute_statistics)
     @patch('gelcoverage.stats.coverage_stats.compute_transcript_level_statistics', mocked_compute_statistics)
     @patch('gelcoverage.stats.coverage_stats.compute_coding_region_statistics', mocked_compute_coding_region_statistics)
     @patch('gelcoverage.stats.coverage_stats.find_gaps', mocked_find_gaps)
     def run(self):
-        return super(GelCoverageMocker, self).run()
+        results, bed = super(GelCoverageMocker, self).run()
+        results = self.set_differential_coverage_genes(results)
+        return results, bed
