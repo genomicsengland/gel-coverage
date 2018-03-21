@@ -70,7 +70,8 @@ def mocked_compute_statistics(*args, **kwargs):
     sd = kwargs.get('sd', 20.0)
     region_statistics = region_statistics_factory.create()
     size = region_statistics.bases if region_statistics.bases is not None else 1
-    coverages = numpy.random.normal(loc=mean, scale=sd, size=size)
+    randomised_mean = numpy.random.normal(loc=mean, scale=sd)
+    coverages = numpy.random.normal(loc=randomised_mean, scale=sd, size=size)
     region_statistics.avg = numpy.mean(coverages)
     region_statistics.med = numpy.median(coverages)
     region_statistics.sd = numpy.std(coverages)
