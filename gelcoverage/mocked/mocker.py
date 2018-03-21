@@ -61,13 +61,16 @@ class CoverageGapFactory(FactoryAvro):
     e = factory.fuzzy.FuzzyInteger(10000, 50000000)
 
 
-def mocked_compute_statistics(mean, sd):
+def mocked_compute_statistics(*args, **kwargs):
     region_statistics_factory = GenericFactoryAvro.get_factory_avro(
         protocols.coverage_0_1_0.RegionStatistics,
         version='6.0.0'
     )
+    mean = kwargs.get('mean', 50.0)
+    sd = kwargs.get('sd', 20.0)
     region_statistics = region_statistics_factory.create()
-    coverages = numpy.random.normal(loc=mean, scale=sd, size=region_statistics.bases)
+    size = region_statistics.bases if region_statistics.bases is not None else 1
+    coverages = numpy.random.normal(loc=mean, scale=sd, size=size)
     region_statistics.avg = numpy.mean(coverages)
     region_statistics.med = numpy.median(coverages)
     region_statistics.sd = numpy.std(coverages)
@@ -157,10 +160,10 @@ class GelCoverageMocker(GelCoverageRunner):
             for gene in results["results"]["genes"]:
                 if gene["name"] in self.lower_coverage_genes:
                     gene["union_tr"]["stats"] = mocked_compute_statistics(
-                        mean=self.lower_coverage_mean, sd=self.lower_coverage_sd)
+                        mean=float(self.lower_coverage_mean), sd=float(self.lower_coverage_sd))
                 if gene["name"] in self.higher_coverage_genes:
                     gene["union_tr"]["stats"] = mocked_compute_statistics(
-                        mean=self.higher_coverage_mean, sd=self.higher_coverage_sd)
+                        mean=float(self.higher_coverage_mean), sd=float(self.higher_coverage_sd))
         return results
 
     @patch.object(gelcoverage.tools.bigwig_reader.BigWigReader, 'read_bigwig_coverages', lambda x, y, z, w: None)

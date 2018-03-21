@@ -73,7 +73,7 @@ def main():
                         help='Comma separated list of genes to mock with a higher coverage')
     parser.add_argument('--higher-coverage-mean', metavar='higher_coverage_mean',
                         help='The new higher coverage mean [default:80]',
-                        default=20)
+                        default=80)
     parser.add_argument('--higher-coverage-sd', metavar='higher_coverage_sd',
                         help='The new higher coverage standard deviation [default:20]',
                         default=20)
