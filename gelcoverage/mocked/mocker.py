@@ -66,8 +66,8 @@ def mocked_compute_statistics(*args, **kwargs):
         protocols.coverage_0_1_0.RegionStatistics,
         version='6.0.0'
     )
-    mean = kwargs.get('mean', 50.0)
-    sd = kwargs.get('sd', 20.0)
+    mean = kwargs.get('mean', 50)
+    sd = kwargs.get('sd', 10)
     region_statistics = region_statistics_factory.create()
     size = region_statistics.bases if region_statistics.bases is not None else 1
     randomised_mean = numpy.random.normal(loc=mean, scale=sd)

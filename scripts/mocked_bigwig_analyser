@@ -66,8 +66,8 @@ def main():
                         help='The new lower coverage mean [default:20]',
                         default=20)
     parser.add_argument('--lower-coverage-sd', metavar='lower_coverage_sd',
-                        help='The new lower coverage standard deviation [default:20]',
-                        default=20)
+                        help='The new lower coverage standard deviation [default:5]',
+                        default=5)
     parser.add_argument('--higher-coverage-genes', metavar='higher_coverage_genes',
                         default=None,
                         help='Comma separated list of genes to mock with a higher coverage')
@@ -75,8 +75,8 @@ def main():
                         help='The new higher coverage mean [default:80]',
                         default=80)
     parser.add_argument('--higher-coverage-sd', metavar='higher_coverage_sd',
-                        help='The new higher coverage standard deviation [default:20]',
-                        default=20)
+                        help='The new higher coverage standard deviation [default:5]',
+                        default=5)
 
     args = parser.parse_args()
 
@@ -85,8 +85,9 @@ def main():
     config_parser.readfp(open(args.config))
 
     # Mocks a bigwig file
-    input_bigwig = ".mocked.bw"
-    bw = pyBigWig.open(".mocked.bw", "w")
+    timestamp = int(time.time())
+    input_bigwig = ".mocked_{}.bw".format(timestamp)
+    bw = pyBigWig.open(input_bigwig, "w")
     bw.addHeader([("chr1", 1000000), ("chr2", 1500000)])
     bw.close()
 
@@ -133,7 +134,6 @@ def main():
     output_folder = args.output_folder
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
-    timestamp = int(time.time())
     for i in xrange(int(args.number_results)):
         (results, bed) = gel_coverage_engine.run()
         # Prints output to stdout
