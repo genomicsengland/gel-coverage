@@ -67,16 +67,16 @@ def main():
                         default=20)
     parser.add_argument('--lower-coverage-sd', metavar='lower_coverage_sd',
                         help='The new lower coverage standard deviation [default:5]',
-                        default=5)
+                        default=10)
     parser.add_argument('--higher-coverage-genes', metavar='higher_coverage_genes',
                         default=None,
                         help='Comma separated list of genes to mock with a higher coverage')
     parser.add_argument('--higher-coverage-mean', metavar='higher_coverage_mean',
                         help='The new higher coverage mean [default:80]',
-                        default=80)
+                        default=120)
     parser.add_argument('--higher-coverage-sd', metavar='higher_coverage_sd',
                         help='The new higher coverage standard deviation [default:5]',
-                        default=5)
+                        default=10)
 
     args = parser.parse_args()
 
