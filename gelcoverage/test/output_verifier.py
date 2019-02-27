@@ -65,6 +65,7 @@ class OutputVerifier(unittest.TestCase):
     def _verify_parameters(self, parameters):
         try:
             self._verify_dict_field(parameters, "gap_coverage_threshold", int)
+            self._verify_dict_field(parameters, "gap_length_threshold", int)
             self._verify_dict_field(parameters, "input_file", str)
             self._verify_dict_field(parameters, "species", str)
             self._verify_dict_field(parameters, "assembly", str)
@@ -97,13 +98,9 @@ class OutputVerifier(unittest.TestCase):
     def __verify_uncovered_genes(self, results):
 
         self._verify_dict_field(results, "uncovered_genes", list)
-        observed_genes = []
         for uncovered_gene in results["uncovered_genes"]:
             self._verify_dict_field(uncovered_gene, constants.CHROMOSOME, str)
             self._verify_dict_field(uncovered_gene, constants.GENE_NAME, str)
-            self.assertTrue(uncovered_gene[constants.GENE_NAME] not in observed_genes,
-                                msg="Duplicated gene '%s'" % uncovered_gene[constants.GENE_NAME])
-            observed_genes.append(uncovered_gene[constants.GENE_NAME])
 
     def __verify_genes(self, results, exon_stats_enabled):
         # Verify every gene
@@ -226,15 +223,9 @@ class OutputVerifier(unittest.TestCase):
         :param exon:
         :return: start and end positions
         """
-        start = None
-        end = None
-        if self.__is_padding_enabled():
-            start = exon[constants.EXON_PADDED_START]
-            end = exon[constants.EXON_PADDED_END]
-        else:
-            start = exon[constants.EXON_START]
-            end = exon[constants.EXON_END]
-        return (start, end)
+        start = exon[constants.EXON_START]
+        end = exon[constants.EXON_END]
+        return start, end
 
     def __is_padding_enabled(self):
         return self.config["exon_padding"] > 0
@@ -278,20 +269,7 @@ class OutputVerifier(unittest.TestCase):
             self._verify_dict_field(exon, constants.EXON_END, int)
             self.assertTrue(exon[constants.EXON_END] >= 0)
             self.assertTrue(exon[constants.EXON_END] >= exon[constants.EXON_START], msg="End < start")
-            if self.__is_padding_enabled():
-                self._verify_dict_field(exon, constants.EXON_PADDED_START, int)
-                self.assertTrue(exon[constants.EXON_PADDED_START] >= 0)
-                self._verify_dict_field(exon, constants.EXON_PADDED_END, int)
-                self.assertTrue(exon[constants.EXON_PADDED_END] >= 0)
-                self.assertTrue(exon[constants.EXON_PADDED_END] > exon[constants.EXON_PADDED_START],
-                                msg="Padded end <= padded start")
-                self.assertTrue(exon[constants.EXON_START] - exon[constants.EXON_PADDED_START] == self.config["exon_padding"],
-                                msg="Incorrect start coordinate padding")
-                self.assertTrue(exon[constants.EXON_PADDED_END] - exon[constants.EXON_END] == self.config["exon_padding"],
-                                msg="Incorrect end coordinate padding")
-            self._verify_dict_field(exon, constants.EXON, str)
-            self.assertTrue(str(exon[constants.EXON]).startswith(constants.EXON),
-                            msg="Exon number is not well formed")
+            #self._verify_dict_field(exon, constants.EXON, int)
             self.__verify_exon_statistics(exon, has_gc)
         except AssertionError, e:
             logging.error("Error verifying exon at %s:%s" % (gene_name, transcript_id))
@@ -341,9 +319,6 @@ class OutputVerifier(unittest.TestCase):
             self._verify_dict_field(gap, constants.GAP_END, int)
             self.assertTrue(gap[constants.GAP_END] >= start and gap[constants.GAP_START] <= end and
                             gap[constants.GAP_END] >= gap[constants.GAP_START])
-            self._verify_dict_field(gap, constants.GAP_LENGTH, int)
-            self.assertTrue(gap[constants.GAP_LENGTH] >= 1 and gap[constants.GAP_LENGTH] <=
-                            gap[constants.GAP_END] - gap[constants.GAP_START] + 1)
         except AssertionError, e:
             logging.error("Error verifying gap")
             logging.error(json.dumps(gap, indent=4))

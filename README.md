@@ -91,7 +91,7 @@ the coding region and the exon level statistics are enabled (`"coding_region_sta
     * Execution time is of some seconds or under a second for small panels. The panel of intellectual disability v1.23 having 1232 genes took 46s.
 * To **run statistics only for a gene list** from exon level up to gene list level, provide a gene list (`gene_list`) instead
 of panel and panel version and use the same configuration as above.
-    * Execution time similar as the previous
+    * Execution time depends on the size of the list
 * To **run statistics only for all genes in the coding region** do not provide panel (`panel`) or gene list (`gene_list`),
 disable the whole genome statistics (`"wg_stats_enabled": False`) and the exon level statistics (`"exon_stats_enabled": False`)
 (the output JSON will be around 4 GB if exon stats are enabled for all genes, otherwise it is around 250 MB),
@@ -174,3 +174,13 @@ bed = bed_maker.run()
 # Saves the analysed region as a BED file
 bed.saveas("my.bed")
 ```
+
+## Mocked data
+
+Generate mocked results for the coding region analysis using this:
+```
+mocked_bigwig_analyser --output-folder mocked --config resources/bigwig_analyser.GRCh38.config --coding-regions resources/coding_regions.GRCh38.bed
+```
+
+This script can be used also with panels using `--panel` and `--panel-version` or with gene lists using `--gene-list`.
+Generate multiple results in the same call using `--number-results`.

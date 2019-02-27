@@ -1,8 +1,24 @@
+version 1.5.0 (23 January 2017)
+----------------------------
+
+* Major changes
+    - Reduce output JSON size:
+        - `--gap-length-threshold` option, avoids reporting gaps under this minimum length. Default value 5bp
+        - Remove redundant field `length` from gaps and exons
+        - Remove redundant fields of padded coordinates from exons. When padding is enabled, the coordinates are padded
+        - Exon names were composed as `exon` + index of the exon, they are now just referred by the index of the exon
+* Bugfixes
+    - Coding region coverage statistics were not calculated over the padded exons even if coordinates were padded
+    - When fetching the list of genes from CellBase there were very few genes repeated, this caused redundancy in results. They were too few genes to affect JSON size greatly.
+* Uncovered genes are now a list of coding regions (i.e.: exons) with an average coverage of 0.0
+* Tool to generate mocked data for the coding region analysis
+
+
 version 1.4.2 (15 December 2017)
 ----------------------------
 
 * Minor changes
-    - `--exon-padding` option
+    - `--exon-padding` option in bed maker
 
 version 1.4.1 (12 December 2017)
 ----------------------------

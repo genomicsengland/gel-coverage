@@ -1,0 +1,157 @@
+    #!/home/priesgo/src/gel/gel-coverage/.env/bin/python
+import os
+import time
+import ConfigParser
+import argparse
+import ujson
+import codecs
+import pyBigWig
+from gelcoverage.mocked.mocker import GelCoverageMocker
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description='Generates mocked results for coverage coding region analysis')
+    parser.add_argument('--output-folder', metavar='output_folder',
+                        help='The folder to write the mocked results. Files will follow the pattern '
+                             '"mocked_coverage_$i.json" [required]',
+                        required=True)
+    parser.add_argument('--number-results', metavar='number_results',
+                        help='The number of mocked results to generate',
+                        default=1)
+    parser.add_argument('--config', metavar='config',
+                        help='The configuration file [required]',
+                        required=True)
+    parser.add_argument('--panel', metavar='panel',
+                        help='The PanelApp panel name or identifier '
+                             '(see https://panelapp.genomicsengland.co.uk/WebServices/list_panels/)',
+                        default=None)
+    parser.add_argument('--panel-version', metavar='panel_version',
+                        help='The PanelApp panel version',
+                        default=None)
+    parser.add_argument('--gene-list', metavar='gene_list',
+                        default=None,
+                        help='Comma separated list of genes (HGNC gene symbols) to analyse. Will be masked by a panel')
+    parser.add_argument('--coding-regions', dest='coding_regions', metavar='coding_regions',
+                        help='BED file containing the coding region to analyse and the corresponding annotations. '
+                             'If provided skips cellbase connection. The BED file has to be sorted by transcript.',
+                        default=None)
+    # parser.add_argument('--disable-wg-stats', dest='wg_stats_enabled', action='store_false',
+    #                     help='Disable the calculation of whole genome statistics.')
+    # parser.set_defaults(wg_stats_enabled=True)
+    # parser.add_argument('--wg-regions', metavar='wg_regions',
+    #                     help='A BED file specifying the regions to be analysed in the whole genome analysis. '
+    #                          'Typically these are the NonN regions in the genome.',
+    #                     default=None)
+    # parser.add_argument('--disable-coding-region-stats', dest='coding_region_stats_enabled', action='store_false',
+    #                     help='Disable the calculation of coding region statistics.')
+    # parser.set_defaults(coding_region_stats_enabled=True)
+    parser.add_argument('--disable-exon-stats', dest='exon_stats_enabled', action='store_false',
+                        help='Disable the calculation of exon statistics. Use this flag when running a coverage '
+                             'analysis on whole exome to minimise the space taken by the output JSON.')
+    parser.set_defaults(exon_stats_enabled=True)
+    parser.add_argument('--coverage-threshold', metavar='coverage_threshold',
+                        help='The coverage threshold used to compute gaps '
+                             '(i.e.: contiguous positions with low coverage)'
+                             '(0 = disabled) [default:15]',
+                        default=15)
+    parser.add_argument('--gap-length-threshold', metavar='gap_length_threshold',
+                        help='The minimum length of contiguous positions with low coverage to consider a gap'
+                             '(1 = report all gaps) [default:5]',
+                        default=5)
+    parser.add_argument('--lower-coverage-genes', metavar='lower_coverage_genes',
+                        default=None,
+                        help='Comma separated list of genes to mock with a lower coverage')
+    parser.add_argument('--lower-coverage-mean', metavar='lower_coverage_mean',
+                        help='The new lower coverage mean [default:20]',
+                        default=20)
+    parser.add_argument('--lower-coverage-sd', metavar='lower_coverage_sd',
+                        help='The new lower coverage standard deviation [default:10]',
+                        default=10)
+    parser.add_argument('--higher-coverage-genes', metavar='higher_coverage_genes',
+                        default=None,
+                        help='Comma separated list of genes to mock with a higher coverage')
+    parser.add_argument('--higher-coverage-mean', metavar='higher_coverage_mean',
+                        help='The new higher coverage mean [default:120]',
+                        default=120)
+    parser.add_argument('--higher-coverage-sd', metavar='higher_coverage_sd',
+                        help='The new higher coverage standard deviation [default:10]',
+                        default=10)
+
+    args = parser.parse_args()
+
+    # Reads configuration file
+    config_parser = ConfigParser.ConfigParser()
+    config_parser.readfp(open(args.config))
+
+    # Mocks a bigwig file
+    timestamp = int(time.time())
+    input_bigwig = ".mocked_{}.bw".format(timestamp)
+    bw = pyBigWig.open(input_bigwig, "w")
+    bw.addHeader([("chr1", 1000000), ("chr2", 1500000)])
+    bw.close()
+
+    # Creates a data structure with all config parameters
+    config = {
+        # Sets parameters from CLI
+        "bw": input_bigwig,
+        "panel": args.panel,
+        "panel_version": args.panel_version,
+        "gene_list": args.gene_list,
+        "coverage_threshold": int(args.coverage_threshold),
+        "gap_length_threshold": int(args.gap_length_threshold),
+        "coding_regions": args.coding_regions,
+        "wg_stats_enabled": False,      # TODO
+        "wg_regions": None,             # TODO
+        "exon_stats_enabled": args.exon_stats_enabled,
+        "coding_region_stats_enabled": True,
+        # Sets parameters from config file
+        'configuration_file': args.config,
+        "panelapp_host": config_parser.get('panelapp', 'host'),
+        "panelapp_gene_confidence": config_parser.get('panelapp', 'gene_confidence'),
+        "panelapp_retries": int(config_parser.get('panelapp', 'retries')),
+        "panelapp_assembly": config_parser.get('cellbase', 'assembly'),
+        "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),
+        "transcript_filtering_biotypes": config_parser.get('transcript_filtering', 'biotypes'),
+        "exon_padding": int(config_parser.get("exon", "exon_padding")),
+        "log_level": int(config_parser.get("logging", "level")),
+        'cellbase_host': config_parser.get('cellbase', 'host'),
+        'cellbase_species': config_parser.get('cellbase', 'species'),
+        'cellbase_version': config_parser.get('cellbase', 'version'),
+        'cellbase_assembly': config_parser.get('cellbase', 'assembly'),
+        'cellbase_retries': int(config_parser.get('cellbase', 'retries'))
+    }
+    mocking_config = {
+        'lower_coverage_genes': args.lower_coverage_genes,
+        'lower_coverage_mean': args.lower_coverage_mean,
+        'lower_coverage_sd': args.lower_coverage_sd,
+        'higher_coverage_genes': args.higher_coverage_genes,
+        'higher_coverage_mean': args.higher_coverage_mean,
+        'higher_coverage_sd': args.higher_coverage_sd
+    }
+    # Calls the GEL coverage engine
+    gel_coverage_engine = GelCoverageMocker(config, mocking_config)
+    output_folder = args.output_folder
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+    for i in xrange(int(args.number_results)):
+        (results, bed) = gel_coverage_engine.run()
+        # Prints output to stdout
+        # TODO: we may want to write it to a file. Check that
+        with codecs.open(os.path.join(output_folder, "mocked_coverage_{}_{}.json".format(timestamp, i)), 'w', 'utf8') \
+                as output_file:
+            output_file.write(
+                ujson.dumps(
+                    results,
+                    ensure_ascii=False
+                )
+            )
+        # Saves the analysed region as a BED file
+        if bed is not None and not args.coding_regions:
+            bed.saveas(os.path.join(output_folder, "mocked_coverage_{}_{}.bed".format(timestamp, i)))
+
+    # Removes the mocked bigwig from the file system
+    os.remove(input_bigwig)
+
+if __name__ == '__main__':
+    main()
