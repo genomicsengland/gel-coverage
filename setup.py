@@ -1,17 +1,15 @@
 # from distutils.core import setup
 from setuptools import find_packages, setup
 import os
+import io
 
 
 # read the contents of your README file
-this_directory = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(this_directory, 'README.md')) as f:
-    long_description = f.read()
 
 VERSION = '1.4.2'
 
 setup(
-    name='gelcoverage',
+    name='gel-coverage',
     version=VERSION,
     packages=find_packages(),
     scripts=['scripts/bigwig_analyser', 'scripts/bed_maker'],
@@ -21,8 +19,6 @@ setup(
     author='Pablo Riesgo Ferreiro',
     author_email='pablo.riesgo-ferreiro@genomicsengland.co.uk',
     description='Whole genome coverage analysis tool',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
     requires=['pandas', 'pyBigWig', 'pybedtools', 'numpy', 'ujson', 'pycellbase'],
     install_requires=[
         'pandas==0.20.3',
