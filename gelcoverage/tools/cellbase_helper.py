@@ -165,7 +165,7 @@ class CellbaseHelper:
         # TODO: unit test
         return cellbase_genes
 
-    def make_exons_bed(self, gene_list, _filter=True, has_chr_prefix=False):
+    def make_exons_bed(self, gene_list, _filter=True, has_chr_prefix=False, exon_padding=0):
         """
         Gets all exons from cellbase and makes a bed - also calculates gc content, returns a valid bed with gc in the
         score column
@@ -210,7 +210,15 @@ class CellbaseHelper:
                         exon_number = exon["exonNumber"]
                         row_id = gene_name + "|" + txid + "|exon" + str(exon_number)
                         all_exons.append(
-                            (chromosome, exon["start"], exon["end"], row_id, str(gc), strand))
+                            (
+                                chromosome,
+                                exon["start"] - exon_padding,
+                                exon["end"] + exon_padding,
+                                row_id,
+                                str(gc),
+                                strand
+                            )
+                        )
         # Build BED file
         bed = pybedtools.BedTool(all_exons)
         logging.info("Gene annotations bed file built!")

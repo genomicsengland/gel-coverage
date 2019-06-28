@@ -38,7 +38,7 @@ class BedMakerTests(unittest.TestCase):
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
         bed.saveas('../resources/test/sample_output_bedmaker_1.bed')
-        observed_genes = observed_genes = self._get_genes_from_bed(bed)
+        observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), 20567)
 
     def test2(self):
@@ -53,7 +53,7 @@ class BedMakerTests(unittest.TestCase):
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
         bed.saveas('../resources/test/sample_output_bedmaker_1.bed')
-        observed_genes = observed_genes = self._get_genes_from_bed(bed)
+        observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), 20542)
 
     def test3(self):
@@ -69,7 +69,7 @@ class BedMakerTests(unittest.TestCase):
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_bedmaker_2.bed')
+        bed.saveas('../resources/test/sample_output_bedmaker_3.bed')
         observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), len(expected_genes))
         self.assertEqual(set(observed_genes), set(expected_genes))
@@ -86,7 +86,25 @@ class BedMakerTests(unittest.TestCase):
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_bedmaker_2.bed')
+        bed.saveas('../resources/test/sample_output_bedmaker_4.bed')
+        observed_genes = self._get_genes_from_bed(bed)
+        self.assertEqual(len(observed_genes), len(expected_genes))
+        self.assertEqual(set(observed_genes), set(expected_genes))
+
+    def test5(self):
+        """
+        Generates a bed file for some genes
+        :return:
+        """
+        expected_genes = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        self.config['gene_list'] = expected_genes
+        self.config['exon_padding'] = 15
+        runner = BedMaker(config=self.config)
+        bed = runner.run()
+        # Verifies the bed...
+        self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
+        # Saves the analysed region as a BED file
+        bed.saveas('../resources/test/sample_output_bedmaker_5.bed')
         observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), len(expected_genes))
         self.assertEqual(set(observed_genes), set(expected_genes))

@@ -637,6 +637,9 @@ class BedMaker:
         if "cellbase_retries" not in self.config:
             # setting default value, infinite retries
             self.config["cellbase_retries"] = -1
+        if "exon_padding" not in self.config:
+            # setting default value, infinite retries
+            self.config["exon_padding"] = 0
         if "cellbase_species" not in self.config:
             errors.append("'cellbase_species' field is mising")
         if "cellbase_version" not in self.config:
@@ -656,12 +659,12 @@ class BedMaker:
             raise GelCoverageInputError("Error in configuration data!")
         self.has_gene_list = "gene_list" in self.config and self.config["gene_list"] is not None
 
-    def __get_bed_for_exons(self, chr_prefix):
+    def __get_bed_for_exons(self, chr_prefix, exon_padding):
         """
         Creates a bed file using cellbase connector
         :return: An iterator on a bedfile
         """
-        bed = self.cellbase_helper.make_exons_bed(self.gene_list, has_chr_prefix=chr_prefix)
+        bed = self.cellbase_helper.make_exons_bed(self.gene_list, has_chr_prefix=chr_prefix, exon_padding=exon_padding)
         return bed
 
     def get_gene_list(self):
@@ -690,7 +693,10 @@ class BedMaker:
             self.gene_list = self.get_gene_list()
 
         # Gets the bed
-        bed = self.__get_bed_for_exons(self.config["chr_prefix"])
+        bed = self.__get_bed_for_exons(
+            self.config["chr_prefix"],
+            self.config["exon_padding"]
+        )
         logging.info("Your bed is made!")
 
         return bed
