@@ -165,7 +165,7 @@ config = {
     "cellbase_species": "hsapiens",
     "cellbase_version": "latest",
     "cellbase_assembly": "grch37",
-    "cellbase_host": "bio-test-cellbase-haproxy-01.gel.zone/cellbase",
+    "cellbase_host": "your.cellbase.url/cellbase",
     "cellbase_retries": -1,
 }
 

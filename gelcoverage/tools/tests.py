@@ -2,16 +2,17 @@ import unittest
 import logging
 import requests
 import urllib2
+import os
 from gelcoverage.tools.cellbase_helper import CellbaseHelper
 from gelcoverage.tools.panelapp_helper import PanelappHelper
 import gelcoverage.tools.backoff_retrier as backoff_retrier
 
 
-PANELAPP_HOST = "bio-test-panelapp.gel.zone/WebServices"
+PANELAPP_HOST = os.environ.get("PANELAPP_URL")
 ASSEMBLY = "GRCh37"
 SPECIES = "hsapiens"
 CELLBASE_VERSION = "latest"
-CELLBASE_HOST = "bio-test-cellbase-tomcat-01.gel.zone:8080/cellbase"
+CELLBASE_HOST = os.environ.get("CELLBASE_URL")
 FILTER_BASIC_FLAG = ["basic"]
 FILTER_BIOTYPES = ["IG_C_gene", "IG_D_gene", "IG_J_gene", "IG_V_gene", "IG_V_gene", "protein_coding",
                    "nonsense_mediated_decay", "non_stop_decay", "TR_C_gene",
