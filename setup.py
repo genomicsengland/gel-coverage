@@ -6,7 +6,7 @@ import io
 
 # read the contents of your README file
 
-VERSION = '1.4.2'
+VERSION = '1.4.3'
 
 setup(
     name='gel-coverage',
@@ -26,6 +26,7 @@ setup(
         'ujson==1.35',
         'pyBigWig==0.3.4',
         'numpy==1.11.2',
+        'httpretty==0.9.5',
         'pycellbase==0.3.3'
     ],
     classifiers=[

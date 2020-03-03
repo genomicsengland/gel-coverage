@@ -1,3 +1,5 @@
+from time import sleep
+
 import pybedtools
 from pycellbase.cbclient import CellBaseClient
 from pycellbase.cbconfig import ConfigClient
@@ -5,7 +7,6 @@ import logging
 
 import gelcoverage.stats.sequence_stats as sequence_stats
 import gelcoverage.tools.backoff_retrier as backoff_retrier
-
 
 chromosome_mapping = {
     "hsapiens": {
@@ -69,6 +70,8 @@ chromosome_mapping = {
 
 class CellbaseHelper:
 
+    _NINCOMPLETE_RESULTS_TRIES = 10
+
     def __init__(self, species, version, assembly, host, retries, filter_flags, filter_biotypes):
         """
         Initializes the CellBase helper.
@@ -105,7 +108,8 @@ class CellbaseHelper:
         # Loads chromosome mapping for this specific reference
         self.chromosome_mapping = chromosome_mapping[self.species.lower()][self.assembly.lower()]
 
-    def __initialise_cellbase_client(self, json_config):
+    @staticmethod
+    def __initialise_cellbase_client(json_config):
         config = ConfigClient(json_config)
         return CellBaseClient(config)
 
@@ -135,10 +139,10 @@ class CellbaseHelper:
         logging.debug("Getting gene list from CellBase...")
         # calls to CB
         cellbase_result = self.cellbase_search(
-                    assembly=self.assembly,
-                    include=",".join(["name", "transcripts.annotationFlags"]),
-                    **{"transcripts.biotype": ",".join(self.filter_biotypes) if _filter else ""}
-                )
+            assembly=self.assembly,
+            include=",".join(["name", "transcripts.annotationFlags"]),
+            **{"transcripts.biotype": ",".join(self.filter_biotypes) if _filter else ""}
+        )
         gene_list = [x["name"] for x in cellbase_result[0]["result"]
                      if self.__is_any_flag_included(CellbaseHelper.__get_all_flags_for_gene(x["transcripts"]))]
         logging.debug("Gene list obtained from CellBase of %s genes" % str(len(gene_list)))
@@ -152,18 +156,45 @@ class CellbaseHelper:
         :param _filter: flag indicating whether to filter by biotypes
         :return: the data structure returned by CellBase
         """
-        # calls to CB
-        cellbase_genes = self.cellbase_search(
-            name=gene_list,
-            assembly=self.assembly,
-            include=["name", "chromosome", "transcripts.exons.start", "transcripts.exons.exonNumber",
-                     "transcripts.id,transcripts.strand", "transcripts.exons.end", "transcripts.exons.sequence",
-                     "exonNumber", "transcripts.annotationFlags"],
-            **{"transcripts.biotype": self.filter_biotypes if _filter else []}
-        )
-        # TODO: check for errors and empty results
-        # TODO: unit test
+
+        # Additional re-try implemented to deal with tomcats issue in which mongo connection gets re-started, empty
+        # results returned but no errors are raised nowhere therefore resulting in silent issues. Not using
+        # self.retries as it's allowed to be infinite (i.e. -1) and we cannot let this particular check to be repeated
+        # forever - there's still a chance that the result is correct although apparently incomplete
+        cellbase_genes = None
+        ntries = 0
+        while self._incomplete_results(cellbase_genes) and ntries < self._NINCOMPLETE_RESULTS_TRIES:
+            if ntries > 0:
+                logging.warning("Apparently incomplete results received from CellBase: {}. Retrying gene info query..."
+                                .format(str(cellbase_genes)))
+                sleep(1)
+
+            # calls to CB
+            cellbase_genes = self.cellbase_search(
+                name=gene_list,
+                assembly=self.assembly,
+                include=["name", "chromosome", "transcripts.exons.start", "transcripts.exons.exonNumber",
+                         "transcripts.id,transcripts.strand", "transcripts.exons.end", "transcripts.exons.sequence",
+                         "exonNumber", "transcripts.annotationFlags"],
+                **{"transcripts.biotype": self.filter_biotypes if _filter else []}
+            )
+            ntries += 1
+
+        # Still possible that the result is correct and no results are meant to be returned according to the query.
+        # Therefore simply return current results if number of re-tries is completed and still results are
+        # apparently incomplete
+        if ntries == self._NINCOMPLETE_RESULTS_TRIES:
+            logging.warning("No more data could be fetched by re-trying. Current CellBase response will be "
+                            "returned: {}".format(str(cellbase_genes)))
+
         return cellbase_genes
+
+    @staticmethod
+    def _incomplete_results(cellbase_gene_response):
+        return not cellbase_gene_response \
+               or not cellbase_gene_response[0] \
+               or "result" not in cellbase_gene_response[0] \
+               or not cellbase_gene_response[0]["result"]
 
     def make_exons_bed(self, gene_list, _filter=True, has_chr_prefix=False, exon_padding=0):
         """
