@@ -9,7 +9,6 @@ import gelcoverage.constants as constants
 
 
 class GelCoverageInputError(Exception):
-
     pass
 
 
@@ -29,7 +28,7 @@ class GelCoverageRunner:
         self.is_coding_region_stats_enabled = self.config["coding_region_stats_enabled"]
         self.is_exon_stats_enabled = self.config["exon_stats_enabled"]
         self.is_panel_analysis = True if "panel" in self.config and self.config["panel"] and \
-                                 "panel_version" in self.config and self.config["panel_version"] else False
+                                         "panel_version" in self.config and self.config["panel_version"] else False
         self.is_gene_list_analysis = True if "gene_list" in self.config and self.config["gene_list"] else False
 
         # Attach bigwig reader
@@ -90,7 +89,7 @@ class GelCoverageRunner:
             # setting default value, infinite retries
             self.config["panelapp_retries"] = -1
         if "exon_padding" not in self.config or type(self.config["exon_padding"]) != int or \
-                        self.config["exon_padding"] <= 0:
+                self.config["exon_padding"] <= 0:
             # default value exon padding disabled
             self.config["exon_padding"] = 0
         if "log_level" not in self.config:
@@ -144,7 +143,6 @@ class GelCoverageRunner:
             raise GelCoverageInputError('Both modes gene list and custom coding region are not allowed, please'
                                         ' provide either "gene-list" or "coding-regions"')
 
-
     def __sanity_checks(self):
         """
         Checks on the configuration data to raise errors before starting long computations.
@@ -193,7 +191,7 @@ class GelCoverageRunner:
         gene_list = set()
         bedfile_handler = open(self.coding_regions, 'r')
         for line in bedfile_handler:
-             gene_list.add(BedInterval(line).name.split('|')[0])
+            gene_list.add(BedInterval(line).name.split('|')[0])
         bedfile_handler.close()
         return list(gene_list)
 
@@ -543,7 +541,6 @@ class GelCoverageRunner:
 
         return self.__output(results), bed
 
-
     def __get_bed_for_exons(self):
         """
         Loads a bed file or creates it using cellbase connector
@@ -553,7 +550,7 @@ class GelCoverageRunner:
             bed = self.load_bed_from_file()
         else:
             bed = self.cellbase_helper.make_exons_bed(self.gene_list,
-                                                   has_chr_prefix=self.bigwig_reader.has_chr_prefix)
+                                                      has_chr_prefix=self.bigwig_reader.has_chr_prefix)
         return bed
 
     def load_bed_from_file(self):
