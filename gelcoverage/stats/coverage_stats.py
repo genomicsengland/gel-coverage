@@ -290,7 +290,7 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader=None, chunk_size=1
                 logging.debug("Analysing chunk %s:%s-%s" % (chromosome,
                                                             current_start,
                                                             current_end))
-                coverages = bigwig_reader.read_bigwig_coverages(chromosome, current_start, current_end, strict=False)
+                coverages = bigwig_reader.read_bigwig_coverages(chromosome, current_start, current_end, strict=True)
                 length = current_end - current_start
                 chunk_mean = np.mean(coverages)
                 if chunk_mean == 0:
