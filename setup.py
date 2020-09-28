@@ -6,7 +6,7 @@ import io
 
 # read the contents of your README file
 
-VERSION = '1.4.4'
+VERSION = '1.4.5'
 
 setup(
     name='gel-coverage',
