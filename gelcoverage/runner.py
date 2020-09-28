@@ -38,7 +38,6 @@ class GelCoverageRunner:
         if self.is_panel_analysis:
             self.panelapp_helper = PanelappHelper(
                 host=self.config['panelapp_host'],
-                retries=self.config['panelapp_retries'],
                 assembly=self.config['panelapp_assembly']
             )
 
