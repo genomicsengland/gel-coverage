@@ -74,7 +74,7 @@ def main():
         # Sets parameters from config file
         'configuration_file': args.config,
         "panelapp_host": config_parser.get('panelapp', 'host'),
-        "panelapp_gene_confidence": config_parser.get('panelapp', 'gene_confidence'),
+        "panelapp_gene_confidence": int(config_parser.get('panelapp', 'gene_confidence')),
         "panelapp_retries": int(config_parser.get('panelapp', 'retries')),
         "panelapp_assembly": config_parser.get('cellbase', 'assembly'),
         "transcript_filtering_flags": config_parser.get('transcript_filtering', 'flags'),

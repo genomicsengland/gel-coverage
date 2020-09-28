@@ -627,22 +627,21 @@ class PanelappHelperTests(unittest.TestCase):
 
     def setUp(self):
         logging.basicConfig(level=logging.DEBUG)
-        retries = 3
-        assembly = "GRCh37"
-        self.panelapp_helper = PanelappHelper(PANELAPP_HOST, retries, assembly)
+        assembly = "GRCh38"
+        self.panelapp_helper = PanelappHelper(PANELAPP_HOST, assembly)
         self.panel_name = "245"
-        self.panel_version = "0.19"
+        self.panel_version = "2.4"
 
     def test1(self):
         """
         Tests querying of an existing panel filtered by HighEvidence
         :return:
         """
-        gene_confidence_threshold = "HighEvidence"
+        gene_confidence_threshold = 3
         gene_list = self.panelapp_helper.get_gene_list(panel=self.panel_name,
                                                        panel_version=self.panel_version,
                                                        gene_confidence_threshold=gene_confidence_threshold)
-        self.assertEqual(len(gene_list), 54)
+        self.assertEqual(len(gene_list), 82)
         print "%s genes were returned" % str(len(gene_list))
         print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
 
@@ -651,24 +650,11 @@ class PanelappHelperTests(unittest.TestCase):
         Tests querying of an existing panel filtered by LowEvidence
         :return:
         """
-        gene_confidence_threshold = "LowEvidence"
+        gene_confidence_threshold = 2
         gene_list = self.panelapp_helper.get_gene_list(panel=self.panel_name,
                                                        panel_version=self.panel_version,
                                                        gene_confidence_threshold=gene_confidence_threshold)
-        self.assertEqual(len(gene_list), 0)
-        print "%s genes were returned" % str(len(gene_list))
-        print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
-
-    def test3(self):
-        """
-        Tests querying of an existing panel filtered by LowEvidence
-        :return:
-        """
-        gene_confidence_threshold = ["LowEvidence", "HighEvidence"]
-        gene_list = self.panelapp_helper.get_gene_list(panel=self.panel_name,
-                                                       panel_version=self.panel_version,
-                                                       gene_confidence_threshold=gene_confidence_threshold)
-        self.assertEqual(len(gene_list), 54)
+        self.assertEqual(len(gene_list), 100)
         print "%s genes were returned" % str(len(gene_list))
         print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
 
@@ -679,91 +665,11 @@ class PanelappHelperTests(unittest.TestCase):
         """
         panel_name = "unexisting_disease"
         panel_version = "0.2"
-        gene_confidence_threshold = ["LowEvidence", "HighEvidence"]
+        gene_confidence_threshold = 3
         try:
             gene_list = self.panelapp_helper.get_gene_list(panel=panel_name,
                                                            panel_version=panel_version,
                                                            gene_confidence_threshold=gene_confidence_threshold)
-            self.assertTrue(False, "Function did not fail with an unexisting panel")
-        except SystemError:
-            pass
-
-
-class PanelappHelperConnectionRetriesTests(unittest.TestCase):
-
-    def setUp(self):
-        logging.basicConfig(level=logging.DEBUG)
-
-        retries = 3
-        assembly = "GRCh37"
-        self.panelapp_helper = PanelappHelper(PANELAPP_HOST, retries, assembly)
-        self.count_failures = 0
-
-        def simulate_connection_failures(*args, **kwargs):
-            if self.count_failures < 3:
-                self.count_failures += 1
-                raise urllib2.URLError("Faked exception")
-            return urllib2.urlopen(*args, **kwargs)
-
-        self.panelapp_helper.urlopen = backoff_retrier.wrapper(simulate_connection_failures, retries)
-        self.panel_name = "245"
-        self.panel_version = "0.19"
-
-    def test1(self):
-        """
-        Tests querying of an existing panel filtered by HighEvidence
-        :return:
-        """
-        gene_confidence_threshold = "HighEvidence"
-        gene_list = self.panelapp_helper.get_gene_list(panel=self.panel_name,
-                                                       panel_version=self.panel_version,
-                                                       gene_confidence_threshold=gene_confidence_threshold)
-        self.assertEqual(self.count_failures, 3)
-        self.assertEqual(len(gene_list), 54)
-        print "%s genes were returned" % str(len(gene_list))
-        print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
-
-    def test2(self):
-        """
-        Tests querying of an existing panel filtered by LowEvidence
-        :return:
-        """
-        gene_confidence_threshold = "LowEvidence"
-        gene_list = self.panelapp_helper.get_gene_list(panel=self.panel_name,
-                                                       panel_version=self.panel_version,
-                                                       gene_confidence_threshold=gene_confidence_threshold)
-        self.assertEqual(self.count_failures, 3)
-        self.assertEqual(len(gene_list), 0)
-        print "%s genes were returned" % str(len(gene_list))
-        print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
-
-    def test3(self):
-        """
-        Tests querying of an existing panel filtered by LowEvidence
-        :return:
-        """
-        gene_confidence_threshold = ["LowEvidence", "HighEvidence"]
-        gene_list = self.panelapp_helper.get_gene_list(panel=self.panel_name,
-                                                       panel_version=self.panel_version,
-                                                       gene_confidence_threshold=gene_confidence_threshold)
-        self.assertEqual(self.count_failures, 3)
-        self.assertEqual(len(gene_list), 54)
-        print "%s genes were returned" % str(len(gene_list))
-        print "10 first results: %s..." % ",".join(gene_list[1:min(len(gene_list), 10)])
-
-    def test3(self):
-        """
-        Tests querying of an unexisting panel
-        :return:
-        """
-        panel_name = "unexisting_disease"
-        panel_version = "0.2"
-        gene_confidence_threshold = ["LowEvidence", "HighEvidence"]
-        try:
-            gene_list = self.panelapp_helper.get_gene_list(panel=panel_name,
-                                                           panel_version=panel_version,
-                                                           gene_confidence_threshold=gene_confidence_threshold)
-            self.assertEqual(self.count_failures, 3)
             self.assertTrue(False, "Function did not fail with an unexisting panel")
         except SystemError:
             pass

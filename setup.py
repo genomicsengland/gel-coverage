@@ -6,7 +6,7 @@ import io
 
 # read the contents of your README file
 
-VERSION = '1.4.4'
+VERSION = '1.4.5'
 
 setup(
     name='gel-coverage',
@@ -28,6 +28,7 @@ setup(
         'numpy==1.11.2',
         'httpretty==0.9.5',
         'pycellbase==0.3.3'
+        'pypanelapp==1.0.3'
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
