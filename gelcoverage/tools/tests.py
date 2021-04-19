@@ -176,7 +176,7 @@ class CellbaseHelperTests(unittest.TestCase):
         try:
             self.cellbase_helper.make_exons_bed(gene_list)
             self.assertTrue(False, "Function did not fail with a None list")
-        except SystemError:
+        except TypeError:
             pass
 
     def test5(self):
@@ -373,7 +373,7 @@ class CellbaseHelperRetriesTests(unittest.TestCase):
             self.cellbase_helper.make_exons_bed(gene_list)
             self.assertTrue(False, "Function did not fail with a None list")
             self.assertEqual(self.count_failures, 3)
-        except SystemError:
+        except TypeError:
             pass
 
     def test5(self):
