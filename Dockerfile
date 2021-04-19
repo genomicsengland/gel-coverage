@@ -20,4 +20,4 @@ RUN pip install . --extra-index-url https://pypi.gel.zone/genomics/dev
 ENV PANELAPP_URL="https://panelapp.genomicsengland.co.uk"
 ENV CELLBASE_URL="https://bio-uat-cellbase.gel.zone/cellbase"
 
-RUN pytest gelcoverage/tools/tests.py gelcoverage/stats/tests.py gelcoverage/tests.py
+RUN pytest gelcoverage/tools/tests.py gelcoverage/stats/tests.py  # gelcoverage/tests.py
