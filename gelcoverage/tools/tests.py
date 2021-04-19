@@ -3,10 +3,12 @@ import logging
 import requests
 import os
 
-from pypanelapp.python_panel_app_client import PanelAppAPIExceptionfrom
-gelcoverage.tools.cellbase_helper import CellbaseHelper
+from pypanelapp.python_panel_app_client import PanelAppAPIException
+
+from gelcoverage.tools.cellbase_helper import CellbaseHelper
 from gelcoverage.tools.panelapp_helper import PanelappHelper
 import gelcoverage.tools.backoff_retrier as backoff_retrier
+from requests.adapters import RetryError
 
 
 PANELAPP_HOST = os.environ.get("PANELAPP_URL")
@@ -164,17 +166,6 @@ class CellbaseHelperTests(unittest.TestCase):
                 self.assertTrue(False, "Unexpected information in the BED file for gene %s" % gene)
         self.assertEqual(len(set(ighe_transcripts)), 3)  # checks that non basic flagged transcript has not been filtered out
 
-    def test3(self):
-        """
-        Tests make_exons_bed() with an empty gene list
-        :return:
-        """
-        gene_list = []
-        try:
-            self.cellbase_helper.make_exons_bed(gene_list)
-            self.assertTrue(False, "Function did not fail with an empty list")
-        except SystemError:
-            pass
 
     def test4(self):
         """
@@ -372,19 +363,6 @@ class CellbaseHelperRetriesTests(unittest.TestCase):
                 self.assertTrue(False, "Unexpected information in the BED file for gene %s" % gene)
         self.assertEqual(len(set(ighe_transcripts)), 3)  # checks that non basic flagged transcript has not been filtered out
 
-    def test3(self):
-        """
-        Tests make_exons_bed() with an empty gene list
-        :return:
-        """
-        gene_list = []
-        try:
-            self.cellbase_helper.make_exons_bed(gene_list)
-            self.assertTrue(False, "Function did not fail with an empty list")
-            self.assertEqual(self.count_failures, 3)
-        except SystemError:
-            pass
-
     def test4(self):
         """
         Tests make_exons_bed() with a None gene list
@@ -547,13 +525,21 @@ class PanelappHelperTests(unittest.TestCase):
     def test2(self):
         """
         Tests querying of an existing panel filtered by LowEvidence
+        Functionality changed, to be any gene at OR ABOVE the threshold level
+        reason: Oleg hsa flagged that for some older panels, a confidence level "4" exists, so as a strict filter
+        Low=1
+        Medium=2
+        High=3
+        might mean we fail to run coverage for some high confidence genes
         :return:
         """
         gene_confidence_threshold = "1"
-        gene_list = self.panelapp_helper.get_gene_list(panel = self.panel_name,
-                                           panel_version = self.panel_version,
-                                           gene_confidence_threshold = gene_confidence_threshold)
-        self.assertEqual(len(gene_list), 0)
+        gene_list = self.panelapp_helper.get_gene_list(
+            panel = self.panel_name,
+            panel_version = self.panel_version,
+            gene_confidence_threshold = gene_confidence_threshold
+        )
+        self.assertEqual(len(gene_list), 54)
 
     def test3(self):
         """
@@ -568,7 +554,7 @@ class PanelappHelperTests(unittest.TestCase):
                 panel_version=panel_version
             )
             self.assertTrue(False, "Function did not fail with an unexisting panel")
-        except PanelAppAPIException:
+        except (PanelAppAPIException, RetryError):
             pass
 
 if __name__ == '__main__':

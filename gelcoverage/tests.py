@@ -148,7 +148,7 @@ class GelCoverageRunnerTests(OutputVerifier):
             "cellbase_host": CELLBASE_HOST,
             "cellbase_retries": -1,
             "panelapp_host": PANELAPP_HOST,
-            "panelapp_gene_confidence": "HighEvidence",
+            "panelapp_gene_confidence": "3",
             "panelapp_retries": -1,
             "panelapp_assembly": ASSEMBLY,
             "transcript_filtering_flags": FILTER_BASIC_FLAG,

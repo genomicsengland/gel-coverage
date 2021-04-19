@@ -1,5 +1,6 @@
 import logging
 
+from requests.adapters import RetryError
 from pypanelapp.python_panel_app_client import PanelApp, PanelAppAPIException
 
 
@@ -26,7 +27,7 @@ class PanelappHelper:
                 panel_id=panel,
                 version=panel_version
             )
-        except PanelAppAPIException as pae:
+        except (PanelAppAPIException, RetryError) as pae:
             logging.error(
                 "Encountered an error querying the PanelApp API for {}:{}".format(panel, panel_version),
                 exc_info=True
