@@ -2,7 +2,7 @@
 from setuptools import find_packages, setup
 
 
-VERSION = '1.4.2'
+VERSION = '1.4.6'
 
 setup(
     name='gel-coverage',
