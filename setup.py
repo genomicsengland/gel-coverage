@@ -1,10 +1,6 @@
 # from distutils.core import setup
 from setuptools import find_packages, setup
-import os
-import io
 
-
-# read the contents of your README file
 
 VERSION = '1.4.2'
 
@@ -23,6 +19,7 @@ setup(
     install_requires=[
         'pandas==0.20.3',
         'pybedtools==0.7.8',
+        'pypanelapp==1.0.7',
         'ujson==1.35',
         'pyBigWig==0.3.4',
         'numpy==1.11.2',
