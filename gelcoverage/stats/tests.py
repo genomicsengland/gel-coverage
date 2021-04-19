@@ -28,9 +28,9 @@ class CoverageStatsTests(OutputVerifier):
         self.coverage_threshold = 30
         self.gc_content = 0.59
 
-        self.bw = "../../resources/test/test1.bw"
+        self.bw = "resources/test/test1.bw"
         self.bigwig_reader = BigWigReader(self.bw)
-        self.wg_regions = "../../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.onlychr2122.bed"
+        self.wg_regions = "resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.onlychr2122.bed"
         self.bed_reader = BedReader(self.wg_regions)
 
     def test1(self):
@@ -47,7 +47,7 @@ class CoverageStatsTests(OutputVerifier):
             self.assertTrue(constants.GAP_END in gap)
             self.assertEqual(type(gap[constants.GAP_START]), int)
             self.assertEqual(type(gap[constants.GAP_END]), int)
-            print "Found a gap at %s-%s" % (str(gap[constants.GAP_START]), str(gap[constants.GAP_END]))
+            print("Found a gap at %s-%s" % (str(gap[constants.GAP_START]), str(gap[constants.GAP_END])))
 
     def test2(self):
         """
@@ -157,9 +157,10 @@ class SequenceStatsTests(unittest.TestCase):
         :return:
         """
         gc_content = sequence_stats.compute_gc_content(self.sequence)
-        print "Found a GC content of %s" % gc_content
+        print("Found a GC content of %s" % gc_content)
         self.assertEqual(type(gc_content), float)
         self.assertTrue(gc_content <= 0.65 and gc_content >= 0.55)
+
 
 if __name__ == '__main__':
     unittest.main()

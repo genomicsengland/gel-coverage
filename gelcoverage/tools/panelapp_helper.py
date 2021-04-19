@@ -1,43 +1,55 @@
-import ujson
-import urllib2
 import logging
 
-import gelcoverage.tools.backoff_retrier as backoff_retrier
+from requests.adapters import RetryError
+from pypanelapp.python_panel_app_client import PanelApp, PanelAppAPIException
 
 
 class PanelappHelper:
 
-    def __init__(self, host, retries, assembly):
+    def __init__(self, server, assembly):
         self.assembly = assembly
-        self.host = host
-        self.retries = retries
-        self.urlopen = backoff_retrier.wrapper(urllib2.urlopen, self.retries)
+        self.panelapp_client = PanelApp(server=server)
 
-    def get_gene_list(self, panel, panel_version, gene_confidence_threshold):
+    def get_gene_list(self, panel, panel_version, gene_confidence_threshold=None):
         """
         Gets the HGNC gene names in a given panel identified by panel name and panel version.
-        Also, if provided, only gets those genes having a level of evidence listed in gene_confidence_threshold.
+        Also, if provided, only gets those genes having minimum evidence gene_confidence_threshold
+
         :param panel: the panel name
         :param panel_version: the panel version
-        :param gene_confidence_threshold: the gene's level of evidence
+        :param str gene_confidence_threshold: the gene's level of evidence
         :return: a list of HGNC gene names
         """
-        logging.debug("Getting gene list from PanelApp...")
-        url = "{host}/get_panel/{panel}/".format(
-            host=self.host,
-            panel=panel)
 
-        parameters = "?version={version}&LevelOfConfidence={confidence}&assembly={assembly}".format(
-            version=panel_version,
-            confidence=",".join(gene_confidence_threshold) if type(gene_confidence_threshold) == list
-            else gene_confidence_threshold,
-            assembly=self.assembly
+        try:
+            panel_data = self.panelapp_client.panel_get(
+                assembly=self.assembly,
+                panel_id=panel,
+                version=panel_version
+            )
+        except (PanelAppAPIException, RetryError) as pae:
+            logging.error(
+                "Encountered an error querying the PanelApp API for {}:{}".format(panel, panel_version),
+                exc_info=True
+            )
+            raise pae
+
+        if gene_confidence_threshold:
+            gene_list = [
+                gene.entity_name
+                for gene in panel_data.genes
+                if gene.confidence_level >= gene_confidence_threshold
+            ]
+        else:
+            gene_list = [gene.entity_name for gene in panel_data.genes]
+
+        logging.debug(
+            "{} Genes, Confidence {}, Panel {}, Version {}".format(
+                len(gene_list),
+                gene_confidence_threshold,
+                panel,
+                panel_version
+            )
         )
-        url = urllib2.quote(url) + parameters  # we don't want parameters quoted
-        panel = ujson.load(self.urlopen("https://" + url))
-        # TODO: refine error management
-        if type(panel) != dict:
-            raise SystemError("PanelApp returned an error for the query %s" % url)
-        gene_list = [x["GeneSymbol"] for x in panel["result"]["Genes"]]
-        logging.debug("Gene list obtained from PanelApp of %s!" % str(len(gene_list)))
+
         return gene_list

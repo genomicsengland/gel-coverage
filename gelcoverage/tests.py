@@ -9,7 +9,7 @@ import gelcoverage.constants as constants
 
 
 
-PANELAPP_HOST = "panelapp.genomicsengland.co.uk/WebServices"
+PANELAPP_HOST = os.environ.get('PANELAPP_URL')
 ASSEMBLY = "GRCh37"
 SPECIES = "hsapiens"
 CELLBASE_VERSION = "latest"
@@ -49,7 +49,7 @@ class BedMakerTests(unittest.TestCase):
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_bedmaker_1.bed')
+        bed.saveas('resources/test/sample_output_bedmaker_1.bed')
         observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), 20567)
 
@@ -64,7 +64,7 @@ class BedMakerTests(unittest.TestCase):
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_bedmaker_1.bed')
+        bed.saveas('resources/test/sample_output_bedmaker_1.bed')
         observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), 20542)
 
@@ -81,7 +81,7 @@ class BedMakerTests(unittest.TestCase):
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_bedmaker_3.bed')
+        bed.saveas('resources/test/sample_output_bedmaker_3.bed')
         observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), len(expected_genes))
         self.assertEqual(set(observed_genes), set(expected_genes))
@@ -98,7 +98,7 @@ class BedMakerTests(unittest.TestCase):
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_bedmaker_4.bed')
+        bed.saveas('resources/test/sample_output_bedmaker_4.bed')
         observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), len(expected_genes))
         self.assertEqual(set(observed_genes), set(expected_genes))
@@ -116,7 +116,7 @@ class BedMakerTests(unittest.TestCase):
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_bedmaker_5.bed')
+        bed.saveas('resources/test/sample_output_bedmaker_5.bed')
         observed_genes = self._get_genes_from_bed(bed)
         self.assertEqual(len(observed_genes), len(expected_genes))
         self.assertEqual(set(observed_genes), set(expected_genes))
@@ -137,8 +137,8 @@ class GelCoverageRunnerTests(OutputVerifier):
         logging.basicConfig(level=logging.INFO)
         self.config = {
             # Sets parameters from CLI
-            "bw": "../resources/test/test1.bw",
-            "configuration_file": "../resources/bigwig_analyser.config",
+            "bw": "resources/test/test1.bw",
+            "configuration_file": "resources/bigwig_analyser.config",
             "panel": "Epileptic encephalopathy",
             "panel_version": "1.2",
             "coverage_threshold": 30,
@@ -148,7 +148,7 @@ class GelCoverageRunnerTests(OutputVerifier):
             "cellbase_host": CELLBASE_HOST,
             "cellbase_retries": -1,
             "panelapp_host": PANELAPP_HOST,
-            "panelapp_gene_confidence": "HighEvidence",
+            "panelapp_gene_confidence": "3",
             "panelapp_retries": -1,
             "panelapp_assembly": ASSEMBLY,
             "transcript_filtering_flags": FILTER_BASIC_FLAG,
@@ -175,19 +175,19 @@ class GelCoverageRunnerTests(OutputVerifier):
                               u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         runner = GelCoverageRunner(
             config=self.config
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_1.json', 'w') as fp:
+        with open('resources/test/sample_output_1.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_1.bed')
+        bed.saveas('resources/test/sample_output_1.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
@@ -199,19 +199,19 @@ class GelCoverageRunnerTests(OutputVerifier):
         expected_gene_list = [u'MBTPS2']
         self.config["panel"] = "568e844522c1fc1c78b67156"
         self.config["panel_version"] = "1.0"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         runner = GelCoverageRunner(
             config=self.config
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_1_1.json', 'w') as fp:
+        with open('resources/test/sample_output_1_1.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_1_1.bed')
+        bed.saveas('resources/test/sample_output_1_1.bed')
         # Runs verifications on output JSON
         #self.verify_output(output, expected_gene_list)
 
@@ -223,19 +223,19 @@ class GelCoverageRunnerTests(OutputVerifier):
         expected_gene_list = []
         self.config["panel"] = "5550b7bebb5a161bf644a3bc"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         runner = GelCoverageRunner(
             config=self.config
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_1_2.json', 'w') as fp:
+        with open('resources/test/sample_output_1_2.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_1_2.bed')
+        bed.saveas('resources/test/sample_output_1_2.bed')
         # Runs verifications on output JSON
         #self.verify_output(output, expected_gene_list)
 
@@ -246,7 +246,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         """
         self.config["panel"] = None
         self.config["panel_version"] = None
-        self.config["bw"] = "../resources/test/test2.bw"
+        self.config["bw"] = "resources/test/test2.bw"
         self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE"
         self.config["exon_padding"] = 0
         expected_gene_list = map(
@@ -258,12 +258,12 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_2.json', 'w') as fp:
+        with open('resources/test/sample_output_2.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_2.bed')
+        bed.saveas('resources/test/sample_output_2.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
@@ -282,19 +282,19 @@ class GelCoverageRunnerTests(OutputVerifier):
                               u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 15
         runner = GelCoverageRunner(
             config=self.config
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_3.json', 'w') as fp:
+        with open('resources/test/sample_output_3.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_3.bed')
+        bed.saveas('resources/test/sample_output_3.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
@@ -305,7 +305,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         """
         self.config["panel"] = None
         self.config["panel_version"] = None
-        self.config["bw"] = "../resources/test/test2.bw"
+        self.config["bw"] = "resources/test/test2.bw"
         self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE"
         self.config["exon_padding"] = 15
         expected_gene_list = map(
@@ -317,11 +317,11 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_4.bed')
+        bed.saveas('resources/test/sample_output_4.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
         # Writes the JSON
-        with open('../resources/test/sample_output_4.json', 'w') as fp:
+        with open('resources/test/sample_output_4.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
@@ -455,22 +455,22 @@ class GelCoverageRunnerTests(OutputVerifier):
                               u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
+            "resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
         runner = GelCoverageRunner(
             config=self.config
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_6.json', 'w') as fp:
+        with open('resources/test/sample_output_6.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_6.bed')
+        bed.saveas('resources/test/sample_output_6.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
@@ -491,11 +491,11 @@ class GelCoverageRunnerTests(OutputVerifier):
                               u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
+            "resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
         try:
             runner = GelCoverageRunner(
                 config=self.config
@@ -513,17 +513,17 @@ class GelCoverageRunnerTests(OutputVerifier):
         """
         self.config["panel"] = None
         self.config["panel_version"] = None
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         self.config["coding_region_stats_enabled"] = False
         self.config["wg_stats_enabled"] = True
-        self.config["wg_regions"] = "../resources/test/test1.bed"
+        self.config["wg_regions"] = "resources/test/test1.bed"
         runner = GelCoverageRunner(
             config=self.config
         )
         output, _ = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_6_2.json', 'w') as fp:
+        with open('resources/test/sample_output_6_2.json', 'w') as fp:
             json.dump(output, fp)
         # Runs verifications on output JSON
         self.verify_output(output, None)
@@ -544,7 +544,7 @@ class GelCoverageRunnerTests(OutputVerifier):
                               u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         runner = GelCoverageRunner(
@@ -552,12 +552,12 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_7.json', 'w') as fp:
+        with open('resources/test/sample_output_7.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_7.bed')
+        bed.saveas('resources/test/sample_output_7.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
@@ -576,7 +576,7 @@ class GelCoverageRunnerTests(OutputVerifier):
                               u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         self.config["exon_stats_enabled"] = False
         runner = GelCoverageRunner(
@@ -584,12 +584,12 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_8.json', 'w') as fp:
+        with open('resources/test/sample_output_8.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_8.bed')
+        bed.saveas('resources/test/sample_output_8.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
@@ -600,7 +600,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         """
         self.config["panel"] = None
         self.config["panel_version"] = None
-        self.config["bw"] = "../resources/test/test2.bw"
+        self.config["bw"] = "resources/test/test2.bw"
         self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE,PTEN"
         self.config["exon_padding"] = 0
         expected_gene_list = map(
@@ -612,12 +612,12 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_9.json', 'w') as fp:
+        with open('resources/test/sample_output_9.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_9.bed')
+        bed.saveas('resources/test/sample_output_9.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
         self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
@@ -631,7 +631,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         """
         self.config["panel"] = None
         self.config["panel_version"] = None
-        self.config["bw"] = "../resources/test/test2.bw"
+        self.config["bw"] = "resources/test/test2.bw"
         self.config["gene_list"] = "PTEN"
         self.config["exon_padding"] = 0
         expected_gene_list = map(
@@ -643,12 +643,12 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_10.json', 'w') as fp:
+        with open('resources/test/sample_output_10.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_10.bed')
+        bed.saveas('resources/test/sample_output_10.bed')
         # Runs verifications on output JSON
         self.assertEqual(len(output["results"]["uncovered_genes"]), 1,
                          msg="Uncovered genes should be of length 1")
@@ -670,18 +670,18 @@ class GelCoverageRunnerTests(OutputVerifier):
                               u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = True
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
+            "resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.bed"
         self.config["coding_region_stats_enabled"] = False
         runner = GelCoverageRunner(
             config=self.config
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_11.json', 'w') as fp:
+        with open('resources/test/sample_output_11.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(bed, None)
@@ -703,18 +703,18 @@ class GelCoverageRunnerTests(OutputVerifier):
                               u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["exon_padding"] = 0
         self.config["wg_stats_enabled"] = False
         self.config["wg_regions"] = \
-            "../resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
+            "resources/Homo_sapiens.GRCh37.75.dna.primary_assembly.NonN_Regions.CHR.prefix.bed"
         self.config["coding_region_stats_enabled"] = False
         runner = GelCoverageRunner(
             config=self.config
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_12.json', 'w') as fp:
+        with open('resources/test/sample_output_12.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(bed, None)
@@ -728,7 +728,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         :return:
         """
         expected_gene_list = None  # too big to set here
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["panel"] = "Intellectual disability"
         self.config["panel_version"] = "1.23"
         self.config["exon_padding"] = 15
@@ -737,12 +737,12 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_13.json', 'w') as fp:
+        with open('resources/test/sample_output_13.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_13.bed')
+        bed.saveas('resources/test/sample_output_13.bed')
         # Runs verifications on output JSON
         self.verify_output(output, expected_gene_list)
 
@@ -752,7 +752,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         :return:
         """
         expected_gene_list = None  # too big to set here
-        self.config["bw"] = "../resources/test/test1.bw"
+        self.config["bw"] = "resources/test/test1.bw"
         self.config["panel"] = "5763f2ea8f620350a1996048"
         self.config["panel_version"] = "1.0"
         self.config["exon_padding"] = 15
@@ -761,12 +761,12 @@ class GelCoverageRunnerTests(OutputVerifier):
         )
         output, bed = runner.run()
         # Writes the JSON
-        with open('../resources/test/sample_output_14.json', 'w') as fp:
+        with open('resources/test/sample_output_14.json', 'w') as fp:
             json.dump(output, fp)
         # Verifies the bed...
         self.assertEqual(type(bed), pybedtools.bedtool.BedTool)
         # Saves the analysed region as a BED file
-        bed.saveas('../resources/test/sample_output_14.bed')
+        bed.saveas('resources/test/sample_output_14.bed')
         # Runs verifications on output JSON
         self.expected_gene_list = expected_gene_list
         self.assertEqual(type(output), dict)

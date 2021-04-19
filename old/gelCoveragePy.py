@@ -151,10 +151,8 @@ class Coverage:
 
             exon_count += 1
             if exon_count % 100000 == 0:
-                print "Done " + str(exon_count) + " exons out of " + str(total_exons)
-        result = pandas.DataFrame(temp_store, columns=headers)
-
-        return result
+                print("Done " + str(exon_count) + " exons out of " + str(total_exons))
+        return pandas.DataFrame(temp_store, columns=headers)
 
     def generic_coverage(self, bw, bed):
         """
@@ -175,7 +173,6 @@ class Coverage:
             end = interval.end
             if start == end:
                 end += 1
-            # print str(chrom)+":"+str(start)+"-"+str(end)
             if "chr" + str(chrom) in self.get_chr_lengths(bw, "dict"):
                 cov = bw.values("chr" + str(chrom), start, end)
                 for coverage in cov:
@@ -224,7 +221,7 @@ class Coverage:
 
         # TODO while doing this calculate coding exons too
 
-        print "making exon bed file... <3min"
+        print("making exon bed file... <3min")
         for i in tqdm.tqdm(xrange(0, numTotalResults, 5000)):
             url = "http://10.5.8.201:8080/cellbase-4.5.0-rc/webservices/rest/latest/hsapiens/feature/gene/search" \
                   "?include=name,chromosome,transcripts.exons.start," \

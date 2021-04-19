@@ -151,7 +151,7 @@ header = ["gene", "txID", "chr", "strand", "totalBases", "bases_lt_3x", "bases_l
 for head in range(1, max + 1):
     header.append("Exon" + str(head))
 
-print "\t".join(header)
+print("\t".join(header))
 
 
 if args.collapse !=0:
@@ -186,7 +186,6 @@ for query in queries:
                         result = bw.values(str(chr), int(start), int(end))
                     except:
                         pass
-                        #print "ERROR\t" + str(chr) + "\t" + str(start) + "\t" + str(end)
 
                     exon_bases_lt_3x = list()
                     exon_bases_lt_15x = list()
@@ -232,4 +231,4 @@ for query in queries:
                total_perc_lt_15x,total_perc_gte_15x,total_perc_gte_30x,total_perc_gte_50x,
                "\t".join(str(value) for exon, value in exon_output.items())]
         if total_bases > 0:
-            print "\t".join(str(x) for x in out)
+            print("\t".join(str(x) for x in out))

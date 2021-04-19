@@ -72,7 +72,7 @@ def process_coverage(bw_file, vcf_file):
     result["summary"]["lt30x"] = len(filter(lambda x: x < 30, covs))
     result["summary"]["lt50x"] = len(filter(lambda x: x < 50, covs))
 
-    print json.dumps(result, indent=4)
+    print(json.dumps(result, indent=4))
 
 
 def main():
