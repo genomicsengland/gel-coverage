@@ -27,7 +27,7 @@ setup(
         'pyBigWig==0.3.4',
         'numpy==1.11.2',
         'httpretty==0.9.5',
-        'pycellbase==0.3.3',
+        'pycellbase==4.7.0',
         'pypanelapp==1.0.7'
     ],
     classifiers=[
