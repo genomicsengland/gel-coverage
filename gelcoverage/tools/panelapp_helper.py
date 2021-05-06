@@ -23,6 +23,6 @@ class PanelappHelper:
         except:
             raise SystemError("PanelApp returned an error for the panel {}, version {}".format(panel, panel_version))
         gene_list = [gene.gene_data.gene_symbol for gene in panel.genes
-                     if int(gene.confidence_level) >= gene_confidence_threshold]
+                     if int(gene.confidence_level) >= int(gene_confidence_threshold)]
         logging.debug("Gene list obtained from PanelApp of %s!" % str(len(gene_list)))
         return gene_list
