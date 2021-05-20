@@ -5,4 +5,4 @@ httpretty==0.9.5
 ujson==1.35
 pandas==0.20.3
 pycellbase==4.7.1
-pypanelapp==1.0.3
+pypanelapp==1.0.7

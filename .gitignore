@@ -7,3 +7,4 @@ dist
 .idea
 gelcoverage.egg-info
 .env
+*.bak

@@ -3,9 +3,8 @@ import logging
 
 
 class BedInterval:
-
     def __init__(self, bedline):
-        self.bedline = bedline.rstrip('\n').split('\t')
+        self.bedline = bedline.rstrip("\n").split("\t")
         self.chrom = self.bedline[0]
         self.start = self.bedline[1]
         self.end = self.bedline[2]
@@ -13,8 +12,8 @@ class BedInterval:
         self.score = self.bedline[4]
         self.strand = self.bedline[5]
 
-class BedReader:
 
+class BedReader:
     def __init__(self, bed):
         # Opens the bigwig file for reading
         logging.debug("Creating the Bed reader...")
@@ -22,7 +21,9 @@ class BedReader:
         self.is_null_bed = self.bed is None or self.bed == ""
         if not self.is_null_bed:
             self.chromosomes = self.__get_chromosomes()
-            self.has_chr_prefix = any([chromosome.startswith("chr") for chromosome in self.chromosomes])
+            self.has_chr_prefix = any(
+                [chromosome.startswith("chr") for chromosome in self.chromosomes]
+            )
         logging.debug("Bed reader created!")
 
     def __get_chromosomes(self):

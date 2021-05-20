@@ -1,5 +1,5 @@
 import requests
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import logging
 import time
 import random
@@ -31,7 +31,11 @@ def wrapper(func, retries):
             try:
                 results = func(*args, **kwargs)
                 success = True
-            except (requests.exceptions.RequestException, requests.exceptions.ConnectionError, urllib2.URLError), ex:
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.ConnectionError,
+                urllib.error.URLError,
+            ) as ex:
                 logging.error(str(ex))
                 # retries a fixed number of times
                 if retries != -1 and retries_count >= retries:

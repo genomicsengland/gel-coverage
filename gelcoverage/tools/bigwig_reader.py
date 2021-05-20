@@ -8,14 +8,15 @@ class UncoveredIntervalException(Exception):
 
 
 class BigWigReader:
-
     def __init__(self, bigwig):
         # Opens the bigwig file for reading
         logging.debug("Creating the BigWig reader...")
         self.bigwig = bigwig
         self.reader = pyBigWig.open(self.bigwig)
-        self.chromosomes = self.reader.chroms().keys()
-        self.has_chr_prefix = any([chromosome.startswith("chr") for chromosome in self.chromosomes])
+        self.chromosomes = list(self.reader.chroms().keys())
+        self.has_chr_prefix = any(
+            [chromosome.startswith("chr") for chromosome in self.chromosomes]
+        )
         self.reported_unexisting_chr = []
         logging.debug("BigWig reader created!")
 
@@ -28,8 +29,10 @@ class BigWigReader:
         :param strict: when true if a position not present in the bigwig is queried it will raise an error
         :return: the sequence of coverages (one integer per position)
         """
-        logging.debug("Queries bigwig for %s:%s-%s in %s mode" %
-                      (chromosome, str(start), str(end), "strict" if strict else "non strict"))
+        logging.debug(
+            "Queries bigwig for %s:%s-%s in %s mode"
+            % (chromosome, str(start), str(end), "strict" if strict else "non strict")
+        )
         if start == end:  # do we really need this?
             end += 1
         # Read from the bigwig file
@@ -38,7 +41,9 @@ class BigWigReader:
                 coverages = self.reader.values(chromosome, start, end)
             except RuntimeError:
                 # When the queried interval is not present in the bigwig file it returns all 0s coverage and logs it
-                logging.debug("Missing interval in bigwig %s:%s-%s" % (chromosome, start, end))
+                logging.debug(
+                    "Missing interval in bigwig %s:%s-%s" % (chromosome, start, end)
+                )
                 raise UncoveredIntervalException()
         else:
             # By using the function intervals we make sure that we are not querying coordinates not present in the
@@ -61,4 +66,7 @@ class BigWigReader:
         :return: list of chromosomes and start and end positions
         """
         logging.debug("Getting chromosomes and their lenght from BigWig header")
-        return {chromosome: [(0, length)] for (chromosome, length) in self.reader.chroms().iteritems()}
+        return {
+            chromosome: [(0, length)]
+            for (chromosome, length) in iter(self.reader.chroms().items())
+        }

@@ -35,7 +35,7 @@ chromosome_mapping = {
             "22": "chr22",
             "X": "chrX",
             "Y": "chrY",
-            "MT": "chrM"
+            "MT": "chrM",
         },
         "grch37": {
             "1": "chr1",
@@ -62,8 +62,8 @@ chromosome_mapping = {
             "22": "chr22",
             "X": "chrX",
             "Y": "chrY",
-            "MT": "chrM"
-        }
+            "MT": "chrM",
+        },
     }
 }
 
@@ -72,7 +72,9 @@ class CellbaseHelper:
 
     _NINCOMPLETE_RESULTS_TRIES = 10
 
-    def __init__(self, species, version, assembly, host, retries, filter_flags, filter_biotypes):
+    def __init__(
+        self, species, version, assembly, host, retries, filter_flags, filter_biotypes
+    ):
         """
         Initializes the CellBase helper.
         :param species: The species
@@ -92,21 +94,22 @@ class CellbaseHelper:
         json_config = {
             "species": species,
             "version": version,
-            "rest": {
-                "hosts": [
-                    host
-                ]
-            }
+            "rest": {"hosts": [host]},
         }
         # Initializes the CellBase client
-        self.__secure_initialise_cellbase_client = backoff_retrier.wrapper(self.__initialise_cellbase_client,
-                                                                           self.retries)
+        self.__secure_initialise_cellbase_client = backoff_retrier.wrapper(
+            self.__initialise_cellbase_client, self.retries
+        )
         self.cellbase_client = self.__secure_initialise_cellbase_client(json_config)
         self.cellbase_gene_client = self.cellbase_client.get_gene_client()
         # Wraps the CB search call into the truncated binary backoff implementation
-        self.cellbase_search = backoff_retrier.wrapper(self.cellbase_gene_client.search, self.retries)
+        self.cellbase_search = backoff_retrier.wrapper(
+            self.cellbase_gene_client.search, self.retries
+        )
         # Loads chromosome mapping for this specific reference
-        self.chromosome_mapping = chromosome_mapping[self.species.lower()][self.assembly.lower()]
+        self.chromosome_mapping = chromosome_mapping[self.species.lower()][
+            self.assembly.lower()
+        ]
 
     @staticmethod
     def __initialise_cellbase_client(json_config):
@@ -128,7 +131,13 @@ class CellbaseHelper:
         :param transcripts: the transcripts data structure
         :return: flattened list of transcripts
         """
-        return sum([y["annotationFlags"] if "annotationFlags" in y else [] for y in transcripts], [])
+        return sum(
+            [
+                y["annotationFlags"] if "annotationFlags" in y else []
+                for y in transcripts
+            ],
+            [],
+        )
 
     def get_all_gene_names(self, _filter=True):
         """
@@ -143,9 +152,16 @@ class CellbaseHelper:
             include=",".join(["name", "transcripts.annotationFlags"]),
             **{"transcripts.biotype": ",".join(self.filter_biotypes) if _filter else ""}
         )
-        gene_list = [x["name"] for x in cellbase_result[0]["result"]
-                     if self.__is_any_flag_included(CellbaseHelper.__get_all_flags_for_gene(x["transcripts"]))]
-        logging.debug("Gene list obtained from CellBase of %s genes" % str(len(gene_list)))
+        gene_list = [
+            x["name"]
+            for x in cellbase_result[0]["result"]
+            if self.__is_any_flag_included(
+                CellbaseHelper.__get_all_flags_for_gene(x["transcripts"])
+            )
+        ]
+        logging.debug(
+            "Gene list obtained from CellBase of %s genes" % str(len(gene_list))
+        )
         return gene_list
 
     def __get_gene_info(self, gene_list, _filter=True):
@@ -163,19 +179,33 @@ class CellbaseHelper:
         # forever - there's still a chance that the result is correct although apparently incomplete
         cellbase_genes = None
         ntries = 0
-        while self._incomplete_results(cellbase_genes) and ntries < self._NINCOMPLETE_RESULTS_TRIES:
+        while (
+            self._incomplete_results(cellbase_genes)
+            and ntries < self._NINCOMPLETE_RESULTS_TRIES
+        ):
             if ntries > 0:
-                logging.warning("Apparently incomplete results received from CellBase: {}. Retrying gene info query..."
-                                .format(str(cellbase_genes)))
+                logging.warning(
+                    "Apparently incomplete results received from CellBase: {}. Retrying gene info query...".format(
+                        str(cellbase_genes)
+                    )
+                )
                 sleep(1)
 
             # calls to CB
             cellbase_genes = self.cellbase_search(
                 name=gene_list,
                 assembly=self.assembly,
-                include=["name", "chromosome", "transcripts.exons.start", "transcripts.exons.exonNumber",
-                         "transcripts.id,transcripts.strand", "transcripts.exons.end", "transcripts.exons.sequence",
-                         "exonNumber", "transcripts.annotationFlags"],
+                include=[
+                    "name",
+                    "chromosome",
+                    "transcripts.exons.start",
+                    "transcripts.exons.exonNumber",
+                    "transcripts.id,transcripts.strand",
+                    "transcripts.exons.end",
+                    "transcripts.exons.sequence",
+                    "exonNumber",
+                    "transcripts.annotationFlags",
+                ],
                 **{"transcripts.biotype": self.filter_biotypes if _filter else []}
             )
             ntries += 1
@@ -184,19 +214,25 @@ class CellbaseHelper:
         # Therefore simply return current results if number of re-tries is completed and still results are
         # apparently incomplete
         if ntries == self._NINCOMPLETE_RESULTS_TRIES:
-            logging.warning("No more data could be fetched by re-trying. Current CellBase response will be "
-                            "returned: {}".format(str(cellbase_genes)))
+            logging.warning(
+                "No more data could be fetched by re-trying. Current CellBase response will be "
+                "returned: {}".format(str(cellbase_genes))
+            )
 
         return cellbase_genes
 
     @staticmethod
     def _incomplete_results(cellbase_gene_response):
-        return not cellbase_gene_response \
-               or not cellbase_gene_response[0] \
-               or "result" not in cellbase_gene_response[0] \
-               or not cellbase_gene_response[0]["result"]
+        return (
+            not cellbase_gene_response
+            or not cellbase_gene_response[0]
+            or "result" not in cellbase_gene_response[0]
+            or not cellbase_gene_response[0]["result"]
+        )
 
-    def make_exons_bed(self, gene_list, _filter=True, has_chr_prefix=False, exon_padding=0):
+    def make_exons_bed(
+        self, gene_list, _filter=True, has_chr_prefix=False, exon_padding=0
+    ):
         """
         Gets all exons from cellbase and makes a bed - also calculates gc content, returns a valid bed with gc in the
         score column
@@ -216,7 +252,7 @@ class CellbaseHelper:
         all_exons = list()
         while gene_count < number_genes:
             limit = min(len(gene_list) - gene_count, gene_batch)
-            current_list = gene_list[gene_count: gene_count + limit]
+            current_list = gene_list[gene_count : gene_count + limit]
             gene_count += limit
             # Query CellBase for a subset of genes
             cellbase_genes = self.__get_gene_info(current_list)
@@ -224,8 +260,12 @@ class CellbaseHelper:
             for gene in cellbase_genes[0]["result"]:
                 gene_name = gene["name"]
                 for transcript in gene["transcripts"]:
-                    filtered_out = "annotationFlags" not in transcript or \
-                                   not self.__is_any_flag_included(transcript["annotationFlags"])
+                    filtered_out = (
+                        "annotationFlags" not in transcript
+                        or not self.__is_any_flag_included(
+                            transcript["annotationFlags"]
+                        )
+                    )
                     if _filter and filtered_out:
                         # We ignore transcripts not flagged as any of a set of flags in the config file
                         continue
@@ -235,9 +275,15 @@ class CellbaseHelper:
                     if has_chr_prefix:
                         if chromosome not in self.chromosome_mapping:
                             continue  # skips genes not in canonical chromosomes when requires transformation
-                        chromosome = self.chromosome_mapping[chromosome]  # transforms chromosome
+                        chromosome = self.chromosome_mapping[
+                            chromosome
+                        ]  # transforms chromosome
                     for exon in transcript["exons"]:
-                        gc = sequence_stats.compute_gc_content(exon["sequence"]) if "sequence" in exon else None
+                        gc = (
+                            sequence_stats.compute_gc_content(exon["sequence"])
+                            if "sequence" in exon
+                            else None
+                        )
                         exon_number = exon["exonNumber"]
                         row_id = gene_name + "|" + txid + "|exon" + str(exon_number)
                         all_exons.append(
@@ -247,7 +293,7 @@ class CellbaseHelper:
                                 exon["end"] + exon_padding,
                                 row_id,
                                 str(gc),
-                                strand
+                                strand,
                             )
                         )
         # Build BED file
