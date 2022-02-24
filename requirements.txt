@@ -1,8 +1,6 @@
-pyBigWig==0.3.4
-pybedtools==0.7.8
-numpy==1.11.2
-httpretty==0.9.5
-ujson==1.35
-pandas==0.20.3
-pycellbase==4.7.1
-pypanelapp==1.0.3
+pyBigWig>=0.3.17,<0.4
+pybedtools>=0.8.0
+numpy>=1.17.2
+ujson>=1.35
+pycellbase>=4.7.1
+pypanelapp>=1.0.3

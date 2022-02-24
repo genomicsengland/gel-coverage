@@ -173,7 +173,7 @@ def compute_coding_region_statistics(genes):
     # Aggregates stats for all chromosomes
     chromosome_stats = dict(groupby_chromosome(chr2stats))
     autosomes_stats = []
-    for chromosome, chr_stats in chromosome_stats.iteritems():
+    for chromosome, chr_stats in chromosome_stats.items():
         chr_total_bases = int(np.sum([x[constants.BASES] for x in chr_stats])) if chr_stats else 0
         chr_bases_lt_15x = int(np.sum([x[constants.BASES_LT15X] for x in chr_stats])) if chr_stats else 0
         chr_bases_gte_15x = int(np.sum([x[constants.BASES_GTE15X] for x in chr_stats])) if chr_stats else 0
@@ -267,7 +267,7 @@ def compute_whole_genome_statistics(bigwig_reader, bed_reader=None, chunk_size=1
     # Iterates each chromosome
     chr_stats = {}
     autosomes_stats = []
-    for chromosome, regions in analysis_regions.iteritems():
+    for chromosome, regions in analysis_regions.items():
         chr_stats[chromosome] = {
             constants.RMSD: [],
             constants.AVERAGE: [],

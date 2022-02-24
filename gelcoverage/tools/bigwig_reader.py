@@ -14,7 +14,7 @@ class BigWigReader:
         logging.debug("Creating the BigWig reader...")
         self.bigwig = bigwig
         self.reader = pyBigWig.open(self.bigwig)
-        self.chromosomes = self.reader.chroms().keys()
+        self.chromosomes = list(self.reader.chroms().keys())
         self.has_chr_prefix = any([chromosome.startswith("chr") for chromosome in self.chromosomes])
         self.reported_unexisting_chr = []
         logging.debug("BigWig reader created!")
@@ -61,4 +61,4 @@ class BigWigReader:
         :return: list of chromosomes and start and end positions
         """
         logging.debug("Getting chromosomes and their lenght from BigWig header")
-        return {chromosome: [(0, length)] for (chromosome, length) in self.reader.chroms().iteritems()}
+        return {chromosome: [(0, length)] for (chromosome, length) in self.reader.chroms().items()}

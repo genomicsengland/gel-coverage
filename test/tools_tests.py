@@ -4,7 +4,7 @@ import os
 import logging
 import pybedtools
 from gelcoverage.runner import GelCoverageRunner, GelCoverageInputError, BedMaker
-from gelcoverage.test.output_verifier import OutputVerifier
+from .test.output_verifier import OutputVerifier
 import gelcoverage.constants as constants
 
 
@@ -74,7 +74,7 @@ class BedMakerTests(unittest.TestCase):
         :return:
         """
         self.config['cellbase_assembly'] = "grch38"
-        expected_genes = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        expected_genes = ['SCN2A', 'SPTAN1', 'PLCB1', 'SLC25A22', 'SCN8A', 'STXBP1', 'PNKP']
         self.config['gene_list'] = expected_genes
         runner = BedMaker(config=self.config)
         bed = runner.run()
@@ -91,7 +91,7 @@ class BedMakerTests(unittest.TestCase):
         Generates a bed file for some genes
         :return:
         """
-        expected_genes = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        expected_genes = ['SCN2A', 'SPTAN1', 'PLCB1', 'SLC25A22', 'SCN8A', 'STXBP1', 'PNKP']
         self.config['gene_list'] = expected_genes
         runner = BedMaker(config=self.config)
         bed = runner.run()
@@ -108,7 +108,7 @@ class BedMakerTests(unittest.TestCase):
         Generates a bed file for some genes
         :return:
         """
-        expected_genes = [u'SCN2A', u'SPTAN1', u'PLCB1', u'SLC25A22', u'SCN8A', u'STXBP1', u'PNKP']
+        expected_genes = ['SCN2A', 'SPTAN1', 'PLCB1', 'SLC25A22', 'SCN8A', 'STXBP1', 'PNKP']
         self.config['gene_list'] = expected_genes
         self.config['exon_padding'] = 15
         runner = BedMaker(config=self.config)
@@ -165,14 +165,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         Test 1: panel from PanelApp
         :return:
         """
-        expected_gene_list = [u'ADSL', u'ALG13', u'ARHGEF9', u'ARX', u'ATP1A3', u'ATRX', u'CDKL5', u'CHD2',
-                              u'CNTNAP2', u'DNM1', u'DOCK7', u'DYRK1A', u'EHMT1', u'FOXG1', u'GABRA1', u'GABRB3',
-                              u'GNAO1', u'GRIN1', u'GRIN2A', u'GRIN2B', u'HCN1', u'IQSEC2', u'KCNA2', u'KCNB1',
-                              u'KCNJ10', u'KCNQ2', u'KCNQ3', u'KCNT1', u'KIAA2022', u'KIF1BP', u'MAPK10', u'MBD5',
-                              u'MECP2', u'MEF2C', u'PCDH19', u'PIGA', u'PLCB1', u'PNKP', u'POLG', u'PRRT2', u'PURA',
-                              u'QARS', u'SCN1A', u'SCN1B', u'SCN2A', u'SCN8A', u'SETD5', u'SIK1', u'SLC12A5',
-                              u'SLC13A5', u'SLC16A2', u'SLC25A22', u'SLC2A1', u'SLC6A1', u'SLC9A6', u'SPTAN1',
-                              u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
+        expected_gene_list = ['ADSL', 'ALG13', 'ARHGEF9', 'ARX', 'ATP1A3', 'ATRX', 'CDKL5', 'CHD2',
+                              'CNTNAP2', 'DNM1', 'DOCK7', 'DYRK1A', 'EHMT1', 'FOXG1', 'GABRA1', 'GABRB3',
+                              'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 'HCN1', 'IQSEC2', 'KCNA2', 'KCNB1',
+                              'KCNJ10', 'KCNQ2', 'KCNQ3', 'KCNT1', 'KIAA2022', 'KIF1BP', 'MAPK10', 'MBD5',
+                              'MECP2', 'MEF2C', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 'POLG', 'PRRT2', 'PURA',
+                              'QARS', 'SCN1A', 'SCN1B', 'SCN2A', 'SCN8A', 'SETD5', 'SIK1', 'SLC12A5',
+                              'SLC13A5', 'SLC16A2', 'SLC25A22', 'SLC2A1', 'SLC6A1', 'SLC9A6', 'SPTAN1',
+                              'STX1B', 'STXBP1', 'SYNGAP1', 'TCF4', 'UBE2A', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
         self.config["bw"] = "../resources/test/test1.bw"
@@ -196,7 +196,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         Test 1: panel from PanelApp
         :return:
         """
-        expected_gene_list = [u'MBTPS2']
+        expected_gene_list = ['MBTPS2']
         self.config["panel"] = "568e844522c1fc1c78b67156"
         self.config["panel_version"] = "1.0"
         self.config["bw"] = "../resources/test/test1.bw"
@@ -249,10 +249,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["bw"] = "../resources/test/test2.bw"
         self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE"
         self.config["exon_padding"] = 0
-        expected_gene_list = map(
-            lambda x: unicode(x),
-            self.config["gene_list"].split(",")
-        )
+        expected_gene_list = [str(x) for x in self.config["gene_list"].split(",")]
         runner = GelCoverageRunner(
             config=self.config
         )
@@ -272,14 +269,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         Test 3: panel from PanelApp with exon padding of 15 bp
         :return:
         """
-        expected_gene_list = [u'ADSL', u'ALG13', u'ARHGEF9', u'ARX', u'ATP1A3', u'ATRX', u'CDKL5', u'CHD2',
-                              u'CNTNAP2', u'DNM1', u'DOCK7', u'DYRK1A', u'EHMT1', u'FOXG1', u'GABRA1', u'GABRB3',
-                              u'GNAO1', u'GRIN1', u'GRIN2A', u'GRIN2B', u'HCN1', u'IQSEC2', u'KCNA2', u'KCNB1',
-                              u'KCNJ10', u'KCNQ2', u'KCNQ3', u'KCNT1', u'KIAA2022', u'KIF1BP', u'MAPK10', u'MBD5',
-                              u'MECP2', u'MEF2C', u'PCDH19', u'PIGA', u'PLCB1', u'PNKP', u'POLG', u'PRRT2', u'PURA',
-                              u'QARS', u'SCN1A', u'SCN1B', u'SCN2A', u'SCN8A', u'SETD5', u'SIK1', u'SLC12A5',
-                              u'SLC13A5', u'SLC16A2', u'SLC25A22', u'SLC2A1', u'SLC6A1', u'SLC9A6', u'SPTAN1',
-                              u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
+        expected_gene_list = ['ADSL', 'ALG13', 'ARHGEF9', 'ARX', 'ATP1A3', 'ATRX', 'CDKL5', 'CHD2',
+                              'CNTNAP2', 'DNM1', 'DOCK7', 'DYRK1A', 'EHMT1', 'FOXG1', 'GABRA1', 'GABRB3',
+                              'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 'HCN1', 'IQSEC2', 'KCNA2', 'KCNB1',
+                              'KCNJ10', 'KCNQ2', 'KCNQ3', 'KCNT1', 'KIAA2022', 'KIF1BP', 'MAPK10', 'MBD5',
+                              'MECP2', 'MEF2C', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 'POLG', 'PRRT2', 'PURA',
+                              'QARS', 'SCN1A', 'SCN1B', 'SCN2A', 'SCN8A', 'SETD5', 'SIK1', 'SLC12A5',
+                              'SLC13A5', 'SLC16A2', 'SLC25A22', 'SLC2A1', 'SLC6A1', 'SLC9A6', 'SPTAN1',
+                              'STX1B', 'STXBP1', 'SYNGAP1', 'TCF4', 'UBE2A', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
         self.config["bw"] = "../resources/test/test1.bw"
@@ -308,10 +305,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["bw"] = "../resources/test/test2.bw"
         self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE"
         self.config["exon_padding"] = 15
-        expected_gene_list = map(
-            lambda x: unicode(x),
-            self.config["gene_list"].split(",")
-        )
+        expected_gene_list = [str(x) for x in self.config["gene_list"].split(",")]
         runner = GelCoverageRunner(
             config=self.config
         )
@@ -445,14 +439,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         Test 6: provided bed of nonN regions and whole genome metrics enabled
         :return:
         """
-        expected_gene_list = [u'ADSL', u'ALG13', u'ARHGEF9', u'ARX', u'ATP1A3', u'ATRX', u'CDKL5', u'CHD2',
-                              u'CNTNAP2', u'DNM1', u'DOCK7', u'DYRK1A', u'EHMT1', u'FOXG1', u'GABRA1', u'GABRB3',
-                              u'GNAO1', u'GRIN1', u'GRIN2A', u'GRIN2B', u'HCN1', u'IQSEC2', u'KCNA2', u'KCNB1',
-                              u'KCNJ10', u'KCNQ2', u'KCNQ3', u'KCNT1', u'KIAA2022', u'KIF1BP', u'MAPK10', u'MBD5',
-                              u'MECP2', u'MEF2C', u'PCDH19', u'PIGA', u'PLCB1', u'PNKP', u'POLG', u'PRRT2', u'PURA',
-                              u'QARS', u'SCN1A', u'SCN1B', u'SCN2A', u'SCN8A', u'SETD5', u'SIK1', u'SLC12A5',
-                              u'SLC13A5', u'SLC16A2', u'SLC25A22', u'SLC2A1', u'SLC6A1', u'SLC9A6', u'SPTAN1',
-                              u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
+        expected_gene_list = ['ADSL', 'ALG13', 'ARHGEF9', 'ARX', 'ATP1A3', 'ATRX', 'CDKL5', 'CHD2',
+                              'CNTNAP2', 'DNM1', 'DOCK7', 'DYRK1A', 'EHMT1', 'FOXG1', 'GABRA1', 'GABRB3',
+                              'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 'HCN1', 'IQSEC2', 'KCNA2', 'KCNB1',
+                              'KCNJ10', 'KCNQ2', 'KCNQ3', 'KCNT1', 'KIAA2022', 'KIF1BP', 'MAPK10', 'MBD5',
+                              'MECP2', 'MEF2C', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 'POLG', 'PRRT2', 'PURA',
+                              'QARS', 'SCN1A', 'SCN1B', 'SCN2A', 'SCN8A', 'SETD5', 'SIK1', 'SLC12A5',
+                              'SLC13A5', 'SLC16A2', 'SLC25A22', 'SLC2A1', 'SLC6A1', 'SLC9A6', 'SPTAN1',
+                              'STX1B', 'STXBP1', 'SYNGAP1', 'TCF4', 'UBE2A', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
         self.config["bw"] = "../resources/test/test1.bw"
@@ -481,14 +475,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         Different chromosome notations, should fail.
         :return:
         """
-        expected_gene_list = [u'ADSL', u'ALG13', u'ARHGEF9', u'ARX', u'ATP1A3', u'ATRX', u'CDKL5', u'CHD2',
-                              u'CNTNAP2', u'DNM1', u'DOCK7', u'DYRK1A', u'EHMT1', u'FOXG1', u'GABRA1', u'GABRB3',
-                              u'GNAO1', u'GRIN1', u'GRIN2A', u'GRIN2B', u'HCN1', u'IQSEC2', u'KCNA2', u'KCNB1',
-                              u'KCNJ10', u'KCNQ2', u'KCNQ3', u'KCNT1', u'KIAA2022', u'KIF1BP', u'MAPK10', u'MBD5',
-                              u'MECP2', u'MEF2C', u'PCDH19', u'PIGA', u'PLCB1', u'PNKP', u'POLG', u'PRRT2', u'PURA',
-                              u'QARS', u'SCN1A', u'SCN1B', u'SCN2A', u'SCN8A', u'SETD5', u'SIK1', u'SLC12A5',
-                              u'SLC13A5', u'SLC16A2', u'SLC25A22', u'SLC2A1', u'SLC6A1', u'SLC9A6', u'SPTAN1',
-                              u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
+        expected_gene_list = ['ADSL', 'ALG13', 'ARHGEF9', 'ARX', 'ATP1A3', 'ATRX', 'CDKL5', 'CHD2',
+                              'CNTNAP2', 'DNM1', 'DOCK7', 'DYRK1A', 'EHMT1', 'FOXG1', 'GABRA1', 'GABRB3',
+                              'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 'HCN1', 'IQSEC2', 'KCNA2', 'KCNB1',
+                              'KCNJ10', 'KCNQ2', 'KCNQ3', 'KCNT1', 'KIAA2022', 'KIF1BP', 'MAPK10', 'MBD5',
+                              'MECP2', 'MEF2C', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 'POLG', 'PRRT2', 'PURA',
+                              'QARS', 'SCN1A', 'SCN1B', 'SCN2A', 'SCN8A', 'SETD5', 'SIK1', 'SLC12A5',
+                              'SLC13A5', 'SLC16A2', 'SLC25A22', 'SLC2A1', 'SLC6A1', 'SLC9A6', 'SPTAN1',
+                              'STX1B', 'STXBP1', 'SYNGAP1', 'TCF4', 'UBE2A', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
         self.config["bw"] = "../resources/test/test1.bw"
@@ -534,14 +528,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         Test 7: whole genome metrics enabled
         :return:
         """
-        expected_gene_list = [u'ADSL', u'ALG13', u'ARHGEF9', u'ARX', u'ATP1A3', u'ATRX', u'CDKL5', u'CHD2',
-                              u'CNTNAP2', u'DNM1', u'DOCK7', u'DYRK1A', u'EHMT1', u'FOXG1', u'GABRA1', u'GABRB3',
-                              u'GNAO1', u'GRIN1', u'GRIN2A', u'GRIN2B', u'HCN1', u'IQSEC2', u'KCNA2', u'KCNB1',
-                              u'KCNJ10', u'KCNQ2', u'KCNQ3', u'KCNT1', u'KIAA2022', u'KIF1BP', u'MAPK10', u'MBD5',
-                              u'MECP2', u'MEF2C', u'PCDH19', u'PIGA', u'PLCB1', u'PNKP', u'POLG', u'PRRT2', u'PURA',
-                              u'QARS', u'SCN1A', u'SCN1B', u'SCN2A', u'SCN8A', u'SETD5', u'SIK1', u'SLC12A5',
-                              u'SLC13A5', u'SLC16A2', u'SLC25A22', u'SLC2A1', u'SLC6A1', u'SLC9A6', u'SPTAN1',
-                              u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
+        expected_gene_list = ['ADSL', 'ALG13', 'ARHGEF9', 'ARX', 'ATP1A3', 'ATRX', 'CDKL5', 'CHD2',
+                              'CNTNAP2', 'DNM1', 'DOCK7', 'DYRK1A', 'EHMT1', 'FOXG1', 'GABRA1', 'GABRB3',
+                              'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 'HCN1', 'IQSEC2', 'KCNA2', 'KCNB1',
+                              'KCNJ10', 'KCNQ2', 'KCNQ3', 'KCNT1', 'KIAA2022', 'KIF1BP', 'MAPK10', 'MBD5',
+                              'MECP2', 'MEF2C', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 'POLG', 'PRRT2', 'PURA',
+                              'QARS', 'SCN1A', 'SCN1B', 'SCN2A', 'SCN8A', 'SETD5', 'SIK1', 'SLC12A5',
+                              'SLC13A5', 'SLC16A2', 'SLC25A22', 'SLC2A1', 'SLC6A1', 'SLC9A6', 'SPTAN1',
+                              'STX1B', 'STXBP1', 'SYNGAP1', 'TCF4', 'UBE2A', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
         self.config["bw"] = "../resources/test/test1.bw"
@@ -566,14 +560,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         Test 8: exon stats disabled
         :return:
         """
-        expected_gene_list = [u'ADSL', u'ALG13', u'ARHGEF9', u'ARX', u'ATP1A3', u'ATRX', u'CDKL5', u'CHD2',
-                              u'CNTNAP2', u'DNM1', u'DOCK7', u'DYRK1A', u'EHMT1', u'FOXG1', u'GABRA1', u'GABRB3',
-                              u'GNAO1', u'GRIN1', u'GRIN2A', u'GRIN2B', u'HCN1', u'IQSEC2', u'KCNA2', u'KCNB1',
-                              u'KCNJ10', u'KCNQ2', u'KCNQ3', u'KCNT1', u'KIAA2022', u'KIF1BP', u'MAPK10', u'MBD5',
-                              u'MECP2', u'MEF2C', u'PCDH19', u'PIGA', u'PLCB1', u'PNKP', u'POLG', u'PRRT2', u'PURA',
-                              u'QARS', u'SCN1A', u'SCN1B', u'SCN2A', u'SCN8A', u'SETD5', u'SIK1', u'SLC12A5',
-                              u'SLC13A5', u'SLC16A2', u'SLC25A22', u'SLC2A1', u'SLC6A1', u'SLC9A6', u'SPTAN1',
-                              u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
+        expected_gene_list = ['ADSL', 'ALG13', 'ARHGEF9', 'ARX', 'ATP1A3', 'ATRX', 'CDKL5', 'CHD2',
+                              'CNTNAP2', 'DNM1', 'DOCK7', 'DYRK1A', 'EHMT1', 'FOXG1', 'GABRA1', 'GABRB3',
+                              'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 'HCN1', 'IQSEC2', 'KCNA2', 'KCNB1',
+                              'KCNJ10', 'KCNQ2', 'KCNQ3', 'KCNT1', 'KIAA2022', 'KIF1BP', 'MAPK10', 'MBD5',
+                              'MECP2', 'MEF2C', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 'POLG', 'PRRT2', 'PURA',
+                              'QARS', 'SCN1A', 'SCN1B', 'SCN2A', 'SCN8A', 'SETD5', 'SIK1', 'SLC12A5',
+                              'SLC13A5', 'SLC16A2', 'SLC25A22', 'SLC2A1', 'SLC6A1', 'SLC9A6', 'SPTAN1',
+                              'STX1B', 'STXBP1', 'SYNGAP1', 'TCF4', 'UBE2A', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
         self.config["bw"] = "../resources/test/test1.bw"
@@ -603,10 +597,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["bw"] = "../resources/test/test2.bw"
         self.config["gene_list"] = "BRCA1,BRCA2,CFTR,IGHE,PTEN"
         self.config["exon_padding"] = 0
-        expected_gene_list = map(
-            lambda x: unicode(x),
-            self.config["gene_list"].split(",")
-        )
+        expected_gene_list = [str(x) for x in self.config["gene_list"].split(",")]
         runner = GelCoverageRunner(
             config=self.config
         )
@@ -634,10 +625,7 @@ class GelCoverageRunnerTests(OutputVerifier):
         self.config["bw"] = "../resources/test/test2.bw"
         self.config["gene_list"] = "PTEN"
         self.config["exon_padding"] = 0
-        expected_gene_list = map(
-            lambda x: unicode(x),
-            self.config["gene_list"].split(",")
-        )
+        expected_gene_list = [str(x) for x in self.config["gene_list"].split(",")]
         runner = GelCoverageRunner(
             config=self.config
         )
@@ -660,14 +648,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         Test 11: coding region analysis disabled
         :return:
         """
-        expected_gene_list = [u'ADSL', u'ALG13', u'ARHGEF9', u'ARX', u'ATP1A3', u'ATRX', u'CDKL5', u'CHD2',
-                              u'CNTNAP2', u'DNM1', u'DOCK7', u'DYRK1A', u'EHMT1', u'FOXG1', u'GABRA1', u'GABRB3',
-                              u'GNAO1', u'GRIN1', u'GRIN2A', u'GRIN2B', u'HCN1', u'IQSEC2', u'KCNA2', u'KCNB1',
-                              u'KCNJ10', u'KCNQ2', u'KCNQ3', u'KCNT1', u'KIAA2022', u'KIF1BP', u'MAPK10', u'MBD5',
-                              u'MECP2', u'MEF2C', u'PCDH19', u'PIGA', u'PLCB1', u'PNKP', u'POLG', u'PRRT2', u'PURA',
-                              u'QARS', u'SCN1A', u'SCN1B', u'SCN2A', u'SCN8A', u'SETD5', u'SIK1', u'SLC12A5',
-                              u'SLC13A5', u'SLC16A2', u'SLC25A22', u'SLC2A1', u'SLC6A1', u'SLC9A6', u'SPTAN1',
-                              u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
+        expected_gene_list = ['ADSL', 'ALG13', 'ARHGEF9', 'ARX', 'ATP1A3', 'ATRX', 'CDKL5', 'CHD2',
+                              'CNTNAP2', 'DNM1', 'DOCK7', 'DYRK1A', 'EHMT1', 'FOXG1', 'GABRA1', 'GABRB3',
+                              'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 'HCN1', 'IQSEC2', 'KCNA2', 'KCNB1',
+                              'KCNJ10', 'KCNQ2', 'KCNQ3', 'KCNT1', 'KIAA2022', 'KIF1BP', 'MAPK10', 'MBD5',
+                              'MECP2', 'MEF2C', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 'POLG', 'PRRT2', 'PURA',
+                              'QARS', 'SCN1A', 'SCN1B', 'SCN2A', 'SCN8A', 'SETD5', 'SIK1', 'SLC12A5',
+                              'SLC13A5', 'SLC16A2', 'SLC25A22', 'SLC2A1', 'SLC6A1', 'SLC9A6', 'SPTAN1',
+                              'STX1B', 'STXBP1', 'SYNGAP1', 'TCF4', 'UBE2A', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
         self.config["bw"] = "../resources/test/test1.bw"
@@ -693,14 +681,14 @@ class GelCoverageRunnerTests(OutputVerifier):
         Test 12: coding region and whole genome analysis disabled
         :return:
         """
-        expected_gene_list = [u'ADSL', u'ALG13', u'ARHGEF9', u'ARX', u'ATP1A3', u'ATRX', u'CDKL5', u'CHD2',
-                              u'CNTNAP2', u'DNM1', u'DOCK7', u'DYRK1A', u'EHMT1', u'FOXG1', u'GABRA1', u'GABRB3',
-                              u'GNAO1', u'GRIN1', u'GRIN2A', u'GRIN2B', u'HCN1', u'IQSEC2', u'KCNA2', u'KCNB1',
-                              u'KCNJ10', u'KCNQ2', u'KCNQ3', u'KCNT1', u'KIAA2022', u'KIF1BP', u'MAPK10', u'MBD5',
-                              u'MECP2', u'MEF2C', u'PCDH19', u'PIGA', u'PLCB1', u'PNKP', u'POLG', u'PRRT2', u'PURA',
-                              u'QARS', u'SCN1A', u'SCN1B', u'SCN2A', u'SCN8A', u'SETD5', u'SIK1', u'SLC12A5',
-                              u'SLC13A5', u'SLC16A2', u'SLC25A22', u'SLC2A1', u'SLC6A1', u'SLC9A6', u'SPTAN1',
-                              u'STX1B', u'STXBP1', u'SYNGAP1', u'TCF4', u'UBE2A', u'UBE3A', u'WDR45', u'WWOX', u'ZEB2']
+        expected_gene_list = ['ADSL', 'ALG13', 'ARHGEF9', 'ARX', 'ATP1A3', 'ATRX', 'CDKL5', 'CHD2',
+                              'CNTNAP2', 'DNM1', 'DOCK7', 'DYRK1A', 'EHMT1', 'FOXG1', 'GABRA1', 'GABRB3',
+                              'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 'HCN1', 'IQSEC2', 'KCNA2', 'KCNB1',
+                              'KCNJ10', 'KCNQ2', 'KCNQ3', 'KCNT1', 'KIAA2022', 'KIF1BP', 'MAPK10', 'MBD5',
+                              'MECP2', 'MEF2C', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 'POLG', 'PRRT2', 'PURA',
+                              'QARS', 'SCN1A', 'SCN1B', 'SCN2A', 'SCN8A', 'SETD5', 'SIK1', 'SLC12A5',
+                              'SLC13A5', 'SLC16A2', 'SLC25A22', 'SLC2A1', 'SLC6A1', 'SLC9A6', 'SPTAN1',
+                              'STX1B', 'STXBP1', 'SYNGAP1', 'TCF4', 'UBE2A', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2']
         self.config["panel"] = "Epileptic encephalopathy"
         self.config["panel_version"] = "1.2"
         self.config["bw"] = "../resources/test/test1.bw"

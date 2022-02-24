@@ -1,4 +1,3 @@
-import json
 import unittest
 import logging
 import json
@@ -52,9 +51,9 @@ class OutputVerifier(unittest.TestCase):
         """
         if type(types) != list:
             types = [types]
-        if str in types and unicode not in types:
-            types.append(unicode)
-        if unicode in types and str not in types:
+        if str in types and str not in types:
+            types.append(str)
+        if str in types and str not in types:
             types.append(str)
         self.assertTrue(name in _dict, msg="Missing field '%s'" % name)
         self.assertTrue(type(_dict[name]) in types,
@@ -89,7 +88,7 @@ class OutputVerifier(unittest.TestCase):
             if "panel" in parameters:
                 self._verify_dict_field(parameters, "panel", str)
                 self._verify_dict_field(parameters, "panel_version", str)
-        except AssertionError, e:
+        except AssertionError as e:
             logging.error("Error verifying configuration parameters")
             logging.error(json.dumps(parameters, indent=4))
             raise e
@@ -255,7 +254,7 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(stats[constants.GTE50X] >= 0 and stats[constants.GTE50X] <= 1)
             self._verify_dict_field(stats, constants.LT15X, float)
             self.assertTrue(stats[constants.LT15X] >= 0 and stats[constants.LT15X] <= 1)
-            self._verify_dict_field(stats, constants.BASES, [int, long])
+            self._verify_dict_field(stats, constants.BASES, [int, int])
             self.assertTrue(stats[constants.BASES] >= 0)
             self._verify_dict_field(stats, constants.MEDIAN, float)
             self.assertTrue(stats[constants.MEDIAN] >= 0)
@@ -265,7 +264,7 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(stats[constants.PERCENTILE25] >= 0)
             self._verify_dict_field(stats, constants.SD, float)
             self.assertTrue(stats[constants.SD] >= 0)
-        except AssertionError, e:
+        except AssertionError as e:
             logging.error("Error verifying transcript statistics")
             logging.error(json.dumps(stats, indent=4))
             raise e
@@ -293,7 +292,7 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(str(exon[constants.EXON]).startswith(constants.EXON),
                             msg="Exon number is not well formed")
             self.__verify_exon_statistics(exon, has_gc)
-        except AssertionError, e:
+        except AssertionError as e:
             logging.error("Error verifying exon at %s:%s" % (gene_name, transcript_id))
             logging.error(json.dumps(exon, indent=4))
             raise e
@@ -317,7 +316,7 @@ class OutputVerifier(unittest.TestCase):
                             statistics[constants.GTE50X] <= 1)
             self.assertTrue(statistics[constants.LT15X] >= 0 and
                             statistics[constants.LT15X] <= 1)
-            self._verify_dict_field(statistics, constants.BASES, [int, long])
+            self._verify_dict_field(statistics, constants.BASES, [int, int])
             self.assertTrue(statistics[constants.BASES] >= 0)
             self._verify_dict_field(statistics, constants.MEDIAN, float)
             self.assertTrue(statistics[constants.MEDIAN] >= 0)
@@ -327,7 +326,7 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(statistics[constants.PERCENTILE25] >= 0)
             self._verify_dict_field(statistics, constants.SD, float)
             self.assertTrue(statistics[constants.SD] >= 0)
-        except AssertionError, e:
+        except AssertionError as e:
             logging.error("Error verifying exon statistics")
             logging.error(json.dumps(statistics, indent=4))
             raise e
@@ -344,7 +343,7 @@ class OutputVerifier(unittest.TestCase):
             self._verify_dict_field(gap, constants.GAP_LENGTH, int)
             self.assertTrue(gap[constants.GAP_LENGTH] >= 1 and gap[constants.GAP_LENGTH] <=
                             gap[constants.GAP_END] - gap[constants.GAP_START] + 1)
-        except AssertionError, e:
+        except AssertionError as e:
             logging.error("Error verifying gap")
             logging.error(json.dumps(gap, indent=4))
             raise e
@@ -365,7 +364,7 @@ class OutputVerifier(unittest.TestCase):
                             statistics[constants.GTE50X] <= 1)
             self.assertTrue(statistics[constants.LT15X] >= 0 and
                             statistics[constants.LT15X] <= 1)
-            self._verify_dict_field(statistics, constants.BASES, [int, long])
+            self._verify_dict_field(statistics, constants.BASES, [int, int])
             self.assertTrue(statistics[constants.BASES] >= 0)
             self._verify_dict_field(statistics, constants.MEDIAN, float)
             self.assertTrue(statistics[constants.MEDIAN] >= 0)
@@ -375,7 +374,7 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(statistics[constants.PERCENTILE25] >= 0)
             self._verify_dict_field(statistics, constants.SD, float)
             self.assertTrue(statistics[constants.SD] >= 0)
-        except AssertionError, e:
+        except AssertionError as e:
             logging.error("Error panel statistics")
             logging.error(json.dumps(statistics, indent=4))
             raise e
@@ -396,7 +395,7 @@ class OutputVerifier(unittest.TestCase):
                             statistics[constants.GTE50X] <= 1)
             self.assertTrue(statistics[constants.LT15X] >= 0 and
                             statistics[constants.LT15X] <= 1)
-            self._verify_dict_field(statistics, constants.BASES, [int, long])
+            self._verify_dict_field(statistics, constants.BASES, [int, int])
             self.assertTrue(statistics[constants.BASES] >= 0)
             self._verify_dict_field(statistics, constants.MEDIAN, float)
             self.assertTrue(statistics[constants.MEDIAN] >= 0)
@@ -408,7 +407,7 @@ class OutputVerifier(unittest.TestCase):
             self.assertTrue(statistics[constants.SD] >= 0)
             self._verify_dict_field(statistics, constants.RMSD, float)
             self.assertTrue(statistics[constants.RMSD] >= 0)
-        except AssertionError, e:
+        except AssertionError as e:
             logging.error("Error panel statistics")
             logging.error(json.dumps(statistics, indent=4))
             raise e

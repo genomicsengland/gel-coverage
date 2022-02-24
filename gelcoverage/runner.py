@@ -524,7 +524,7 @@ class GelCoverageRunner:
             )
             # Add uncovered genes
             results["uncovered_genes"] = [
-                {constants.GENE_NAME: k, constants.CHROMOSOME: v} for k, v in self.uncovered_genes.iteritems()
+                {constants.GENE_NAME: k, constants.CHROMOSOME: v} for k, v in self.uncovered_genes.items()
             ]
             results = self.__delete_unnecessary_info_from_genes(results, constants)
         else:

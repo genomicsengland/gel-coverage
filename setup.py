@@ -2,11 +2,21 @@
 from setuptools import find_packages, setup
 import os
 import io
-
+import re
 
 # read the contents of your README file
 
-VERSION = '1.4.5'
+VERSION = '1.4.6'
+
+REGEX_COMMENT = re.compile(r"[\s^]#(.*)")
+
+
+def parse_requirements(filename):
+    filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    with open(filename, "rt") as filehandle:
+        return tuple(
+            filter(None, (REGEX_COMMENT.sub("", line).strip() for line in filehandle))
+        )
 
 setup(
     name='gel-coverage',
@@ -16,20 +26,11 @@ setup(
     url='https://github.com/genomicsengland/gel-coverage',
     download_url="https://github.com/genomicsengland/gel-coverage/archive/v{}.tar.gz".format(VERSION),
     license='Apache',
-    author='Pablo Riesgo Ferreiro',
-    author_email='pablo.riesgo-ferreiro@genomicsengland.co.uk',
+    author='Luca Venturini',
+    author_email='luca.venturini@genomicsengland.co.uk',
     description='Whole genome coverage analysis tool',
-    requires=['pandas', 'pyBigWig', 'pybedtools', 'numpy', 'ujson', 'pycellbase'],
-    install_requires=[
-        'pandas==0.20.3',
-        'pybedtools==0.7.8',
-        'ujson==1.35',
-        'pyBigWig==0.3.4',
-        'numpy==1.11.2',
-        'httpretty==0.9.5',
-        'pycellbase==4.7.0',
-        'pypanelapp==1.0.7'
-    ],
+    install_requires=parse_requirements("requirements.txt"),
+    extras_require={"test": ["httpretty>=0.9.5", "unittest"]},
     classifiers=[
         'Development Status :: 5 - Production/Stable',      # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
         'Intended Audience :: Healthcare Industry',
