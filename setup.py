@@ -25,7 +25,7 @@ setup(
         'pybedtools==0.7.8',
         'ujson==1.35',
         'pyBigWig==0.3.4',
-        'numpy==1.11.2',
+        'numpy==1.21.0',
         'httpretty==0.9.5',
         'pycellbase==4.7.0',
         'pypanelapp==1.0.7'
