@@ -23,7 +23,7 @@ setup(
     install_requires=[
         'pandas==0.20.3',
         'pybedtools==0.7.8',
-        'ujson==1.35',
+        'ujson==5.4.0',
         'pyBigWig==0.3.4',
         'numpy==1.11.2',
         'httpretty==0.9.5',
